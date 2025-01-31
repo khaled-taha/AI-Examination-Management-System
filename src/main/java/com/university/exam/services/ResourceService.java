@@ -1,7 +1,9 @@
 package com.university.exam.services;
 
-import com.university.exam.dtos.ResourceDTO;
-import com.university.exam.dtos.ResourceDirectoryDTO;
+import com.university.exam.dtos.requestDTO.ResourceRequestDTO;
+import com.university.exam.dtos.requestDTO.ResourceDirectoryRequestDTO;
+import com.university.exam.dtos.responseDTO.ResourceDirectoryResponseDTO;
+import com.university.exam.dtos.responseDTO.ResourceResponseDTO;
 import com.university.exam.entities.Resource;
 import com.university.exam.entities.ResourceDirectory;
 import com.university.exam.entities.SuperResource;
@@ -30,11 +32,11 @@ public class ResourceService {
     private ResourceDirectoryRepository resourceDirectoryRepository;
 
     @Transactional
-    public ResourceDTO uploadResource(ResourceDTO resourceDTO, byte[] data) throws NoSuchObjectException {
-        ResourceDirectory directory = fetchResourceDirectory(resourceDTO.getResourceDirId());
-        Resource resource = createResource(resourceDTO, directory);
-        SuperResource superResource = createSuperResource(data, resource);
-        return ResourceDTO.fromEntity(resource);
+    public ResourceResponseDTO uploadResource(ResourceRequestDTO resourceRequestDTO, byte[] data) throws NoSuchObjectException {
+        ResourceDirectory directory = fetchResourceDirectory(resourceRequestDTO.getResourceDirId());
+        Resource resource = createResource(resourceRequestDTO, directory);
+        createSuperResource(data, resource);
+        return ResourceResponseDTO.fromEntity(resource);
     }
 
     @Transactional
@@ -52,18 +54,18 @@ public class ResourceService {
     }
 
     @Transactional
-    public ResourceDirectoryDTO createDirectory(ResourceDirectoryDTO directoryDTO) {
+    public ResourceDirectoryResponseDTO createDirectory(ResourceDirectoryRequestDTO directoryDTO) {
         ResourceDirectory directory = buildDirectory(directoryDTO);
         directory = saveDirectory(directory);
-        return ResourceDirectoryDTO.fromEntity(directory);
+        return ResourceDirectoryResponseDTO.fromEntity(directory);
     }
 
     @Transactional
-    public ResourceDirectoryDTO updateDirectory(UUID directoryId, ResourceDirectoryDTO directoryDTO) throws NoSuchObjectException {
+    public ResourceDirectoryResponseDTO updateDirectory(UUID directoryId, ResourceDirectoryRequestDTO directoryDTO) throws NoSuchObjectException {
         ResourceDirectory directory = fetchDirectory(directoryId);
         updateDirectoryDetails(directory, directoryDTO);
         directory = saveDirectory(directory);
-        return ResourceDirectoryDTO.fromEntity(directory);
+        return ResourceDirectoryResponseDTO.fromEntity(directory);
     }
 
     @Transactional
@@ -78,10 +80,10 @@ public class ResourceService {
                 .orElseThrow(() -> new NoSuchObjectException("Resource directory not found"));
     }
 
-    private Resource createResource(ResourceDTO resourceDTO, ResourceDirectory directory) {
+    private Resource createResource(ResourceRequestDTO resourceRequestDTO, ResourceDirectory directory) {
         Resource resource = new Resource();
-        resource.setName(resourceDTO.getName());
-        resource.setType(resourceDTO.getType());
+        resource.setName(resourceRequestDTO.getName());
+        resource.setType(resourceRequestDTO.getType());
         resource.setResourceDirectory(directory);
         return resourceRepository.save(resource);
     }
@@ -111,7 +113,7 @@ public class ResourceService {
         resourceRepository.delete(resource);
     }
 
-    private ResourceDirectory buildDirectory(ResourceDirectoryDTO directoryDTO) {
+    private ResourceDirectory buildDirectory(ResourceDirectoryRequestDTO directoryDTO) {
         ResourceDirectory directory = new ResourceDirectory();
         directory.setName(directoryDTO.getName());
         directory.setCreator(directoryDTO.getCreator());
@@ -128,7 +130,7 @@ public class ResourceService {
                 .orElseThrow(() -> new NoSuchObjectException("Directory not found"));
     }
 
-    private void updateDirectoryDetails(ResourceDirectory directory, ResourceDirectoryDTO directoryDTO) {
+    private void updateDirectoryDetails(ResourceDirectory directory, ResourceDirectoryRequestDTO directoryDTO) {
         directory.setName(directoryDTO.getName());
         directory.setCreator(directoryDTO.getCreator());
         directory.setBaseDirId(directoryDTO.getBaseDirId());

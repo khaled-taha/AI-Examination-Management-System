@@ -1,6 +1,7 @@
 package com.university.exam.controllers;
 
-import com.university.exam.dtos.CourseDTO;
+import com.university.exam.dtos.requestDTO.CourseRequestDTO;
+import com.university.exam.dtos.responseDTO.CourseResponseDTO;
 import com.university.exam.exceptions.ValidationException;
 import com.university.exam.services.CourseService;
 import jakarta.validation.Valid;
@@ -19,13 +20,13 @@ public class CourseController {
     private CourseService courseService;
 
     @PostMapping
-    public ResponseEntity<CourseDTO> createCourse(@Valid @RequestBody CourseDTO courseDTO) throws NoSuchObjectException, ValidationException {
-        return ResponseEntity.ok(courseService.createCourse(courseDTO));
+    public ResponseEntity<CourseResponseDTO> createCourse(@Valid @RequestBody CourseRequestDTO courseRequestDTO) throws NoSuchObjectException, ValidationException {
+        return ResponseEntity.ok(courseService.createCourse(courseRequestDTO));
     }
 
     @PutMapping("/{code}")
-    public ResponseEntity<CourseDTO> updateCourse(@PathVariable String code, @Valid @RequestBody CourseDTO courseDTO) throws NoSuchObjectException, ValidationException {
-        return ResponseEntity.ok(courseService.updateCourse(code, courseDTO));
+    public ResponseEntity<CourseResponseDTO> updateCourse(@PathVariable String code, @Valid @RequestBody CourseRequestDTO courseRequestDTO) throws NoSuchObjectException, ValidationException {
+        return ResponseEntity.ok(courseService.updateCourse(code, courseRequestDTO));
     }
 
     @DeleteMapping("/{code}")

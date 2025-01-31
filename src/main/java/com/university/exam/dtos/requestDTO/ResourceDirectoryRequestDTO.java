@@ -1,4 +1,4 @@
-package com.university.exam.dtos;
+package com.university.exam.dtos.requestDTO;
 
 import com.university.exam.entities.ResourceDirectory;
 import jakarta.validation.constraints.*;
@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class ResourceDirectoryDTO {
+public class ResourceDirectoryRequestDTO {
     @NotBlank(message = "Directory name is required")
     @Size(max = 50, message = "Directory name cannot exceed 50 characters")
     private String name;
@@ -17,12 +17,4 @@ public class ResourceDirectoryDTO {
     private String creator;
 
     private UUID baseDirId;
-
-    public static ResourceDirectoryDTO fromEntity(ResourceDirectory directory) {
-        ResourceDirectoryDTO dto = new ResourceDirectoryDTO();
-        dto.setName(directory.getName());
-        dto.setCreator(directory.getCreator());
-        dto.setBaseDirId(directory.getBaseDirId());
-        return dto;
-    }
 }

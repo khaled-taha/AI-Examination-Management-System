@@ -1,7 +1,9 @@
 package com.university.exam.controllers;
 
-import com.university.exam.dtos.ResourceDTO;
-import com.university.exam.dtos.ResourceDirectoryDTO;
+import com.university.exam.dtos.requestDTO.ResourceRequestDTO;
+import com.university.exam.dtos.requestDTO.ResourceDirectoryRequestDTO;
+import com.university.exam.dtos.responseDTO.ResourceDirectoryResponseDTO;
+import com.university.exam.dtos.responseDTO.ResourceResponseDTO;
 import com.university.exam.services.ResourceService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -22,17 +24,17 @@ public class ResourceController {
     private ResourceService resourceService;
 
     @PostMapping("/upload")
-    public ResponseEntity<ResourceDTO> uploadResource(
+    public ResponseEntity<ResourceResponseDTO> uploadResource(
             @RequestParam("file") MultipartFile file,
             @RequestParam("name") String name,
             @RequestParam("type") String type,
             @RequestParam("resourceDirId") UUID resourceDirId) throws IOException {
-        ResourceDTO resourceDTO = new ResourceDTO();
-        resourceDTO.setName(name);
-        resourceDTO.setType(type);
-        resourceDTO.setResourceDirId(resourceDirId);
+        ResourceRequestDTO resourceRequestDTO = new ResourceRequestDTO();
+        resourceRequestDTO.setName(name);
+        resourceRequestDTO.setType(type);
+        resourceRequestDTO.setResourceDirId(resourceDirId);
 
-        ResourceDTO uploadedResource = resourceService.uploadResource(resourceDTO, file.getBytes());
+        ResourceResponseDTO uploadedResource = resourceService.uploadResource(resourceRequestDTO, file.getBytes());
         return ResponseEntity.ok(uploadedResource);
     }
 
@@ -51,14 +53,14 @@ public class ResourceController {
     }
 
     @PostMapping("/directories")
-    public ResponseEntity<ResourceDirectoryDTO> createDirectory(@Valid @RequestBody ResourceDirectoryDTO directoryDTO) {
+    public ResponseEntity<ResourceDirectoryResponseDTO> createDirectory(@Valid @RequestBody ResourceDirectoryRequestDTO directoryDTO) {
         return ResponseEntity.ok(resourceService.createDirectory(directoryDTO));
     }
 
     @PutMapping("/directories/{directoryId}")
-    public ResponseEntity<ResourceDirectoryDTO> updateDirectory(
+    public ResponseEntity<ResourceDirectoryResponseDTO> updateDirectory(
             @PathVariable UUID directoryId,
-            @Valid @RequestBody ResourceDirectoryDTO directoryDTO) throws NoSuchObjectException {
+            @Valid @RequestBody ResourceDirectoryRequestDTO directoryDTO) throws NoSuchObjectException {
         return ResponseEntity.ok(resourceService.updateDirectory(directoryId, directoryDTO));
     }
 
