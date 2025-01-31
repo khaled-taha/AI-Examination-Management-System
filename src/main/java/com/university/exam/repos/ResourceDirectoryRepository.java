@@ -10,5 +10,4 @@ import java.util.UUID;
 @Repository
 public interface ResourceDirectoryRepository extends JpaRepository<ResourceDirectory, UUID> {
     List<ResourceDirectory> findByBaseDirId(UUID baseDirId);
-    void deleteAll(List<ResourceDirectory> directories);
 }

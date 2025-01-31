@@ -6,18 +6,17 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
-
   datasource:
     driver-class-name: org.postgresql.Driver
     platform: postgres
-    url: jdbc:postgresql://localhost:5433/ems
+    url: jdbc:postgresql://localhost:5432/ems
     database: emsDB
     password: 123
     username: postgres
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
@@ -25,13 +24,18 @@ spring:
       jdbc:
         lob:
           non_contextual_creation: true
+  jackson:
+    time-zone: Africa/Cairo
 
 server:
   servlet:
     context-path: /ems
   port: 8083
 
+
 # swagger-ui custom path
 springdoc:
   swagger-ui:
-    path: /api-doc
+    path: /ems-doc
+
+

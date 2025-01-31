@@ -12,5 +12,4 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
     List<Resource> findByResourceDirectoryId(UUID resourceDirectoryId);
 
     List<Resource> findByResourceDirectoryIdIn(List<UUID> directoryIds); // Fetch resources in multiple directories
-    void deleteAll(List<Resource> resources); // Batch delete resources
 }
