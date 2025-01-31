@@ -1,0 +1,37 @@
+spring:
+  application: exam
+
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    platform: postgres
+    url: jdbc:postgresql://localhost:5433/ems
+    database: emsDB
+    password: 123
+    username: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+      jdbc:
+        lob:
+          non_contextual_creation: true
+
+server:
+  servlet:
+    context-path: /ems
+  port: 8083
+
+# swagger-ui custom path
+springdoc:
+  swagger-ui:
+    path: /api-doc
