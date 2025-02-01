@@ -43,7 +43,7 @@ public class CourseController {
                     @ApiResponse(responseCode = "200", description = "Course created successfully",
                             content = @Content(schema = @Schema(implementation = CourseResponseDTO.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid input"),
-                    @ApiResponse(responseCode = "404", description = "Related resource not found")
+                    @ApiResponse(responseCode = "404", description = "Related Group not found")
             }
     )
     public ResponseEntity<CourseResponseDTO> createCourse(@Valid @RequestBody CourseRequestDTO courseRequestDTO) throws NoSuchObjectException, ValidationException {

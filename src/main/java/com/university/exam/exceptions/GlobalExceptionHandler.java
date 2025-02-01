@@ -7,7 +7,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.context.request.WebRequest;
 
 import java.rmi.NoSuchObjectException;
 import java.time.LocalDateTime;
@@ -19,7 +18,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoSuchObjectException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<ErrorResponse> handleNoSuchObjectException(NoSuchObjectException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleNoSuchObjectException(NoSuchObjectException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.NOT_FOUND.value(),
@@ -31,7 +30,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<ErrorResponse> handleValidationException(ValidationException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleValidationException(ValidationException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
@@ -43,7 +42,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<ErrorResponse> handleParametersValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleParametersValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
@@ -61,7 +60,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

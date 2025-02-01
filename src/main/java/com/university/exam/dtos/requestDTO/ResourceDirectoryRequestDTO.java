@@ -1,6 +1,5 @@
 package com.university.exam.dtos.requestDTO;
 
-import com.university.exam.entities.ResourceDirectory;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
