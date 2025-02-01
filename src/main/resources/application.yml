@@ -1,5 +1,6 @@
 spring:
-  application: exam
+  application:
+    name: exam
 
   servlet:
     multipart:
@@ -7,16 +8,25 @@ spring:
       max-request-size: 100MB
 
   datasource:
-    driver-class-name: org.postgresql.Driver
-    platform: postgres
     url: jdbc:postgresql://localhost:5432/ems
-    database: emsDB
-    password: 123
     username: postgres
+    password: 123
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -24,6 +34,7 @@ spring:
       jdbc:
         lob:
           non_contextual_creation: true
+
   jackson:
     time-zone: Africa/Cairo
 
@@ -32,10 +43,7 @@ server:
     context-path: /ems
   port: 8083
 
-
-# swagger-ui custom path
+# Swagger UI : http://localhost:8083/ems/swagger-ui/index.html
 springdoc:
   swagger-ui:
-    path: /ems-doc
-
-
+    enabled: true
