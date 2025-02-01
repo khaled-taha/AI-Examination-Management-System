@@ -84,8 +84,9 @@ public class CourseService {
         deleteSuperResources(resourceIds);
         deleteResources(resourceIds);
         deleteSubDirectories(subDirectories);
-        deleteBaseDirectory(baseDirectory);
+
         deleteCourse(course);
+        deleteBaseDirectory(baseDirectory);
     }
 
     @Transactional(readOnly = true)

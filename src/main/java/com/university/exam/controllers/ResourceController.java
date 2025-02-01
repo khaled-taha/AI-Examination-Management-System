@@ -65,9 +65,9 @@ public class ResourceController {
     }
 
     @DeleteMapping("/directories/{directoryId}")
-    public ResponseEntity<Void> deleteDirectory(@PathVariable UUID directoryId) throws NoSuchObjectException {
+    public ResponseEntity<String> deleteDirectory(@PathVariable UUID directoryId) throws NoSuchObjectException {
         resourceService.deleteDirectory(directoryId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Deleted Successfully!");
     }
 
     // Get ResourcesBy Course Code

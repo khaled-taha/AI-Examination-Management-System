@@ -16,9 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.rmi.NoSuchObjectException;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -73,7 +71,7 @@ public class ResourceService {
     @Transactional
     public void deleteDirectory(UUID directoryId) throws NoSuchObjectException {
         fetchDirectory(directoryId);
-        resourceDirectoryRepository.deleteDirectoryWithResources(directoryId);
+        resourceDirectoryRepository.deleteSubDirectoryWithResources(directoryId);
     }
 
     private ResourceDirectory fetchResourceDirectory(UUID directoryId) throws NoSuchObjectException {

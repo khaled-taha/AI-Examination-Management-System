@@ -19,12 +19,12 @@ public interface ResourceDirectoryRepository extends JpaRepository<ResourceDirec
         DELETE FROM super_resource sr
         WHERE sr.resource_id IN (
             SELECT r.id FROM resource r
-            WHERE r.resource_directory_id = :directoryId
+            WHERE r.resource_dir_id = :directoryId
         );
         DELETE FROM resource r
-        WHERE r.resource_directory_id = :directoryId;
+        WHERE r.resource_dir_id = :directoryId;
         DELETE FROM resource_directory d
         WHERE d.id = :directoryId;
         """, nativeQuery = true)
-    void deleteDirectoryWithResources(@Param("directoryId") UUID directoryId);
+    void deleteSubDirectoryWithResources(@Param("directoryId") UUID directoryId);
 }

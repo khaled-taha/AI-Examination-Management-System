@@ -33,9 +33,9 @@ public class CourseController {
     }
 
     @DeleteMapping("/{code}")
-    public ResponseEntity<Void> deleteCourse(@PathVariable String code) throws NoSuchObjectException {
+    public ResponseEntity<String> deleteCourse(@PathVariable String code) throws NoSuchObjectException {
         courseService.deleteCourse(code);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Deleted Successfully!");
     }
 
     @GetMapping("/{code}/directories")
