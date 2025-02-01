@@ -9,7 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface ResourceRepository extends JpaRepository<Resource, UUID> {
-    List<Resource> findByResourceDirectoryId(UUID resourceDirectoryId);
-
     List<Resource> findByResourceDirectoryIdIn(List<UUID> directoryIds);
 }

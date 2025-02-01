@@ -72,9 +72,8 @@ public class ResourceService {
 
     @Transactional
     public void deleteDirectory(UUID directoryId) throws NoSuchObjectException {
-        ResourceDirectory directory = fetchDirectory(directoryId);
-        deleteResourcesAndSuperResourcesInDirectory(directoryId);
-        deleteDirectory(directory);
+        fetchDirectory(directoryId);
+        resourceDirectoryRepository.deleteDirectoryWithResources(directoryId);
     }
 
     private ResourceDirectory fetchResourceDirectory(UUID directoryId) throws NoSuchObjectException {
@@ -136,21 +135,5 @@ public class ResourceService {
         directory.setName(directoryDTO.getName());
         directory.setCreator(directoryDTO.getCreator());
         directory.setBaseDirId(directoryDTO.getBaseDirId());
-    }
-
-    private void deleteResourcesAndSuperResourcesInDirectory(UUID directoryId) {
-        List<Resource> resources = resourceRepository.findByResourceDirectoryId(directoryId);
-
-        List<UUID> resourceIds = resources.stream()
-                .map(Resource::getId)
-                .collect(Collectors.toList());
-
-        superResourceRepository.deleteByResourceIdIn(resourceIds);
-
-        resourceRepository.deleteAllByIdInBatch(resourceIds);
-    }
-
-    private void deleteDirectory(ResourceDirectory directory) {
-        resourceDirectoryRepository.delete(directory);
     }
 }
