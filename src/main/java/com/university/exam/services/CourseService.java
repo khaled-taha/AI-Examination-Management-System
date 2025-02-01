@@ -7,6 +7,7 @@ import com.university.exam.dtos.responseDTO.ResourceResponseDTO;
 import com.university.exam.entities.*;
 import com.university.exam.exceptions.ValidationException;
 import com.university.exam.repos.*;
+import com.university.exam.utils.Utils;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -95,9 +96,7 @@ public class CourseService {
         ResourceDirectory baseDirectory = course.getBaseDirectory();
 
         List<ResourceDirectory> directories = fetchAllDirectories(baseDirectory);
-
         List<Resource> resources = fetchResourcesForDirectories(directories);
-
         Map<UUID, List<Resource>> resourcesByDirectoryId = groupResourcesByDirectoryId(resources);
 
         return mapDirectoriesToDTOs(directories, resourcesByDirectoryId);
@@ -106,22 +105,18 @@ public class CourseService {
     @Transactional(readOnly = true)
     public List<CourseResponseDTO> getCoursesByGroupId(UUID groupId) throws NoSuchObjectException {
         validateGroupExists(groupId);
-        List<Course> courses = courseRepository.findByGroupId(groupId);
+        List<Course> courses = fetchCourse(groupId);
+        return assignAvatars(courses);
+    }
 
-        Map<UUID, byte[]> avatarDataMap = fetchAvatarDataForCourses(courses);
-        Map<UUID, String> avatarTypeMap = fetchAvatarTypeForCourses(courses);
-
-        return courses.stream()
-                .map(course -> {
-                    byte[] avatar = avatarDataMap.get(course.getAvatarId());
-                    String avatarType = avatarTypeMap.get(course.getAvatarId());
-                    return CourseResponseDTO.fromEntity(course, avatar, avatarType);
-                })
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public CourseResponseDTO getCourseByCode(String code) throws NoSuchObjectException {
+        Course course = fetchCourse(code);
+        return assignAvatars(List.of(course)).get(0);
     }
 
     private void validateCourseDTO(CourseRequestDTO courseRequestDTO) throws ValidationException {
-        if (courseRequestDTO.getName() == null || courseRequestDTO.getName().isEmpty()) {
+        if (Utils.isEmpty(courseRequestDTO.getName())) {
             throw new ValidationException("Course name cannot be empty");
         }
     }
@@ -273,6 +268,26 @@ public class CourseService {
     private void validateGroupExists(UUID groupId) throws NoSuchObjectException {
         groupRepository.findById(groupId)
                 .orElseThrow(() -> new NoSuchObjectException("Group not found with ID: " + groupId));
+    }
+
+    private List<Course> fetchCourse(UUID groupId) throws NoSuchObjectException {
+        List<Course> courses = courseRepository.findByGroupId(groupId);
+        if(Utils.isEmpty(courses))
+            throw new NoSuchObjectException("No Found Courses For Group ["+ groupId +"]");
+        return courses;
+    }
+
+    private List<CourseResponseDTO> assignAvatars(List<Course> courses){
+        Map<UUID, byte[]> avatarDataMap = fetchAvatarDataForCourses(courses);
+        Map<UUID, String> avatarTypeMap = fetchAvatarTypeForCourses(courses);
+
+        return courses.stream()
+                .map(course -> {
+                    byte[] avatar = avatarDataMap.get(course.getAvatarId());
+                    String avatarType = avatarTypeMap.get(course.getAvatarId());
+                    return CourseResponseDTO.fromEntity(course, avatar, avatarType);
+                })
+                .collect(Collectors.toList());
     }
 
     private Map<UUID, byte[]> fetchAvatarDataForCourses(List<Course> courses) {

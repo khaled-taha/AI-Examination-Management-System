@@ -2,6 +2,7 @@ package com.university.exam.controllers;
 
 import com.university.exam.dtos.requestDTO.ResourceRequestDTO;
 import com.university.exam.dtos.requestDTO.ResourceDirectoryRequestDTO;
+import com.university.exam.dtos.responseDTO.DirectoryWithResourcesDTO;
 import com.university.exam.dtos.responseDTO.ResourceDirectoryResponseDTO;
 import com.university.exam.dtos.responseDTO.ResourceResponseDTO;
 import com.university.exam.services.ResourceService;
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.rmi.NoSuchObjectException;
+import java.util.List;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -147,5 +149,23 @@ public class ResourceController {
             @PathVariable UUID directoryId) throws NoSuchObjectException {
         resourceService.deleteDirectory(directoryId);
         return ResponseEntity.ok("Deleted Successfully!");
+    }
+
+    @GetMapping("/directories/{baseDirectoryId}")
+    @Operation(
+            summary = "Get sub-directories of a base dir",
+            description = "Retrieves all sub-directories of a base dir. We can get all categorized resources of any course" +
+                    " by baseDirectoryId in Course Response",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Sub Directories retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = DirectoryWithResourcesDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Base Dir not found")
+            }
+    )
+    public ResponseEntity<List<DirectoryWithResourcesDTO>> getSubDirectoriesByBaseId(
+            @Parameter(description = "Id of the base Directory", required = true)
+            @PathVariable UUID baseDirectoryId) throws NoSuchObjectException {
+        List<DirectoryWithResourcesDTO> directoryWithResourcesDTOS = resourceService.getSubDirectoriesById(baseDirectoryId);
+        return ResponseEntity.ok(directoryWithResourcesDTOS);
     }
 }

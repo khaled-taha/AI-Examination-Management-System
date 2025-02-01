@@ -2,8 +2,10 @@ package com.university.exam.services;
 
 import com.university.exam.dtos.requestDTO.ResourceRequestDTO;
 import com.university.exam.dtos.requestDTO.ResourceDirectoryRequestDTO;
+import com.university.exam.dtos.responseDTO.DirectoryWithResourcesDTO;
 import com.university.exam.dtos.responseDTO.ResourceDirectoryResponseDTO;
 import com.university.exam.dtos.responseDTO.ResourceResponseDTO;
+import com.university.exam.entities.Course;
 import com.university.exam.entities.Resource;
 import com.university.exam.entities.ResourceDirectory;
 import com.university.exam.entities.SuperResource;
@@ -16,7 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.rmi.NoSuchObjectException;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -33,7 +38,7 @@ public class ResourceService {
 
     @Transactional
     public ResourceResponseDTO uploadResource(ResourceRequestDTO resourceRequestDTO, byte[] data) throws NoSuchObjectException {
-        ResourceDirectory directory = fetchResourceDirectory(resourceRequestDTO.getResourceDirId());
+        ResourceDirectory directory = fetchDirectory(resourceRequestDTO.getResourceDirId());
         Resource resource = createResource(resourceRequestDTO, directory);
         createSuperResource(data, resource);
         return ResourceResponseDTO.fromEntity(resource);
@@ -74,9 +79,15 @@ public class ResourceService {
         resourceDirectoryRepository.deleteSubDirectoryWithResources(directoryId);
     }
 
-    private ResourceDirectory fetchResourceDirectory(UUID directoryId) throws NoSuchObjectException {
-        return resourceDirectoryRepository.findById(directoryId)
-                .orElseThrow(() -> new NoSuchObjectException("Resource directory not found"));
+    @Transactional(readOnly = true)
+    public List<DirectoryWithResourcesDTO> getSubDirectoriesById(UUID baseDirectoryId) throws NoSuchObjectException {
+        ResourceDirectory baseDirectory = fetchDirectory(baseDirectoryId);
+
+        List<ResourceDirectory> directories = fetchAllDirectories(baseDirectory);
+        List<Resource> resources = fetchResourcesForDirectories(directories);
+        Map<UUID, List<Resource>> resourcesByDirectoryId = groupResourcesByDirectoryId(resources);
+
+        return mapDirectoriesToDTOs(directories, resourcesByDirectoryId);
     }
 
     private Resource createResource(ResourceRequestDTO resourceRequestDTO, ResourceDirectory directory) {
@@ -96,7 +107,7 @@ public class ResourceService {
 
     private Resource fetchResource(UUID resourceId) throws NoSuchObjectException {
         return resourceRepository.findById(resourceId)
-                .orElseThrow(() -> new NoSuchObjectException("Resource not found"));
+                .orElseThrow(() -> new NoSuchObjectException("Resource directory not found"));
     }
 
     private SuperResource fetchSuperResource(UUID resourceId) throws NoSuchObjectException {
@@ -127,6 +138,39 @@ public class ResourceService {
     private ResourceDirectory fetchDirectory(UUID directoryId) throws NoSuchObjectException {
         return resourceDirectoryRepository.findById(directoryId)
                 .orElseThrow(() -> new NoSuchObjectException("Directory not found"));
+    }
+
+    private List<ResourceDirectory> fetchAllDirectories(ResourceDirectory baseDirectory) {
+        List<ResourceDirectory> subDirectories = resourceDirectoryRepository.findByBaseDirId(baseDirectory.getId());
+        subDirectories.add(baseDirectory);
+        return subDirectories;
+    }
+
+    private List<Resource> fetchResourcesForDirectories(List<ResourceDirectory> directories) {
+        List<UUID> directoryIds = directories.stream()
+                .map(ResourceDirectory::getId)
+                .collect(Collectors.toList());
+
+        return resourceRepository.findByResourceDirectoryIdIn(directoryIds);
+    }
+
+    private Map<UUID, List<Resource>> groupResourcesByDirectoryId(List<Resource> resources) {
+        return resources.stream()
+                .collect(Collectors.groupingBy(resource -> resource.getResourceDirectory().getId()));
+    }
+
+    private List<DirectoryWithResourcesDTO> mapDirectoriesToDTOs(
+            List<ResourceDirectory> directories,
+            Map<UUID, List<Resource>> resourcesByDirectoryId) {
+        return directories.stream()
+                .map(directory -> {
+                    List<ResourceResponseDTO> resourceDTOs = resourcesByDirectoryId.getOrDefault(directory.getId(), List.of())
+                            .stream()
+                            .map(ResourceResponseDTO::fromEntity)
+                            .collect(Collectors.toList());
+                    return DirectoryWithResourcesDTO.fromEntity(directory, resourceDTOs);
+                })
+                .collect(Collectors.toList());
     }
 
     private void updateDirectoryDetails(ResourceDirectory directory, ResourceDirectoryRequestDTO directoryDTO) {

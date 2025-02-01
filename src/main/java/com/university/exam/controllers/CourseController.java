@@ -85,6 +85,7 @@ public class CourseController {
     }
 
     @GetMapping("/{code}/directories")
+    @Deprecated
     @Operation(
             summary = "Get directories for a course",
             description = "Retrieves all directories associated with the specified course code.",
@@ -115,5 +116,20 @@ public class CourseController {
             @Parameter(description = "ID of the group", required = true)
             @PathVariable UUID groupId) throws NoSuchObjectException {
         return ResponseEntity.ok(courseService.getCoursesByGroupId(groupId));
+    }
+
+    @GetMapping("/{code}")
+    @Operation(
+            summary = "Retrieve a course",
+            description = "Retrieve the course by the specified code.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Course retrieved successfully"),
+                    @ApiResponse(responseCode = "404", description = "Course not found")
+            }
+    )
+    public ResponseEntity<CourseResponseDTO> getCourse(
+            @Parameter(description = "Code of the course to retrieve", required = true)
+            @PathVariable String code) throws NoSuchObjectException {
+        return ResponseEntity.ok(courseService.getCourseByCode(code));
     }
 }
