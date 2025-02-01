@@ -2,6 +2,8 @@ package com.university.exam.services;
 
 import com.university.exam.dtos.requestDTO.CourseRequestDTO;
 import com.university.exam.dtos.responseDTO.CourseResponseDTO;
+import com.university.exam.dtos.responseDTO.DirectoryWithResourcesDTO;
+import com.university.exam.dtos.responseDTO.ResourceResponseDTO;
 import com.university.exam.entities.*;
 import com.university.exam.exceptions.ValidationException;
 import com.university.exam.repos.*;
@@ -12,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.rmi.NoSuchObjectException;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -84,7 +88,36 @@ public class CourseService {
         deleteCourse(course);
     }
 
-    // Helper Methods
+    @Transactional(readOnly = true)
+    public List<DirectoryWithResourcesDTO> getDirectoriesByCourseCode(String courseCode) throws NoSuchObjectException {
+        Course course = fetchCourse(courseCode);
+        ResourceDirectory baseDirectory = course.getBaseDirectory();
+
+        List<ResourceDirectory> directories = fetchAllDirectories(baseDirectory);
+
+        List<Resource> resources = fetchResourcesForDirectories(directories);
+
+        Map<UUID, List<Resource>> resourcesByDirectoryId = groupResourcesByDirectoryId(resources);
+
+        return mapDirectoriesToDTOs(directories, resourcesByDirectoryId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseResponseDTO> getCoursesByGroupId(UUID groupId) throws NoSuchObjectException {
+        validateGroupExists(groupId);
+        List<Course> courses = courseRepository.findByGroupId(groupId);
+
+        Map<UUID, byte[]> avatarDataMap = fetchAvatarDataForCourses(courses);
+        Map<UUID, String> avatarTypeMap = fetchAvatarTypeForCourses(courses);
+
+        return courses.stream()
+                .map(course -> {
+                    byte[] avatar = avatarDataMap.get(course.getAvatarId());
+                    String avatarType = avatarTypeMap.get(course.getAvatarId());
+                    return CourseResponseDTO.fromEntity(course, avatar, avatarType);
+                })
+                .collect(Collectors.toList());
+    }
 
     private void validateCourseDTO(CourseRequestDTO courseRequestDTO) throws ValidationException {
         if (courseRequestDTO.getName() == null || courseRequestDTO.getName().isEmpty()) {
@@ -132,7 +165,7 @@ public class CourseService {
 
     private Course fetchCourse(String code) throws NoSuchObjectException {
         return courseRepository.findById(code)
-                .orElseThrow(() -> new NoSuchObjectException("Course not found"));
+                .orElseThrow(() -> new NoSuchObjectException("Course not found with code: " + code));
     }
 
     private void updateCourseDetails(Course course, CourseRequestDTO courseRequestDTO, Group group) {
@@ -201,5 +234,71 @@ public class CourseService {
 
     private void deleteCourse(Course course) {
         courseRepository.delete(course);
+    }
+
+    private List<ResourceDirectory> fetchAllDirectories(ResourceDirectory baseDirectory) {
+        List<ResourceDirectory> subDirectories = resourceDirectoryRepository.findByBaseDirId(baseDirectory.getId());
+        subDirectories.add(baseDirectory);
+        return subDirectories;
+    }
+
+    private List<Resource> fetchResourcesForDirectories(List<ResourceDirectory> directories) {
+        List<UUID> directoryIds = directories.stream()
+                .map(ResourceDirectory::getId)
+                .collect(Collectors.toList());
+
+        return resourceRepository.findByResourceDirectoryIdIn(directoryIds);
+    }
+
+    private Map<UUID, List<Resource>> groupResourcesByDirectoryId(List<Resource> resources) {
+        return resources.stream()
+                .collect(Collectors.groupingBy(resource -> resource.getResourceDirectory().getId()));
+    }
+
+    private List<DirectoryWithResourcesDTO> mapDirectoriesToDTOs(
+            List<ResourceDirectory> directories,
+            Map<UUID, List<Resource>> resourcesByDirectoryId) {
+        return directories.stream()
+                .map(directory -> {
+                    List<ResourceResponseDTO> resourceDTOs = resourcesByDirectoryId.getOrDefault(directory.getId(), List.of())
+                            .stream()
+                            .map(ResourceResponseDTO::fromEntity)
+                            .collect(Collectors.toList());
+                    return DirectoryWithResourcesDTO.fromEntity(directory, resourceDTOs);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private void validateGroupExists(UUID groupId) throws NoSuchObjectException {
+        groupRepository.findById(groupId)
+                .orElseThrow(() -> new NoSuchObjectException("Group not found with ID: " + groupId));
+    }
+
+    private Map<UUID, byte[]> fetchAvatarDataForCourses(List<Course> courses) {
+        List<UUID> avatarIds = courses.stream()
+                .map(Course::getAvatarId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return superResourceRepository.findByResourceIdIn(avatarIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        superResource -> superResource.getResource().getId(),
+                        SuperResource::getData
+                ));
+    }
+
+    private Map<UUID, String> fetchAvatarTypeForCourses(List<Course> courses) {
+        List<UUID> avatarIds = courses.stream()
+                .map(Course::getAvatarId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return resourceRepository.findAllById(avatarIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Resource::getId,
+                        Resource::getType
+                ));
     }
 }

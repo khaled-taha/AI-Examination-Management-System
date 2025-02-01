@@ -11,5 +11,5 @@ import java.util.UUID;
 public interface ResourceRepository extends JpaRepository<Resource, UUID> {
     List<Resource> findByResourceDirectoryId(UUID resourceDirectoryId);
 
-    List<Resource> findByResourceDirectoryIdIn(List<UUID> directoryIds); // Fetch resources in multiple directories
+    List<Resource> findByResourceDirectoryIdIn(List<UUID> directoryIds);
 }

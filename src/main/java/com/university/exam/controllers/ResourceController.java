@@ -69,4 +69,6 @@ public class ResourceController {
         resourceService.deleteDirectory(directoryId);
         return ResponseEntity.noContent().build();
     }
+
+    // Get ResourcesBy Course Code
 }

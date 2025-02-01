@@ -13,5 +13,7 @@ import java.util.UUID;
 public interface SuperResourceRepository extends JpaRepository<SuperResource, UUID> {
     Optional<SuperResource> findByResourceId(UUID resourceId);
     void deleteByResourceId(UUID resourceId);
-    void deleteByResourceIdIn(List<UUID> resourceIds); // Batch delete super resources
+    void deleteByResourceIdIn(List<UUID> resourceIds);
+
+    List<SuperResource> findByResourceIdIn(List<UUID> resourceIds);
 }
