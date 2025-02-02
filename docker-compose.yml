@@ -1,37 +1,38 @@
 version: "3.8"
 services:
+  exam-app:
+    container_name: exam-app
+    image: exam-v1  # Use the image name you built earlier
+    build: ./
+    ports:
+      - "8087:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/exam-db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+    networks:
+      - app_network
+
   postgres:
-    container_name: emsDB
+    container_name: postgres
     image: postgres:10.4
     hostname: postgres
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_USER: ems_2025
-      POSTGRES_PASSWORD: ems-pass
-      POSTGRES_DB: emsdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: exam-db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ems_2025 -d emsdb"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d exam-db"]
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - app_network
-
-  app:
-    image: exam:latest
-    container_name: emsApp
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      DB_URL: jdbc:postgresql://postgres:5432/emsdb
-      DB_USERNAME: ems_2025
-      DB_PASSWORD: ems-pass
-    ports:
-      - "8080:8080"
     networks:
       - app_network
 
