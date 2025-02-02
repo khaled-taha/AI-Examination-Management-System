@@ -10,9 +10,34 @@ services:
       POSTGRES_USER: ems_2025
       POSTGRES_PASSWORD: ems-pass
       POSTGRES_DB: emsdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ems_2025 -d emsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  app:
+    image: exam:latest
+    container_name: emsApp
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/emsdb
+      DB_USERNAME: ems_2025
+      DB_PASSWORD: ems-pass
+    ports:
+      - "8080:8080"
     networks:
       - app_network
 
 networks:
   app_network:
     name: app_network
+
+volumes:
+  postgres_data:
