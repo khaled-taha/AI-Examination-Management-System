@@ -1,0 +1,180 @@
+package com.university.exam.resourceManagement.services;
+
+import com.university.exam.resourceManagement.dtos.requestDTO.ResourceDirectoryRequestDTO;
+import com.university.exam.resourceManagement.dtos.requestDTO.ResourceRequestDTO;
+import com.university.exam.resourceManagement.dtos.responseDTO.DirectoryWithResourcesDTO;
+import com.university.exam.resourceManagement.dtos.responseDTO.ResourceDirectoryResponseDTO;
+import com.university.exam.resourceManagement.dtos.responseDTO.ResourceResponseDTO;
+import com.university.exam.resourceManagement.entities.Resource;
+import com.university.exam.resourceManagement.entities.ResourceDirectory;
+import com.university.exam.resourceManagement.entities.SuperResource;
+import com.university.exam.resourceManagement.repos.ResourceDirectoryRepository;
+import com.university.exam.resourceManagement.repos.ResourceRepository;
+import com.university.exam.resourceManagement.repos.SuperResourceRepository;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.rmi.NoSuchObjectException;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@AllArgsConstructor
+public class ResourceService {
+
+    @Autowired
+    private ResourceRepository resourceRepository;
+
+    @Autowired
+    private SuperResourceRepository superResourceRepository;
+
+    @Autowired
+    private ResourceDirectoryRepository resourceDirectoryRepository;
+
+    @Transactional
+    public ResourceResponseDTO uploadResource(ResourceRequestDTO resourceRequestDTO, byte[] data) throws NoSuchObjectException {
+        ResourceDirectory directory = fetchDirectory(resourceRequestDTO.getResourceDirId());
+        Resource resource = createResource(resourceRequestDTO, directory);
+        createSuperResource(data, resource);
+        return ResourceResponseDTO.fromEntity(resource);
+    }
+
+    @Transactional
+    public void deleteResource(UUID resourceId) throws NoSuchObjectException {
+        Resource resource = fetchResource(resourceId);
+        SuperResource superResource = fetchSuperResource(resourceId);
+        deleteSuperResource(superResource);
+        deleteResource(resource);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] downloadResource(UUID resourceId) throws NoSuchObjectException {
+        SuperResource superResource = fetchSuperResource(resourceId);
+        return superResource.getData();
+    }
+
+    @Transactional
+    public ResourceDirectoryResponseDTO createDirectory(ResourceDirectoryRequestDTO directoryDTO) {
+        ResourceDirectory directory = buildDirectory(directoryDTO);
+        directory = saveDirectory(directory);
+        return ResourceDirectoryResponseDTO.fromEntity(directory);
+    }
+
+    @Transactional
+    public ResourceDirectoryResponseDTO updateDirectory(UUID directoryId, ResourceDirectoryRequestDTO directoryDTO) throws NoSuchObjectException {
+        ResourceDirectory directory = fetchDirectory(directoryId);
+        updateDirectoryDetails(directory, directoryDTO);
+        directory = saveDirectory(directory);
+        return ResourceDirectoryResponseDTO.fromEntity(directory);
+    }
+
+    @Transactional
+    public void deleteDirectory(UUID directoryId) throws NoSuchObjectException {
+        fetchDirectory(directoryId);
+        resourceDirectoryRepository.deleteSubDirectoryWithResources(directoryId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DirectoryWithResourcesDTO> getSubDirectoriesById(UUID baseDirectoryId) throws NoSuchObjectException {
+        ResourceDirectory baseDirectory = fetchDirectory(baseDirectoryId);
+
+        List<ResourceDirectory> directories = fetchAllDirectories(baseDirectory);
+        List<Resource> resources = fetchResourcesForDirectories(directories);
+        Map<UUID, List<Resource>> resourcesByDirectoryId = groupResourcesByDirectoryId(resources);
+
+        return mapDirectoriesToDTOs(directories, resourcesByDirectoryId);
+    }
+
+    private Resource createResource(ResourceRequestDTO resourceRequestDTO, ResourceDirectory directory) {
+        Resource resource = new Resource();
+        resource.setName(resourceRequestDTO.getName());
+        resource.setType(resourceRequestDTO.getType());
+        resource.setResourceDirectory(directory);
+        return resourceRepository.save(resource);
+    }
+
+    private SuperResource createSuperResource(byte[] data, Resource resource) {
+        SuperResource superResource = new SuperResource();
+        superResource.setData(data);
+        superResource.setResource(resource);
+        return superResourceRepository.save(superResource);
+    }
+
+    private Resource fetchResource(UUID resourceId) throws NoSuchObjectException {
+        return resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new NoSuchObjectException("Resource directory not found"));
+    }
+
+    private SuperResource fetchSuperResource(UUID resourceId) throws NoSuchObjectException {
+        return superResourceRepository.findByResourceId(resourceId)
+                .orElseThrow(() -> new NoSuchObjectException("Super resource not found"));
+    }
+
+    private void deleteSuperResource(SuperResource superResource) {
+        superResourceRepository.delete(superResource);
+    }
+
+    private void deleteResource(Resource resource) {
+        resourceRepository.delete(resource);
+    }
+
+    private ResourceDirectory buildDirectory(ResourceDirectoryRequestDTO directoryDTO) {
+        ResourceDirectory directory = new ResourceDirectory();
+        directory.setName(directoryDTO.getName());
+        directory.setCreator(directoryDTO.getCreator());
+        directory.setBaseDirId(directoryDTO.getBaseDirId());
+        return directory;
+    }
+
+    private ResourceDirectory saveDirectory(ResourceDirectory directory) {
+        return resourceDirectoryRepository.save(directory);
+    }
+
+    private ResourceDirectory fetchDirectory(UUID directoryId) throws NoSuchObjectException {
+        return resourceDirectoryRepository.findById(directoryId)
+                .orElseThrow(() -> new NoSuchObjectException("Directory not found"));
+    }
+
+    private List<ResourceDirectory> fetchAllDirectories(ResourceDirectory baseDirectory) {
+        List<ResourceDirectory> subDirectories = resourceDirectoryRepository.findByBaseDirId(baseDirectory.getId());
+        subDirectories.add(baseDirectory);
+        return subDirectories;
+    }
+
+    private List<Resource> fetchResourcesForDirectories(List<ResourceDirectory> directories) {
+        List<UUID> directoryIds = directories.stream()
+                .map(ResourceDirectory::getId)
+                .collect(Collectors.toList());
+
+        return resourceRepository.findByResourceDirectoryIdIn(directoryIds);
+    }
+
+    private Map<UUID, List<Resource>> groupResourcesByDirectoryId(List<Resource> resources) {
+        return resources.stream()
+                .collect(Collectors.groupingBy(resource -> resource.getResourceDirectory().getId()));
+    }
+
+    private List<DirectoryWithResourcesDTO> mapDirectoriesToDTOs(
+            List<ResourceDirectory> directories,
+            Map<UUID, List<Resource>> resourcesByDirectoryId) {
+        return directories.stream()
+                .map(directory -> {
+                    List<ResourceResponseDTO> resourceDTOs = resourcesByDirectoryId.getOrDefault(directory.getId(), List.of())
+                            .stream()
+                            .map(ResourceResponseDTO::fromEntity)
+                            .collect(Collectors.toList());
+                    return DirectoryWithResourcesDTO.fromEntity(directory, resourceDTOs);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private void updateDirectoryDetails(ResourceDirectory directory, ResourceDirectoryRequestDTO directoryDTO) {
+        directory.setName(directoryDTO.getName());
+        directory.setCreator(directoryDTO.getCreator());
+        directory.setBaseDirId(directoryDTO.getBaseDirId());
+    }
+}
