@@ -23,8 +23,5 @@ public class CourseRequestDTO {
     private byte[] avatar;
     private String avatarType;
 
-    @NotNull(message = "Base Directory ID is required")
-    private UUID baseDirectoryId;
-
     private boolean active = true;
 }
