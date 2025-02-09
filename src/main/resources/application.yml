@@ -20,7 +20,7 @@ spring:
       connection-timeout: 30000
 
   flyway:
-    enabled: true
+    enabled: false
     locations: classpath:db/migration
     baseline-on-migrate: true
 
