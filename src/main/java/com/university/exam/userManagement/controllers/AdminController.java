@@ -40,7 +40,7 @@ public class AdminController {
             summary = "Create a new admin",
             description = "Saves a new admin with the provided details.",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Admin created successfully",
+                    @ApiResponse(responseCode = "200", description = "Admin created successfully",
                             content = @Content(schema = @Schema(implementation = AdminResponseDTO.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid request payload")
             }

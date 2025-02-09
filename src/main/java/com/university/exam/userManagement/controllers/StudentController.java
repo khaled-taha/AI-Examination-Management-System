@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -39,7 +38,7 @@ public class StudentController {
             summary = "Create a new student",
             description = "Saves a new student with the provided details.",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Student created successfully",
+                    @ApiResponse(responseCode = "200", description = "Student created successfully",
                             content = @Content(schema = @Schema(implementation = StudentResponseDTO.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid request payload")
             }
