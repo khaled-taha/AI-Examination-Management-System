@@ -5,6 +5,7 @@ import com.university.exam.dtos.responseDTO.GroupResponseDTO;
 import com.university.exam.services.GroupService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -34,8 +35,11 @@ public class GroupController {
             summary = "Get groups by user ID",
             description = "Retrieves all groups associated with the specified user ID.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Groups retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = CourseResponseDTO.class))),
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Groups retrieved successfully",
+                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = GroupResponseDTO.class)))
+                    ),
                     @ApiResponse(responseCode = "404", description = "Group not found")
             }
     )
@@ -45,13 +49,14 @@ public class GroupController {
         return ResponseEntity.ok(groupService.getGroupsByUserId(userId));
     }
 
+
     @GetMapping("/{groupId}")
     @Operation(
             summary = "Get group by group ID",
             description = "Retrieves group associated with the specified group ID.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Group retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = CourseResponseDTO.class))),
+                            content = @Content(schema = @Schema(implementation = GroupResponseDTO.class))),
                     @ApiResponse(responseCode = "404", description = "Group not found")
             }
     )
