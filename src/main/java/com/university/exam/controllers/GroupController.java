@@ -40,7 +40,7 @@ public class GroupController {
             }
     )
     public ResponseEntity<List<GroupResponseDTO>> getGroupByUserId(
-            @Parameter(description = "ID of the user", required = true)
+            @Parameter(description = "ID of the user", required = false)
             @PathVariable UUID userId) {
         return ResponseEntity.ok(groupService.getGroupsByUserId(userId));
     }
