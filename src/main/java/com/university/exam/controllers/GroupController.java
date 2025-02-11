@@ -57,7 +57,7 @@ public class GroupController {
     )
     public ResponseEntity<GroupResponseDTO> getGroupByGroupId(
             @Parameter(description = "ID of the group", required = true)
-            @PathVariable UUID userId) throws NoSuchObjectException {
-        return ResponseEntity.ok(groupService.getGroupByGroupId(userId));
+            @PathVariable UUID groupId) throws NoSuchObjectException {
+        return ResponseEntity.ok(groupService.getGroupByGroupId(groupId));
     }
 }

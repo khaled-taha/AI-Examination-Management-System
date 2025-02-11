@@ -8,13 +8,13 @@ import java.util.UUID;
 
 @Data
 public class GroupResponseDTO {
-    private UUID code;
+    private UUID id;
     private String name;
     private String description;
 
     public static GroupResponseDTO fromEntity(Group group) {
         GroupResponseDTO dto = new GroupResponseDTO();
-        dto.setCode(group.getId());
+        dto.setId(group.getId());
         dto.setName(group.getName());
         dto.setDescription(group.getDescription());
         return dto;
