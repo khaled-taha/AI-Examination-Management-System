@@ -30,7 +30,7 @@ public class GroupController {
     @Autowired
     private GroupService groupService;
 
-    @GetMapping("/group/{userId}")
+    @GetMapping("/user/{userId}")
     @Operation(
             summary = "Get groups by user ID",
             description = "Retrieves all groups associated with the specified user ID.",
