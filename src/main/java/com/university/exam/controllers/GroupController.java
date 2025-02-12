@@ -40,6 +40,7 @@ public class GroupController {
                             description = "Groups retrieved successfully",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = GroupResponseDTO.class)))
                     ),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
                     @ApiResponse(responseCode = "404", description = "Group not found")
             }
     )
@@ -57,6 +58,7 @@ public class GroupController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Group retrieved successfully",
                             content = @Content(schema = @Schema(implementation = GroupResponseDTO.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
                     @ApiResponse(responseCode = "404", description = "Group not found")
             }
     )

@@ -2,7 +2,7 @@ version: "3.8"
 services:
   exam-app:
     container_name: exam-app
-    image: exam-v1  # Use the image name you built earlier
+    image: exam-app  # Use the image name you built earlier
     build: ./
     ports:
       - "8087:8083"
