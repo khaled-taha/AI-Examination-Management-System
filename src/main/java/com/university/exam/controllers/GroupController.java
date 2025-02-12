@@ -30,7 +30,7 @@ public class GroupController {
     @Autowired
     private GroupService groupService;
 
-    @GetMapping("/{userId}")
+    @GetMapping("/group/{userId}")
     @Operation(
             summary = "Get groups by user ID",
             description = "Retrieves all groups associated with the specified user ID.",
@@ -45,12 +45,12 @@ public class GroupController {
     )
     public ResponseEntity<List<GroupResponseDTO>> getGroupByUserId(
             @Parameter(description = "ID of the user", required = false)
-            @PathVariable UUID userId) {
+            @PathVariable String userId) {
         return ResponseEntity.ok(groupService.getGroupsByUserId(userId));
     }
 
 
-    @GetMapping("/{groupId}")
+    @GetMapping("/group/{groupId}")
     @Operation(
             summary = "Get group by group ID",
             description = "Retrieves group associated with the specified group ID.",

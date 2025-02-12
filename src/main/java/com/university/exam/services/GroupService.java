@@ -19,7 +19,7 @@ public class GroupService {
 
 
     @Transactional(readOnly = true)
-    public List<GroupResponseDTO> getGroupsByUserId(UUID userId) {
+    public List<GroupResponseDTO> getGroupsByUserId(String userId) {
         return fetchGroups(userId).stream()
                 .map(GroupResponseDTO::fromEntity).toList();
     }
@@ -29,7 +29,7 @@ public class GroupService {
         return fetchGroup(groupId).map(GroupResponseDTO::fromEntity)
                 .orElseThrow(() -> new NoSuchObjectException("Group Not Found [" + groupId + "]"));
     }
-    private List<Group> fetchGroups(UUID userId) {
+    private List<Group> fetchGroups(String userId) {
         return groupRepository.findAll();
     }
 
