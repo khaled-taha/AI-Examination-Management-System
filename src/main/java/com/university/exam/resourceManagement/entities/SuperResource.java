@@ -18,7 +18,7 @@ public class SuperResource {
     private UUID id;
 
     @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "bytea")
     private byte[] data;
 
     @OneToOne

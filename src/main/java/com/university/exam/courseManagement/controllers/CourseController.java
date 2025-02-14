@@ -7,6 +7,7 @@ import com.university.exam.exceptions.ValidationException;
 import com.university.exam.resourceManagement.dtos.responseDTO.DirectoryWithResourcesDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -86,7 +87,8 @@ public class CourseController {
             description = "Retrieves all directories associated with the specified course code.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Directories retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = DirectoryWithResourcesDTO.class))),
+                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = DirectoryWithResourcesDTO.class)))),
+
                     @ApiResponse(responseCode = "404", description = "Course not found")
             }
     )
@@ -103,7 +105,7 @@ public class CourseController {
             description = "Retrieves all courses associated with the specified group ID.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Courses retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = CourseResponseDTO.class))),
+                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = CourseResponseDTO.class)))),
                     @ApiResponse(responseCode = "404", description = "Group not found")
             }
     )

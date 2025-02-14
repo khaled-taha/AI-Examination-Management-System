@@ -7,6 +7,7 @@ import com.university.exam.resourceManagement.dtos.responseDTO.DirectoryWithReso
 import com.university.exam.resourceManagement.dtos.responseDTO.ResourceDirectoryResponseDTO;
 import com.university.exam.resourceManagement.dtos.responseDTO.ResourceResponseDTO;
 import com.university.exam.resourceManagement.services.ResourceService;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -155,7 +156,7 @@ public class ResourceController {
                     " by baseDirectoryId in Course Response",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Sub Directories retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = DirectoryWithResourcesDTO.class))),
+                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = DirectoryWithResourcesDTO.class)))),
                     @ApiResponse(responseCode = "404", description = "Base Dir not found")
             }
     )
