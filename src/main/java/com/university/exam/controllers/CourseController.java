@@ -9,9 +9,11 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.rmi.NoSuchObjectException;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +25,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,7 +39,7 @@ public class CourseController {
     @Autowired
     private CourseService courseService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Create a new course",
             description = "Creates a new course with the provided details.",
@@ -47,8 +50,9 @@ public class CourseController {
                     @ApiResponse(responseCode = "404", description = "Related Group not found")
             }
     )
-    public ResponseEntity<CourseResponseDTO> createCourse(@Valid @RequestBody CourseRequestDTO courseRequestDTO) throws NoSuchObjectException, ValidationException {
-        return ResponseEntity.ok(courseService.createCourse(courseRequestDTO));
+    public ResponseEntity<CourseResponseDTO> createCourse(@Valid @RequestBody CourseRequestDTO courseRequestDTO,
+                                                          @RequestParam(required = false) MultipartFile avatar) throws IOException, ValidationException {
+        return ResponseEntity.ok(courseService.createCourse(courseRequestDTO, avatar));
     }
 
     @PutMapping("/{code}")
@@ -65,8 +69,9 @@ public class CourseController {
     public ResponseEntity<CourseResponseDTO> updateCourse(
             @Parameter(description = "Code of the course to update", required = true)
             @PathVariable String code,
-            @Valid @RequestBody CourseRequestDTO courseRequestDTO) throws NoSuchObjectException, ValidationException {
-        return ResponseEntity.ok(courseService.updateCourse(code, courseRequestDTO));
+            @Valid @RequestBody CourseRequestDTO courseRequestDTO,
+            @RequestParam(required = false) MultipartFile avatar) throws IOException, ValidationException {
+        return ResponseEntity.ok(courseService.updateCourse(code, courseRequestDTO, avatar));
     }
 
     @DeleteMapping("/{code}")

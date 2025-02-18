@@ -3,6 +3,8 @@ package com.university.exam.dtos.requestDTO;
 import lombok.Data;
 
 import jakarta.validation.constraints.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.UUID;
 
 @Data
@@ -17,9 +19,5 @@ public class CourseRequestDTO {
 
     @NotNull(message = "Group ID is required")
     private UUID groupId;
-
-    private byte[] avatar;
-    private String avatarType;
-
     private boolean active = true;
 }

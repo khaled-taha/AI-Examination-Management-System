@@ -16,7 +16,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.rmi.NoSuchObjectException;
 import java.util.List;
 import java.util.Map;
@@ -37,11 +39,14 @@ public class ResourceService {
     private ResourceDirectoryRepository resourceDirectoryRepository;
 
     @Transactional
-    public ResourceResponseDTO uploadResource(ResourceRequestDTO resourceRequestDTO, byte[] data) throws NoSuchObjectException {
-        ResourceDirectory directory = fetchDirectory(resourceRequestDTO.getResourceDirId());
-        Resource resource = createResource(resourceRequestDTO, directory);
-        createSuperResource(data, resource);
-        return ResourceResponseDTO.fromEntity(resource);
+    public ResourceResponseDTO uploadResource(UUID resourceDirId, MultipartFile file) throws IOException {
+        if(file != null && !file.isEmpty() && file.getContentType() != null && !file.getContentType().isEmpty()) {
+            ResourceDirectory directory = fetchDirectory(resourceDirId);
+            Resource resource = createResource(file, directory);
+            createSuperResource(file.getBytes(), resource);
+            return ResourceResponseDTO.fromEntity(resource);
+        }
+        throw new IOException("File is empty or has no content type");
     }
 
     @Transactional
@@ -52,10 +57,12 @@ public class ResourceService {
         deleteResource(resource);
     }
 
+    public record FileDownloading(byte[] data, String name) {}
     @Transactional(readOnly = true)
-    public byte[] downloadResource(UUID resourceId) throws NoSuchObjectException {
+    public FileDownloading downloadResource(UUID resourceId) throws NoSuchObjectException {
         SuperResource superResource = fetchSuperResource(resourceId);
-        return superResource.getData();
+        Resource resource = fetchResource(resourceId);
+        return new FileDownloading(superResource.getData(), resource.getName());
     }
 
     @Transactional
@@ -90,10 +97,11 @@ public class ResourceService {
         return mapDirectoriesToDTOs(directories, resourcesByDirectoryId);
     }
 
-    private Resource createResource(ResourceRequestDTO resourceRequestDTO, ResourceDirectory directory) {
+    private Resource createResource(MultipartFile file, ResourceDirectory directory) {
         Resource resource = new Resource();
-        resource.setName(resourceRequestDTO.getName());
-        resource.setType(resourceRequestDTO.getType());
+        resource.setName(file.getName());
+        resource.setType(file.getContentType());
+        resource.setSize(file.getSize());
         resource.setResourceDirectory(directory);
         return resourceRepository.save(resource);
     }

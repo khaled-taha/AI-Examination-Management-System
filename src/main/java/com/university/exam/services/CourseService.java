@@ -12,7 +12,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.rmi.NoSuchObjectException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,36 +39,38 @@ public class CourseService {
     private GroupRepository groupRepository;
 
     @Transactional
-    public CourseResponseDTO createCourse(CourseRequestDTO courseRequestDTO) throws NoSuchObjectException {
-        validateCourseDTO(courseRequestDTO);
-
+    public CourseResponseDTO createCourse(CourseRequestDTO courseRequestDTO, MultipartFile avatar) throws IOException {
         Group group = fetchGroup(courseRequestDTO.getGroupId());
         ResourceDirectory baseDirectory = createBaseDirectory(courseRequestDTO.getName());
-        Resource avatarResource = createAvatarResource(courseRequestDTO, baseDirectory);
-        SuperResource avatarSuperResource = createAvatarSuperResource(courseRequestDTO, avatarResource);
+        Resource avatarResource = null;
+        if(avatar != null && !avatar.isEmpty() && avatar.getContentType() != null && !avatar.getContentType().isEmpty()) {
+            avatarResource = createAvatarResource(courseRequestDTO, avatar, baseDirectory);
+            createAvatarSuperResource(courseRequestDTO, avatarResource, avatar);
+        }
 
         Course course = buildCourse(courseRequestDTO, group, baseDirectory, avatarResource);
         course = courseRepository.save(course);
 
-        return CourseResponseDTO.fromEntity(course, avatarSuperResource.getData(), courseRequestDTO.getAvatarType());
+        byte[] avatarData = avatar != null && !avatar.isEmpty() ? avatar.getBytes() : null;
+        String avatarType = avatar != null && !avatar.isEmpty() ? avatar.getContentType() : null;
+        return CourseResponseDTO.fromEntity(course, avatarData, avatarType);
     }
 
     @Transactional
-    public CourseResponseDTO updateCourse(String code, CourseRequestDTO courseRequestDTO) throws NoSuchObjectException {
+    public CourseResponseDTO updateCourse(String code, CourseRequestDTO courseRequestDTO, MultipartFile avatar) throws IOException {
         validateCourseDTO(courseRequestDTO);
 
         Group group = fetchGroup(courseRequestDTO.getGroupId());
         Course course = fetchCourse(code);
 
         updateCourseDetails(course, courseRequestDTO, group);
-        updateAvatarIfProvided(course, courseRequestDTO);
+        updateAvatarIfProvided(course, avatar);
 
         course = courseRepository.save(course);
-        return CourseResponseDTO.fromEntity(
-                course,
-                course.getAvatarId() != null ? fetchSuperResourceData(course.getAvatarId()) : null,
-                course.getAvatarId() != null ? fetchResourceType(course.getAvatarId()) : null
-        );
+
+        byte[] avatarData = avatar != null ? avatar.getBytes() : null;
+        String avatarType = avatar != null ? avatar.getContentType() : null;
+        return CourseResponseDTO.fromEntity(course, avatarData, avatarType);
     }
 
     @Transactional
@@ -130,27 +134,27 @@ public class CourseService {
         return resourceDirectoryRepository.save(baseDirectory);
     }
 
-    private Resource createAvatarResource(CourseRequestDTO courseRequestDTO, ResourceDirectory baseDirectory) {
+    private Resource createAvatarResource(CourseRequestDTO courseRequestDTO, MultipartFile avatar, ResourceDirectory baseDirectory) {
         Resource avatarResource = new Resource();
         avatarResource.setName("Course_" + courseRequestDTO.getName() + "_Avatar");
-        avatarResource.setType(Utils.isEmpty(courseRequestDTO.getAvatarType()) ? "" : courseRequestDTO.getAvatarType());
+        avatarResource.setType(avatar.getContentType());
+        avatarResource.setSize(avatar.getSize());
         avatarResource.setResourceDirectory(baseDirectory);
         return resourceRepository.save(avatarResource);
     }
 
-    private SuperResource createAvatarSuperResource(CourseRequestDTO courseRequestDTO, Resource avatarResource) {
+    private void createAvatarSuperResource(CourseRequestDTO courseRequestDTO, Resource avatarResource, MultipartFile avatar) throws IOException {
         SuperResource avatarSuperResource = new SuperResource();
-     //   byte[] decodedBytes = Base64.getDecoder().decode(courseRequestDTO.getAvatar());
-        avatarSuperResource.setData(courseRequestDTO.getAvatar());
+        avatarSuperResource.setData(avatar != null && !avatar.isEmpty() ? avatar.getBytes() : new byte[0]);
         avatarSuperResource.setResource(avatarResource);
-        return superResourceRepository.save(avatarSuperResource);
+        superResourceRepository.save(avatarSuperResource);
     }
 
     private Course buildCourse(CourseRequestDTO courseRequestDTO, Group group, ResourceDirectory baseDirectory, Resource avatarResource) {
         return Course.builder()
                 .code(courseRequestDTO.getCode())
                 .name(courseRequestDTO.getName())
-                .avatarId(avatarResource.getId())
+                .avatarId(avatarResource != null ? avatarResource.getId() : null)
                 .active(courseRequestDTO.isActive())
                 .group(group)
                 .baseDirectory(baseDirectory)
@@ -168,16 +172,18 @@ public class CourseService {
         course.setGroup(group);
     }
 
-    private void updateAvatarIfProvided(Course course, CourseRequestDTO courseRequestDTO) throws NoSuchObjectException {
-        if (courseRequestDTO.getAvatar() != null) {
+    private void updateAvatarIfProvided(Course course, MultipartFile avatar) throws IOException {
+        if (avatar != null) {
             Resource avatarResource = resourceRepository.findById(course.getAvatarId())
                     .orElseThrow(() -> new NoSuchObjectException("Avatar resource not found"));
 
             SuperResource avatarSuperResource = superResourceRepository.findByResourceId(avatarResource.getId())
                     .orElseThrow(() -> new NoSuchObjectException("Avatar super resource not found"));
-         //   byte[] decodedBytes = Base64.getDecoder().decode(courseRequestDTO.getAvatar());
-            avatarSuperResource.setData(courseRequestDTO.getAvatar());
+            avatarSuperResource.setData(avatar.getBytes());
             superResourceRepository.save(avatarSuperResource);
+
+            avatarResource.setSize(avatar.getSize());
+            resourceRepository.save(avatarResource);
         }
     }
 
@@ -284,6 +290,7 @@ public class CourseService {
                 .map(course -> {
                     byte[] avatar = avatarDataMap.get(course.getAvatarId());
                     String avatarType = avatarTypeMap.get(course.getAvatarId());
+
                     return CourseResponseDTO.fromEntity(course, avatar, avatarType);
                 })
                 .collect(Collectors.toList());

@@ -26,6 +26,9 @@ public class Resource {
     @Column(nullable = false)
     private String type;
 
+    @Column(nullable = false)
+    private long size;
+
     @ManyToOne
     @JoinColumn(name = "resource_dir_id", nullable = false)
     private ResourceDirectory resourceDirectory;

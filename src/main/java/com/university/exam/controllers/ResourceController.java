@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,18 +55,10 @@ public class ResourceController {
     public ResponseEntity<ResourceResponseDTO> uploadResource(
             @Parameter(description = "Resource file to upload", required = true)
             @RequestParam("file") MultipartFile file,
-            @Parameter(description = "Name of the resource", required = true)
-            @RequestParam("name") String name,
-            @Parameter(description = "Type of the resource", required = true)
-            @RequestParam("type") String type,
             @Parameter(description = "ID of the resource directory", required = true)
             @RequestParam("resourceDirId") UUID resourceDirId) throws IOException {
-        ResourceRequestDTO resourceRequestDTO = new ResourceRequestDTO();
-        resourceRequestDTO.setName(name);
-        resourceRequestDTO.setType(type);
-        resourceRequestDTO.setResourceDirId(resourceDirId);
 
-        ResourceResponseDTO uploadedResource = resourceService.uploadResource(resourceRequestDTO, file.getBytes());
+        ResourceResponseDTO uploadedResource = resourceService.uploadResource(resourceDirId, file);
         return ResponseEntity.ok(uploadedResource);
     }
 
@@ -98,10 +91,10 @@ public class ResourceController {
     public ResponseEntity<byte[]> downloadResource(
             @Parameter(description = "ID of the resource to download", required = true)
             @PathVariable UUID resourceId) throws NoSuchObjectException {
-        byte[] data = resourceService.downloadResource(resourceId);
+        ResourceService.FileDownloading fileDownloading = resourceService.downloadResource(resourceId);
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=\"" + resourceId + "\"")
-                .body(data);
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileDownloading.name() + "\"")
+                .body(fileDownloading.data());
     }
 
     @PostMapping("/directories")
