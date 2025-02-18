@@ -37,7 +37,7 @@ public class ResourceController {
     @Autowired
     private ResourceService resourceService;
 
-    @PostMapping("/upload")
+    @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Upload a resource",
             description = "Uploads a resource file with the provided details.",
