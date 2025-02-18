@@ -50,7 +50,7 @@ public class ResourceController {
     )
     public ResponseEntity<ResourceResponseDTO> uploadResource(
             @Parameter(description = "Resource file to upload", required = true)
-            @RequestParam("file") MultipartFile file,
+            @RequestParam MultipartFile file,
             @Parameter(description = "ID of the resource directory", required = true)
             @RequestParam("resourceDirId") UUID resourceDirId) throws IOException {
 
@@ -80,7 +80,7 @@ public class ResourceController {
             description = "Downloads the resource file with the specified ID.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Resource downloaded successfully",
-                            content = @Content(schema = @Schema(type = "string", format = "binary"))),
+                            content = @Content(schema = @Schema(type = "blob", format = "binary"))),
                     @ApiResponse(responseCode = "404", description = "Resource not found")
             }
     )
@@ -102,7 +102,7 @@ public class ResourceController {
             description = "Previews the resource file with the specified ID.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Resource downloaded successfully",
-                            content = @Content(schema = @Schema(type = "string", format = "binary"))),
+                            content = @Content(schema = @Schema(type = "blob", format = "binary"))),
                     @ApiResponse(responseCode = "404", description = "Resource not found")
             }
     )
