@@ -57,12 +57,12 @@ public class ResourceService {
         deleteResource(resource);
     }
 
-    public record FileDownloading(byte[] data, String name) {}
+    public record FileDownloading(byte[] data, String name, String type, long size) {}
     @Transactional(readOnly = true)
     public FileDownloading downloadResource(UUID resourceId) throws NoSuchObjectException {
         SuperResource superResource = fetchSuperResource(resourceId);
         Resource resource = fetchResource(resourceId);
-        return new FileDownloading(superResource.getData(), resource.getName());
+        return new FileDownloading(superResource.getData(), resource.getName(), resource.getType(), resource.getSize());
     }
 
     @Transactional

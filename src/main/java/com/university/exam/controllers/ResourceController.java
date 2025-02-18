@@ -1,16 +1,17 @@
 package com.university.exam.controllers;
 
-import com.university.exam.dtos.requestDTO.ResourceRequestDTO;
 import com.university.exam.dtos.requestDTO.ResourceDirectoryRequestDTO;
 import com.university.exam.dtos.responseDTO.DirectoryWithResourcesDTO;
 import com.university.exam.dtos.responseDTO.ResourceDirectoryResponseDTO;
 import com.university.exam.dtos.responseDTO.ResourceResponseDTO;
 import com.university.exam.services.ResourceService;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,11 +27,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.UUID;
 
 @RestController
 @AllArgsConstructor
@@ -88,12 +84,36 @@ public class ResourceController {
                     @ApiResponse(responseCode = "404", description = "Resource not found")
             }
     )
-    public ResponseEntity<byte[]> downloadResource(
+    public void downloadResource(
             @Parameter(description = "ID of the resource to download", required = true)
-            @PathVariable UUID resourceId) throws NoSuchObjectException {
+            @PathVariable UUID resourceId, HttpServletResponse response) throws IOException {
         ResourceService.FileDownloading fileDownloading = resourceService.downloadResource(resourceId);
+
+        response.setContentType(fileDownloading.type());
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileDownloading.name() + "\"");
+        response.getOutputStream().write(fileDownloading.data());
+        response.getOutputStream().flush();
+    }
+
+
+    @GetMapping("/files/preview/{resourceId}")
+    @Operation(
+            summary = "Preview a resource In the browser",
+            description = "Previews the resource file with the specified ID.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Resource downloaded successfully",
+                            content = @Content(schema = @Schema(type = "string", format = "binary"))),
+                    @ApiResponse(responseCode = "404", description = "Resource not found")
+            }
+    )
+    public ResponseEntity<byte[]> previewFile(
+            @Parameter(description = "ID of the resource to download", required = true)
+            @PathVariable UUID resourceId) throws IOException {
+        ResourceService.FileDownloading fileDownloading = resourceService.downloadResource(resourceId);
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileDownloading.name() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileDownloading.name() + "\"")
+                .contentType(MediaType.parseMediaType(fileDownloading.type()))
                 .body(fileDownloading.data());
     }
 
