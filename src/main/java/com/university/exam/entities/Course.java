@@ -40,7 +40,7 @@ public class Course {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "dir_doc_id", nullable = false)
     private ResourceDirectory baseDirectory;
 }

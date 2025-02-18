@@ -4,13 +4,14 @@ spring:
 
   servlet:
     multipart:
+      enabled: true
       max-file-size: 100MB
       max-request-size: 100MB
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/ems
+    username: postgres
+    password: 123
     driver-class-name: org.postgresql.Driver
     hikari:
       minimum-idle: 5
@@ -20,7 +21,7 @@ spring:
       connection-timeout: 30000
 
   flyway:
-    enabled: true
+    enabled: false
     locations: classpath:db/migration
     baseline-on-migrate: true
 

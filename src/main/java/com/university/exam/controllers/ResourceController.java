@@ -1,6 +1,7 @@
 package com.university.exam.controllers;
 
 import com.university.exam.dtos.requestDTO.ResourceDirectoryRequestDTO;
+import com.university.exam.dtos.responseDTO.BaseDirResponseDTO;
 import com.university.exam.dtos.responseDTO.DirectoryWithResourcesDTO;
 import com.university.exam.dtos.responseDTO.ResourceDirectoryResponseDTO;
 import com.university.exam.dtos.responseDTO.ResourceResponseDTO;
@@ -176,10 +177,10 @@ public class ResourceController {
                     @ApiResponse(responseCode = "404", description = "Base Dir not found")
             }
     )
-    public ResponseEntity<List<DirectoryWithResourcesDTO>> getSubDirectoriesByBaseId(
+    public ResponseEntity<BaseDirResponseDTO> getSubDirectoriesByBaseId(
             @Parameter(description = "Id of the base Directory", required = true)
             @PathVariable UUID baseDirectoryId) throws NoSuchObjectException {
-        List<DirectoryWithResourcesDTO> directoryWithResourcesDTOS = resourceService.getSubDirectoriesById(baseDirectoryId);
+        BaseDirResponseDTO directoryWithResourcesDTOS = resourceService.getSubDirectoriesById(baseDirectoryId);
         return ResponseEntity.ok(directoryWithResourcesDTOS);
     }
 }

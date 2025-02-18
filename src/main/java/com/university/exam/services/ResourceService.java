@@ -1,17 +1,17 @@
 package com.university.exam.services;
 
-import com.university.exam.dtos.requestDTO.ResourceRequestDTO;
 import com.university.exam.dtos.requestDTO.ResourceDirectoryRequestDTO;
+import com.university.exam.dtos.responseDTO.BaseDirResponseDTO;
 import com.university.exam.dtos.responseDTO.DirectoryWithResourcesDTO;
 import com.university.exam.dtos.responseDTO.ResourceDirectoryResponseDTO;
 import com.university.exam.dtos.responseDTO.ResourceResponseDTO;
-import com.university.exam.entities.Course;
 import com.university.exam.entities.Resource;
 import com.university.exam.entities.ResourceDirectory;
 import com.university.exam.entities.SuperResource;
 import com.university.exam.repos.ResourceDirectoryRepository;
 import com.university.exam.repos.ResourceRepository;
 import com.university.exam.repos.SuperResourceRepository;
+import com.university.exam.utils.Utils;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,10 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.rmi.NoSuchObjectException;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -87,14 +86,20 @@ public class ResourceService {
     }
 
     @Transactional(readOnly = true)
-    public List<DirectoryWithResourcesDTO> getSubDirectoriesById(UUID baseDirectoryId) throws NoSuchObjectException {
+    public BaseDirResponseDTO getSubDirectoriesById(UUID baseDirectoryId) throws NoSuchObjectException {
         ResourceDirectory baseDirectory = fetchDirectory(baseDirectoryId);
 
-        List<ResourceDirectory> directories = fetchAllDirectories(baseDirectory);
+        List<ResourceDirectory> directories = fetchAllSubDirectories(baseDirectory);
+        directories.add(baseDirectory);
         List<Resource> resources = fetchResourcesForDirectories(directories);
-        Map<UUID, List<Resource>> resourcesByDirectoryId = groupResourcesByDirectoryId(resources);
+        directories.remove(baseDirectory);
 
-        return mapDirectoriesToDTOs(directories, resourcesByDirectoryId);
+        Map<UUID, List<Resource>> resourcesByDirectoryId = groupResourcesByDirectoryId(resources);
+        List<Resource> baseResource = resourcesByDirectoryId.getOrDefault(baseDirectoryId, List.of());
+        resourcesByDirectoryId.remove(baseDirectoryId);
+
+        List<DirectoryWithResourcesDTO> subDirectoryWithResourcesDTOS = mapDirectoriesToDTOs(directories, resourcesByDirectoryId);
+        return BaseDirResponseDTO.fromEntity(baseDirectory, baseResource, subDirectoryWithResourcesDTOS);
     }
 
     private Resource createResource(MultipartFile file, ResourceDirectory directory) {
@@ -148,10 +153,8 @@ public class ResourceService {
                 .orElseThrow(() -> new NoSuchObjectException("Directory not found"));
     }
 
-    private List<ResourceDirectory> fetchAllDirectories(ResourceDirectory baseDirectory) {
-        List<ResourceDirectory> subDirectories = resourceDirectoryRepository.findByBaseDirId(baseDirectory.getId());
-        subDirectories.add(baseDirectory);
-        return subDirectories;
+    private List<ResourceDirectory> fetchAllSubDirectories(ResourceDirectory baseDirectory) {
+        return resourceDirectoryRepository.findByBaseDirId(baseDirectory.getId());
     }
 
     private List<Resource> fetchResourcesForDirectories(List<ResourceDirectory> directories) {

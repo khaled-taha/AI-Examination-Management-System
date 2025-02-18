@@ -7,10 +7,14 @@ import com.university.exam.exceptions.ValidationException;
 import com.university.exam.services.CourseService;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -30,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.UUID;
 
+@Validated
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/v1/courses")
@@ -50,12 +55,24 @@ public class CourseController {
                     @ApiResponse(responseCode = "404", description = "Related Group not found")
             }
     )
-    public ResponseEntity<CourseResponseDTO> createCourse(@Valid @RequestBody CourseRequestDTO courseRequestDTO,
-                                                          @RequestParam(required = false) MultipartFile avatar) throws IOException, ValidationException {
+    public ResponseEntity<CourseResponseDTO> createCourse(
+            @RequestParam @NotBlank(message = "Course code is required")
+                          @Size(min = 5, max = 10, message = "Course code must be between 5 and 10 characters") String code,
+            @RequestParam @NotBlank(message = "Course name is required")
+                          @Size(min = 5, max = 100, message = "Course name cannot exceed 100 characters") String name,
+            @RequestParam @NotNull(message = "Group ID is required") UUID groupId,
+            @RequestParam(required = false) MultipartFile avatar) throws IOException, ValidationException {
+
+        CourseRequestDTO courseRequestDTO = new CourseRequestDTO();
+        courseRequestDTO.setCode(code);
+        courseRequestDTO.setGroupId(groupId);
+        courseRequestDTO.setName(name);
+
         return ResponseEntity.ok(courseService.createCourse(courseRequestDTO, avatar));
     }
 
-    @PutMapping("/{code}")
+
+    @PutMapping(path = "/{courseCode}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Update an existing course",
             description = "Updates the course with the specified code.",
@@ -67,11 +84,19 @@ public class CourseController {
             }
     )
     public ResponseEntity<CourseResponseDTO> updateCourse(
-            @Parameter(description = "Code of the course to update", required = true)
-            @PathVariable String code,
-            @Valid @RequestBody CourseRequestDTO courseRequestDTO,
+            @PathVariable @NotBlank(message = "Course code is required") String courseCode,
+
+            @RequestParam @NotBlank(message = "Course name is required")
+            @Size(min = 5, max = 100, message = "Course name cannot exceed 100 characters") String name,
+
+            @RequestParam @NotNull(message = "Group ID is required") UUID groupId,
             @RequestParam(required = false) MultipartFile avatar) throws IOException, ValidationException {
-        return ResponseEntity.ok(courseService.updateCourse(code, courseRequestDTO, avatar));
+
+        CourseRequestDTO courseRequestDTO = new CourseRequestDTO();
+        courseRequestDTO.setGroupId(groupId);
+        courseRequestDTO.setName(name);
+
+        return ResponseEntity.ok(courseService.updateCourse(courseCode, courseRequestDTO, avatar));
     }
 
     @DeleteMapping("/{code}")

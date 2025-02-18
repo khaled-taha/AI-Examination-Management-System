@@ -41,6 +41,8 @@ public class CourseService {
     @Transactional
     public CourseResponseDTO createCourse(CourseRequestDTO courseRequestDTO, MultipartFile avatar) throws IOException {
         Group group = fetchGroup(courseRequestDTO.getGroupId());
+        validateCourse(courseRequestDTO.getCode());
+
         ResourceDirectory baseDirectory = createBaseDirectory(courseRequestDTO.getName());
         Resource avatarResource = null;
         if(avatar != null && !avatar.isEmpty() && avatar.getContentType() != null && !avatar.getContentType().isEmpty()) {
@@ -48,12 +50,12 @@ public class CourseService {
             createAvatarSuperResource(courseRequestDTO, avatarResource, avatar);
         }
 
-        Course course = buildCourse(courseRequestDTO, group, baseDirectory, avatarResource);
-        course = courseRepository.save(course);
+        Course newCourse = buildCourse(courseRequestDTO, group, baseDirectory, avatarResource);
+        courseRepository.save(newCourse);
 
         byte[] avatarData = avatar != null && !avatar.isEmpty() ? avatar.getBytes() : null;
         String avatarType = avatar != null && !avatar.isEmpty() ? avatar.getContentType() : null;
-        return CourseResponseDTO.fromEntity(course, avatarData, avatarType);
+        return CourseResponseDTO.fromEntity(newCourse, avatarData, avatarType);
     }
 
     @Transactional
@@ -64,12 +66,47 @@ public class CourseService {
         Course course = fetchCourse(code);
 
         updateCourseDetails(course, courseRequestDTO, group);
-        updateAvatarIfProvided(course, avatar);
 
+        updateBaseDirectoryName(course.getBaseDirectory(), courseRequestDTO.getName());
+        Resource avatarResource = updateOrCreateAvatarResource(avatar, course, courseRequestDTO);
+
+        course.setAvatarId(avatarResource != null ? avatarResource.getId() : null);
         course = courseRepository.save(course);
 
-        byte[] avatarData = avatar != null ? avatar.getBytes() : null;
-        String avatarType = avatar != null ? avatar.getContentType() : null;
+        return buildCourseResponseDTO(course, avatar);
+    }
+
+    private void updateBaseDirectoryName(ResourceDirectory baseDirectory, String courseName) {
+        baseDirectory.setName("Course_" + courseName + "_BaseDir");
+        resourceDirectoryRepository.save(baseDirectory);
+    }
+
+    private Resource updateOrCreateAvatarResource(MultipartFile avatar, Course course, CourseRequestDTO courseRequestDTO) throws IOException {
+        if (avatar == null) {
+            if (course.getAvatarId() != null) {
+                superResourceRepository.deleteByResourceIdIn(Collections.singletonList(course.getAvatarId()));
+                resourceRepository.deleteById(course.getAvatarId());
+            }
+            return null;
+        }
+
+        Resource avatarResource;
+        if (course.getAvatarId() == null) {
+            avatarResource = createAvatarResource(courseRequestDTO, avatar, course.getBaseDirectory());
+            createAvatarSuperResource(courseRequestDTO, avatarResource, avatar);
+        } else {
+            avatarResource = resourceRepository.findById(course.getAvatarId())
+                    .orElseThrow(() -> new NoSuchObjectException("Avatar resource not found"));
+            avatarResource.setName("Course_" + courseRequestDTO.getName() + "_Avatar");
+            resourceRepository.save(avatarResource);
+            updateAvatarIfProvided(course, avatar);
+        }
+        return avatarResource;
+    }
+
+    private CourseResponseDTO buildCourseResponseDTO(Course course, MultipartFile avatar) throws IOException {
+        byte[] avatarData = avatar != null && !avatar.isEmpty() ? avatar.getBytes() : null;
+        String avatarType = avatar != null && !avatar.isEmpty() ? avatar.getContentType() : null;
         return CourseResponseDTO.fromEntity(course, avatarData, avatarType);
     }
 
@@ -86,9 +123,7 @@ public class CourseService {
         deleteSuperResources(resourceIds);
         deleteResources(resourceIds);
         deleteSubDirectories(subDirectories);
-
         deleteCourse(course);
-        deleteBaseDirectory(baseDirectory);
     }
 
     @Transactional(readOnly = true)
@@ -161,12 +196,17 @@ public class CourseService {
                 .build();
     }
 
+    private void validateCourse(String code) throws NoSuchObjectException {
+        if(courseRepository.existsById(code))
+            throw new ValidationException("Course with code " + code + " already exists");
+    }
+
     private Course fetchCourse(String code) throws NoSuchObjectException {
         return courseRepository.findById(code)
                 .orElseThrow(() -> new NoSuchObjectException("Course not found with code: " + code));
     }
 
-    private void updateCourseDetails(Course course, CourseRequestDTO courseRequestDTO, Group group) {
+    private void updateCourseDetails(Course course, CourseRequestDTO courseRequestDTO, Group group) throws NoSuchObjectException {
         course.setName(courseRequestDTO.getName());
         course.setActive(courseRequestDTO.isActive());
         course.setGroup(group);
