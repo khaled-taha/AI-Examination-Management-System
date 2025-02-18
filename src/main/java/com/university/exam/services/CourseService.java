@@ -14,10 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.rmi.NoSuchObjectException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -136,14 +133,15 @@ public class CourseService {
     private Resource createAvatarResource(CourseRequestDTO courseRequestDTO, ResourceDirectory baseDirectory) {
         Resource avatarResource = new Resource();
         avatarResource.setName("Course_" + courseRequestDTO.getName() + "_Avatar");
-        avatarResource.setType(courseRequestDTO.getAvatarType());
+        avatarResource.setType(Utils.isEmpty(courseRequestDTO.getAvatarType()) ? "" : courseRequestDTO.getAvatarType());
         avatarResource.setResourceDirectory(baseDirectory);
         return resourceRepository.save(avatarResource);
     }
 
     private SuperResource createAvatarSuperResource(CourseRequestDTO courseRequestDTO, Resource avatarResource) {
         SuperResource avatarSuperResource = new SuperResource();
-        avatarSuperResource.setData(courseRequestDTO.getAvatar());
+        byte[] decodedBytes = Base64.getDecoder().decode(courseRequestDTO.getAvatar());
+        avatarSuperResource.setData(decodedBytes);
         avatarSuperResource.setResource(avatarResource);
         return superResourceRepository.save(avatarSuperResource);
     }
@@ -177,7 +175,8 @@ public class CourseService {
 
             SuperResource avatarSuperResource = superResourceRepository.findByResourceId(avatarResource.getId())
                     .orElseThrow(() -> new NoSuchObjectException("Avatar super resource not found"));
-            avatarSuperResource.setData(courseRequestDTO.getAvatar());
+            byte[] decodedBytes = Base64.getDecoder().decode(courseRequestDTO.getAvatar());
+            avatarSuperResource.setData(decodedBytes);
             superResourceRepository.save(avatarSuperResource);
         }
     }
