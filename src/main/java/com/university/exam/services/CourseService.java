@@ -140,8 +140,8 @@ public class CourseService {
 
     private SuperResource createAvatarSuperResource(CourseRequestDTO courseRequestDTO, Resource avatarResource) {
         SuperResource avatarSuperResource = new SuperResource();
-        byte[] decodedBytes = Base64.getDecoder().decode(courseRequestDTO.getAvatar());
-        avatarSuperResource.setData(decodedBytes);
+     //   byte[] decodedBytes = Base64.getDecoder().decode(courseRequestDTO.getAvatar());
+        avatarSuperResource.setData(courseRequestDTO.getAvatar());
         avatarSuperResource.setResource(avatarResource);
         return superResourceRepository.save(avatarSuperResource);
     }
@@ -175,8 +175,8 @@ public class CourseService {
 
             SuperResource avatarSuperResource = superResourceRepository.findByResourceId(avatarResource.getId())
                     .orElseThrow(() -> new NoSuchObjectException("Avatar super resource not found"));
-            byte[] decodedBytes = Base64.getDecoder().decode(courseRequestDTO.getAvatar());
-            avatarSuperResource.setData(decodedBytes);
+         //   byte[] decodedBytes = Base64.getDecoder().decode(courseRequestDTO.getAvatar());
+            avatarSuperResource.setData(courseRequestDTO.getAvatar());
             superResourceRepository.save(avatarSuperResource);
         }
     }

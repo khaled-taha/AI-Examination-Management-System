@@ -18,7 +18,7 @@ public class CourseRequestDTO {
     @NotNull(message = "Group ID is required")
     private UUID groupId;
 
-    private String avatar;
+    private byte[] avatar;
     private String avatarType;
 
     private boolean active = true;
