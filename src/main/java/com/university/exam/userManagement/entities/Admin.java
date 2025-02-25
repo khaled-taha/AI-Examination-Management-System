@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.UUID;
 
 @Data
@@ -25,6 +26,8 @@ public class Admin {
     @JoinColumn(name = "specialization_id", nullable = false, unique = true)
     private Specialization specialization;
 
+    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
+    private Set<CourseAdmin> courseAdmins = new HashSet<>();
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

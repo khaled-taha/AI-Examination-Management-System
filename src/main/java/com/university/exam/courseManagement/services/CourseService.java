@@ -13,6 +13,8 @@ import com.university.exam.resourceManagement.entities.SuperResource;
 import com.university.exam.resourceManagement.repos.ResourceDirectoryRepository;
 import com.university.exam.resourceManagement.repos.ResourceRepository;
 import com.university.exam.resourceManagement.repos.SuperResourceRepository;
+import com.university.exam.userManagement.entities.Admin;
+import com.university.exam.userManagement.repos.AdminRepository;
 import com.university.exam.utils.Utils;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,12 @@ public class CourseService {
 
     @Autowired
     private GroupRepository groupRepository;
+
+    @Autowired
+    private CourseAdminRepository courseAdminRepository;
+
+    @Autowired
+    private AdminRepository adminRepository;
 
     @Transactional
     public CourseResponseDTO createCourse(CourseRequestDTO courseRequestDTO) throws NoSuchObjectException {
@@ -94,6 +102,7 @@ public class CourseService {
 
         deleteCourse(course);
         deleteBaseDirectory(baseDirectory);
+        courseAdminRepository.deleteByCourseCode(code);
     }
 
     @Transactional(readOnly = true)
@@ -322,5 +331,40 @@ public class CourseService {
                         Resource::getId,
                         Resource::getType
                 ));
+    }
+
+    @Transactional
+    public void assignAdminsToCourse(String courseCode, List<UUID> adminIds) throws NoSuchObjectException {
+        Course course = fetchCourse(courseCode);
+
+        List<CourseAdmin> existingAssignments = courseAdminRepository.findByCourseCode(courseCode);
+        courseAdminRepository.deleteAll(existingAssignments);
+
+        for (UUID adminId : adminIds) {
+            Admin admin = adminRepository.findByUser_UserId(adminId)
+                    .orElseThrow(() -> new NoSuchObjectException("Admin not found with ID: " + adminId));
+
+            CourseAdmin courseAdmin = new CourseAdmin();
+            courseAdmin.setCourse(course);
+            courseAdmin.setAdmin(admin);
+            courseAdminRepository.save(courseAdmin);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<Admin> getCourseAdmins(String courseCode) throws NoSuchObjectException {
+        fetchCourse(courseCode);
+        return courseAdminRepository.findByCourseCode(courseCode).stream()
+                .map(CourseAdmin::getAdmin)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void removeAdminFromCourse(String courseCode, UUID adminId) throws NoSuchObjectException {
+        fetchCourse(courseCode);
+        adminRepository.findById(adminId)
+                .orElseThrow(() -> new NoSuchObjectException("Admin not found with ID: " + adminId));
+
+        courseAdminRepository.deleteByCourseCodeAndAdminAdminId(courseCode, adminId);
     }
 }

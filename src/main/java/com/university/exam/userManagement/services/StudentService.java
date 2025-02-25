@@ -1,9 +1,10 @@
 package com.university.exam.userManagement.services;
 
+import com.university.exam.courseManagement.entities.Group;
+import com.university.exam.courseManagement.repos.GroupRepository;
 import com.university.exam.userManagement.dtos.requestDTO.StudentRequestDTO;
 import com.university.exam.userManagement.dtos.requestDTO.UserRequestDTO;
 import com.university.exam.userManagement.dtos.responseDTO.StudentResponseDTO;
-import com.university.exam.userManagement.entities.ClassStudy;
 import com.university.exam.userManagement.entities.Student;
 import com.university.exam.userManagement.entities.User;
 import com.university.exam.userManagement.repos.ClassStudyRepository;
@@ -15,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.rmi.NoSuchObjectException;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -27,7 +27,7 @@ public class StudentService {
     private UserRepository userRepository;
 
     @Autowired
-    private ClassStudyRepository classStudyRepository;
+    private GroupRepository groupRepository;
 
     @Transactional(readOnly = true)
     public StudentResponseDTO getStudentByUserId(UUID userId) throws Exception {
@@ -41,12 +41,12 @@ public class StudentService {
         User user = UserRequestDTO.convertToUserEntity(studentRequestDTO.getUserRequestDTO(), "STUDENT");
         user = userRepository.save(user);
 
-        ClassStudy classStudy = classStudyRepository.findById(studentRequestDTO.getClassStudyId())
-                .orElseThrow(() -> new NoSuchObjectException("Class Study Not Found ["+ studentRequestDTO.getClassStudyId() +"]"));
+        Group group = groupRepository.findById(studentRequestDTO.getGroupId())
+               .orElseThrow(() -> new NoSuchObjectException("Group Not Found ["+ studentRequestDTO.getGroupId() +"]"));
 
         Student student = new Student();
         student.setUser(user);
-        student.setClassStudy(classStudy);
+        student.setGroup(group);
         student = studentRepository.save(student);
 
         return StudentResponseDTO.convertToStudentResponseDTO(student);

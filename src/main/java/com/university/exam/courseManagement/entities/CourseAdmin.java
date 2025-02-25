@@ -1,30 +1,33 @@
-package com.university.exam.userManagement.entities;
+package com.university.exam.courseManagement.entities;
 
-import com.university.exam.courseManagement.entities.Group;
+import com.university.exam.userManagement.entities.Admin;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
 @Entity
-@Table(name = "Student")
-public class Student {
+@Table(name = "course_admin")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CourseAdmin {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "student_id")
-    private UUID studentId;
-
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
+    private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "group_id", nullable = false)
-    private Group group;
+    @JoinColumn(name = "course_code", nullable = false)
+    private Course course;
+
+    @ManyToOne
+    @JoinColumn(name = "admin_id", nullable = false)
+    private Admin admin;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

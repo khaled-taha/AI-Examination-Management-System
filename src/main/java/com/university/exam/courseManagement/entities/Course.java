@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.UUID;
 
 @Entity
@@ -47,4 +48,7 @@ public class Course {
     @ManyToOne
     @JoinColumn(name = "dir_doc_id", nullable = false)
     private ResourceDirectory baseDirectory;
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    private Set<CourseAdmin> courseAdmins = new HashSet<>();
 }

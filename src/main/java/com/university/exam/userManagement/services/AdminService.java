@@ -1,5 +1,6 @@
 package com.university.exam.userManagement.services;
 
+import com.university.exam.courseManagement.entities.Group;
 import com.university.exam.userManagement.dtos.requestDTO.AdminRequestDTO;
 import com.university.exam.userManagement.dtos.requestDTO.UserRequestDTO;
 import com.university.exam.userManagement.dtos.responseDTO.AdminResponseDTO;
@@ -9,14 +10,13 @@ import com.university.exam.userManagement.entities.User;
 import com.university.exam.userManagement.repos.AdminRepository;
 import com.university.exam.userManagement.repos.SpecializationRepository;
 import com.university.exam.userManagement.repos.UserRepository;
-import org.hibernate.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.rmi.NoSuchObjectException;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Service
