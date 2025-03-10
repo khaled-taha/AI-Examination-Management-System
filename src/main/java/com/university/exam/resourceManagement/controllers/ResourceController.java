@@ -2,15 +2,18 @@ package com.university.exam.resourceManagement.controllers;
 
 
 import com.university.exam.resourceManagement.dtos.requestDTO.ResourceDirectoryRequestDTO;
-import com.university.exam.resourceManagement.dtos.requestDTO.ResourceRequestDTO;
+import com.university.exam.resourceManagement.dtos.responseDTO.BaseDirResponseDTO;
 import com.university.exam.resourceManagement.dtos.responseDTO.DirectoryWithResourcesDTO;
 import com.university.exam.resourceManagement.dtos.responseDTO.ResourceDirectoryResponseDTO;
 import com.university.exam.resourceManagement.dtos.responseDTO.ResourceResponseDTO;
 import com.university.exam.resourceManagement.services.ResourceService;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,7 +40,7 @@ public class ResourceController {
     @Autowired
     private ResourceService resourceService;
 
-    @PostMapping("/upload")
+    @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Upload a resource",
             description = "Uploads a resource file with the provided details.",
@@ -50,19 +53,11 @@ public class ResourceController {
     )
     public ResponseEntity<ResourceResponseDTO> uploadResource(
             @Parameter(description = "Resource file to upload", required = true)
-            @RequestParam("file") MultipartFile file,
-            @Parameter(description = "Name of the resource", required = true)
-            @RequestParam("name") String name,
-            @Parameter(description = "Type of the resource", required = true)
-            @RequestParam("type") String type,
+            @RequestParam MultipartFile file,
             @Parameter(description = "ID of the resource directory", required = true)
             @RequestParam("resourceDirId") UUID resourceDirId) throws IOException {
-        ResourceRequestDTO resourceRequestDTO = new ResourceRequestDTO();
-        resourceRequestDTO.setName(name);
-        resourceRequestDTO.setType(type);
-        resourceRequestDTO.setResourceDirId(resourceDirId);
 
-        ResourceResponseDTO uploadedResource = resourceService.uploadResource(resourceRequestDTO, file.getBytes());
+        ResourceResponseDTO uploadedResource = resourceService.uploadResource(resourceDirId, file);
         return ResponseEntity.ok(uploadedResource);
     }
 
@@ -88,17 +83,41 @@ public class ResourceController {
             description = "Downloads the resource file with the specified ID.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Resource downloaded successfully",
-                            content = @Content(schema = @Schema(type = "string", format = "binary"))),
+                            content = @Content(schema = @Schema(type = "blob", format = "binary"))),
                     @ApiResponse(responseCode = "404", description = "Resource not found")
             }
     )
-    public ResponseEntity<byte[]> downloadResource(
+    public void downloadResource(
             @Parameter(description = "ID of the resource to download", required = true)
-            @PathVariable UUID resourceId) throws NoSuchObjectException {
-        byte[] data = resourceService.downloadResource(resourceId);
+            @PathVariable UUID resourceId, HttpServletResponse response) throws IOException {
+        ResourceService.FileDownloading fileDownloading = resourceService.downloadResource(resourceId);
+
+        response.setContentType(fileDownloading.type());
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileDownloading.name() + "\"");
+        response.getOutputStream().write(fileDownloading.data());
+        response.getOutputStream().flush();
+    }
+
+
+    @GetMapping("/files/preview/{resourceId}")
+    @Operation(
+            summary = "Preview a resource In the browser",
+            description = "Previews the resource file with the specified ID.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Resource downloaded successfully",
+                            content = @Content(schema = @Schema(type = "blob", format = "binary"))),
+                    @ApiResponse(responseCode = "404", description = "Resource not found")
+            }
+    )
+    public ResponseEntity<byte[]> previewFile(
+            @Parameter(description = "ID of the resource to download", required = true)
+            @PathVariable UUID resourceId) throws IOException {
+        ResourceService.FileDownloading fileDownloading = resourceService.downloadResource(resourceId);
+
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=\"" + resourceId + "\"")
-                .body(data);
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileDownloading.name() + "\"")
+                .contentType(MediaType.parseMediaType(fileDownloading.type()))
+                .body(fileDownloading.data());
     }
 
     @PostMapping("/directories")
@@ -160,10 +179,10 @@ public class ResourceController {
                     @ApiResponse(responseCode = "404", description = "Base Dir not found")
             }
     )
-    public ResponseEntity<List<DirectoryWithResourcesDTO>> getSubDirectoriesByBaseId(
+    public ResponseEntity<BaseDirResponseDTO> getSubDirectoriesByBaseId(
             @Parameter(description = "Id of the base Directory", required = true)
             @PathVariable UUID baseDirectoryId) throws NoSuchObjectException {
-        List<DirectoryWithResourcesDTO> directoryWithResourcesDTOS = resourceService.getSubDirectoriesById(baseDirectoryId);
+        BaseDirResponseDTO directoryWithResourcesDTOS = resourceService.getSubDirectoriesById(baseDirectoryId);
         return ResponseEntity.ok(directoryWithResourcesDTOS);
     }
 }

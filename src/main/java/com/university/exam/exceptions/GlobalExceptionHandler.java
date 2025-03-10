@@ -1,6 +1,7 @@
 package com.university.exam.exceptions;
 
 import com.university.exam.utils.Enums;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,6 +26,7 @@ public class GlobalExceptionHandler {
                 Enums.ApiStatus.NOT_FOUND.getStatus(),
                 ex.getMessage()
         );
+        ex.printStackTrace();
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
@@ -37,6 +39,20 @@ public class GlobalExceptionHandler {
                 Enums.ApiStatus.BAD_REQUEST.getStatus(),
                 ex.getMessage()
         );
+        ex.printStackTrace();
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                Enums.ApiStatus.BAD_REQUEST.getStatus(),
+                ex.getMessage()
+        );
+        ex.printStackTrace();
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -54,9 +70,10 @@ public class GlobalExceptionHandler {
                 Enums.ApiStatus.BAD_REQUEST.getStatus(),
                 errors.toString()
         );
-
+        ex.printStackTrace();
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -67,6 +84,7 @@ public class GlobalExceptionHandler {
                 Enums.ApiStatus.INTERNAL_SERVER_ERROR.getStatus(),
                 Enums.ApiStatus.INTERNAL_SERVER_ERROR.getDescription()
         );
+        ex.printStackTrace();
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -2,6 +2,7 @@ package com.university.exam.resourceManagement.services;
 
 import com.university.exam.resourceManagement.dtos.requestDTO.ResourceDirectoryRequestDTO;
 import com.university.exam.resourceManagement.dtos.requestDTO.ResourceRequestDTO;
+import com.university.exam.resourceManagement.dtos.responseDTO.BaseDirResponseDTO;
 import com.university.exam.resourceManagement.dtos.responseDTO.DirectoryWithResourcesDTO;
 import com.university.exam.resourceManagement.dtos.responseDTO.ResourceDirectoryResponseDTO;
 import com.university.exam.resourceManagement.dtos.responseDTO.ResourceResponseDTO;
@@ -15,7 +16,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.rmi.NoSuchObjectException;
 import java.util.List;
 import java.util.Map;
@@ -36,11 +39,14 @@ public class ResourceService {
     private ResourceDirectoryRepository resourceDirectoryRepository;
 
     @Transactional
-    public ResourceResponseDTO uploadResource(ResourceRequestDTO resourceRequestDTO, byte[] data) throws NoSuchObjectException {
-        ResourceDirectory directory = fetchDirectory(resourceRequestDTO.getResourceDirId());
-        Resource resource = createResource(resourceRequestDTO, directory);
-        createSuperResource(data, resource);
-        return ResourceResponseDTO.fromEntity(resource);
+    public ResourceResponseDTO uploadResource(UUID resourceDirId, MultipartFile file) throws IOException {
+        if(file != null && !file.isEmpty() && file.getContentType() != null && !file.getContentType().isEmpty()) {
+            ResourceDirectory directory = fetchDirectory(resourceDirId);
+            Resource resource = createResource(file, directory);
+            createSuperResource(file.getBytes(), resource);
+            return ResourceResponseDTO.fromEntity(resource);
+        }
+        throw new IOException("File is empty or has no content type");
     }
 
     @Transactional
@@ -51,10 +57,12 @@ public class ResourceService {
         deleteResource(resource);
     }
 
+    public record FileDownloading(byte[] data, String name, String type, long size) {}
     @Transactional(readOnly = true)
-    public byte[] downloadResource(UUID resourceId) throws NoSuchObjectException {
+    public FileDownloading downloadResource(UUID resourceId) throws NoSuchObjectException {
         SuperResource superResource = fetchSuperResource(resourceId);
-        return superResource.getData();
+        Resource resource = fetchResource(resourceId);
+        return new FileDownloading(superResource.getData(), resource.getName(), resource.getType(), resource.getSize());
     }
 
     @Transactional
@@ -79,20 +87,27 @@ public class ResourceService {
     }
 
     @Transactional(readOnly = true)
-    public List<DirectoryWithResourcesDTO> getSubDirectoriesById(UUID baseDirectoryId) throws NoSuchObjectException {
+    public BaseDirResponseDTO getSubDirectoriesById(UUID baseDirectoryId) throws NoSuchObjectException {
         ResourceDirectory baseDirectory = fetchDirectory(baseDirectoryId);
 
-        List<ResourceDirectory> directories = fetchAllDirectories(baseDirectory);
+        List<ResourceDirectory> directories = fetchAllSubDirectories(baseDirectory);
+        directories.add(baseDirectory);
         List<Resource> resources = fetchResourcesForDirectories(directories);
-        Map<UUID, List<Resource>> resourcesByDirectoryId = groupResourcesByDirectoryId(resources);
+        directories.remove(baseDirectory);
 
-        return mapDirectoriesToDTOs(directories, resourcesByDirectoryId);
+        Map<UUID, List<Resource>> resourcesByDirectoryId = groupResourcesByDirectoryId(resources);
+        List<Resource> baseResource = resourcesByDirectoryId.getOrDefault(baseDirectoryId, List.of());
+        resourcesByDirectoryId.remove(baseDirectoryId);
+
+        List<DirectoryWithResourcesDTO> subDirectoryWithResourcesDTOS = mapDirectoriesToDTOs(directories, resourcesByDirectoryId);
+        return BaseDirResponseDTO.fromEntity(baseDirectory, baseResource, subDirectoryWithResourcesDTOS);
     }
 
-    private Resource createResource(ResourceRequestDTO resourceRequestDTO, ResourceDirectory directory) {
+    private Resource createResource(MultipartFile file, ResourceDirectory directory) {
         Resource resource = new Resource();
-        resource.setName(resourceRequestDTO.getName());
-        resource.setType(resourceRequestDTO.getType());
+        resource.setName(file.getName());
+        resource.setType(file.getContentType());
+        resource.setSize(file.getSize());
         resource.setResourceDirectory(directory);
         return resourceRepository.save(resource);
     }
@@ -139,10 +154,8 @@ public class ResourceService {
                 .orElseThrow(() -> new NoSuchObjectException("Directory not found"));
     }
 
-    private List<ResourceDirectory> fetchAllDirectories(ResourceDirectory baseDirectory) {
-        List<ResourceDirectory> subDirectories = resourceDirectoryRepository.findByBaseDirId(baseDirectory.getId());
-        subDirectories.add(baseDirectory);
-        return subDirectories;
+    private List<ResourceDirectory> fetchAllSubDirectories(ResourceDirectory baseDirectory) {
+        return resourceDirectoryRepository.findByBaseDirId(baseDirectory.getId());
     }
 
     private List<Resource> fetchResourcesForDirectories(List<ResourceDirectory> directories) {

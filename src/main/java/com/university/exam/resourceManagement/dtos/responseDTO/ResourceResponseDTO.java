@@ -11,6 +11,7 @@ public class ResourceResponseDTO {
     private UUID id;
     private String name;
     private String type;
+    private long size;
     private UUID resourceDirId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -20,6 +21,7 @@ public class ResourceResponseDTO {
         dto.setId(resource.getId());
         dto.setName(resource.getName());
         dto.setType(resource.getType());
+        dto.setSize(resource.getSize());
         dto.setResourceDirId(resource.getResourceDirectory().getId());
         dto.setCreatedAt(resource.getCreatedAt());
         dto.setUpdatedAt(resource.getUpdatedAt());
