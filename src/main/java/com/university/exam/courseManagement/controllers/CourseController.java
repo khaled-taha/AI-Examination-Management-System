@@ -5,6 +5,7 @@ import com.university.exam.courseManagement.dtos.responseDTO.CourseResponseDTO;
 import com.university.exam.courseManagement.services.CourseService;
 import com.university.exam.exceptions.ValidationException;
 import com.university.exam.resourceManagement.dtos.responseDTO.DirectoryWithResourcesDTO;
+import com.university.exam.userManagement.dtos.responseDTO.AdminResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -13,11 +14,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.rmi.NoSuchObjectException;
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +38,7 @@ public class CourseController {
     @Autowired
     private CourseService courseService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Create a new course",
             description = "Creates a new course with the provided details.",
@@ -42,11 +49,24 @@ public class CourseController {
                     @ApiResponse(responseCode = "404", description = "Related Group not found")
             }
     )
-    public ResponseEntity<CourseResponseDTO> createCourse(@Valid @RequestBody CourseRequestDTO courseRequestDTO) throws NoSuchObjectException, ValidationException {
-        return ResponseEntity.ok(courseService.createCourse(courseRequestDTO));
+    public ResponseEntity<CourseResponseDTO> createCourse(
+            @RequestParam @NotBlank(message = "Course code is required")
+            @Size(min = 5, max = 10, message = "Course code must be between 5 and 10 characters") String code,
+            @RequestParam @NotBlank(message = "Course name is required")
+            @Size(min = 5, max = 100, message = "Course name cannot exceed 100 characters") String name,
+            @RequestParam @NotNull(message = "Group ID is required") UUID groupId,
+            @RequestParam(required = false) MultipartFile avatar) throws IOException, ValidationException {
+
+        CourseRequestDTO courseRequestDTO = new CourseRequestDTO();
+        courseRequestDTO.setCode(code);
+        courseRequestDTO.setGroupId(groupId);
+        courseRequestDTO.setName(name);
+
+        return ResponseEntity.ok(courseService.createCourse(courseRequestDTO, avatar));
     }
 
-    @PutMapping("/{code}")
+
+    @PutMapping(path = "/{courseCode}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Update an existing course",
             description = "Updates the course with the specified code.",
@@ -58,10 +78,19 @@ public class CourseController {
             }
     )
     public ResponseEntity<CourseResponseDTO> updateCourse(
-            @Parameter(description = "Code of the course to update", required = true)
-            @PathVariable String code,
-            @Valid @RequestBody CourseRequestDTO courseRequestDTO) throws NoSuchObjectException, ValidationException {
-        return ResponseEntity.ok(courseService.updateCourse(code, courseRequestDTO));
+            @PathVariable @NotBlank(message = "Course code is required") String courseCode,
+
+            @RequestParam @NotBlank(message = "Course name is required")
+            @Size(min = 5, max = 100, message = "Course name cannot exceed 100 characters") String name,
+
+            @RequestParam @NotNull(message = "Group ID is required") UUID groupId,
+            @RequestParam(required = false) MultipartFile avatar) throws IOException, ValidationException {
+
+        CourseRequestDTO courseRequestDTO = new CourseRequestDTO();
+        courseRequestDTO.setGroupId(groupId);
+        courseRequestDTO.setName(name);
+
+        return ResponseEntity.ok(courseService.updateCourse(courseCode, courseRequestDTO, avatar));
     }
 
     @DeleteMapping("/{code}")
@@ -128,5 +157,56 @@ public class CourseController {
             @Parameter(description = "Code of the course to retrieve", required = true)
             @PathVariable String code) throws NoSuchObjectException {
         return ResponseEntity.ok(courseService.getCourseByCode(code));
+    }
+
+
+    @PutMapping("/{code}/admins/assign")
+    @Operation(
+            summary = "Assign admins to a course",
+            description = "Assigns a list of admins to the specified course.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Admins assigned successfully"),
+                    @ApiResponse(responseCode = "404", description = "Course or Admin not found")
+            }
+    )
+    public ResponseEntity<String> assignAdminsToCourse(
+            @Parameter(description = "Code of the course", required = true)
+            @PathVariable String code,
+            @RequestBody List<UUID> userIds) throws NoSuchObjectException {
+        courseService.assignAdminsToCourse(code, userIds);
+        return ResponseEntity.ok("Admins assigned successfully");
+    }
+
+    @GetMapping("/{code}/admins")
+    @Operation(
+            summary = "Get course admins",
+            description = "Retrieves all admins assigned to the specified course.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Admins retrieved successfully"),
+                    @ApiResponse(responseCode = "404", description = "Course not found")
+            }
+    )
+    public ResponseEntity<List<AdminResponseDTO>> getCourseAdmins(
+            @Parameter(description = "Code of the course", required = true)
+            @PathVariable String code) throws NoSuchObjectException {
+        return ResponseEntity.ok(courseService.getCourseAdmins(code));
+    }
+
+    @DeleteMapping("/{code}/admins/{userId}")
+    @Operation(
+            summary = "Remove admin from course",
+            description = "Removes an admin from the specified course.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Admin removed successfully"),
+                    @ApiResponse(responseCode = "404", description = "Course or Admin not found")
+            }
+    )
+    public ResponseEntity<String> removeAdminFromCourse(
+            @Parameter(description = "Code of the course", required = true)
+            @PathVariable String code,
+            @Parameter(description = "ID of the admin", required = true)
+            @PathVariable UUID userId) throws NoSuchObjectException {
+        courseService.removeAdminFromCourse(code, userId);
+        return ResponseEntity.ok("Admin removed successfully");
     }
 }

@@ -4,6 +4,7 @@ import com.university.exam.courseManagement.entities.Course;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.UUID;
 
 @Data
@@ -11,8 +12,7 @@ public class CourseResponseDTO {
     private String code;
     private String name;
     private UUID avatarId;
-    private byte[] avatar;
-    private String avatarType;
+    private String avatar;
     private boolean active;
     private UUID groupId;
     private LocalDateTime createdAt;
@@ -24,8 +24,10 @@ public class CourseResponseDTO {
         dto.setCode(course.getCode());
         dto.setName(course.getName());
         dto.setAvatarId(course.getAvatarId());
-        dto.setAvatar(avatar);
-        dto.setAvatarType(avatarType);
+        if (avatar != null && avatarType != null) {
+            String base64Image = Base64.getEncoder().encodeToString(avatar);
+            dto.setAvatar("data:" + avatarType + ";base64," + base64Image);
+        }
         dto.setActive(course.isActive());
         dto.setGroupId(course.getGroup().getId());
         dto.setCreatedAt(course.getCreatedAt());

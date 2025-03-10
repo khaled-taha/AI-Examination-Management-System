@@ -13,21 +13,27 @@ import com.university.exam.resourceManagement.entities.SuperResource;
 import com.university.exam.resourceManagement.repos.ResourceDirectoryRepository;
 import com.university.exam.resourceManagement.repos.ResourceRepository;
 import com.university.exam.resourceManagement.repos.SuperResourceRepository;
+import com.university.exam.userManagement.dtos.responseDTO.AdminResponseDTO;
+import com.university.exam.userManagement.dtos.responseDTO.SpecializationResponseDTO;
 import com.university.exam.userManagement.entities.Admin;
+import com.university.exam.userManagement.entities.User;
 import com.university.exam.userManagement.repos.AdminRepository;
+import com.university.exam.userManagement.repos.UserRepository;
 import com.university.exam.utils.Utils;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.rmi.NoSuchObjectException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class CourseService {
@@ -51,39 +57,81 @@ public class CourseService {
     private CourseAdminRepository courseAdminRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private AdminRepository adminRepository;
 
     @Transactional
-    public CourseResponseDTO createCourse(CourseRequestDTO courseRequestDTO) throws NoSuchObjectException {
-        validateCourseDTO(courseRequestDTO);
-
+    public CourseResponseDTO createCourse(CourseRequestDTO courseRequestDTO, MultipartFile avatar) throws IOException {
         Group group = fetchGroup(courseRequestDTO.getGroupId());
+        validateCourse(courseRequestDTO.getCode());
+
         ResourceDirectory baseDirectory = createBaseDirectory(courseRequestDTO.getName());
-        Resource avatarResource = createAvatarResource(courseRequestDTO, baseDirectory);
-        SuperResource avatarSuperResource = createAvatarSuperResource(courseRequestDTO, avatarResource);
+        Resource avatarResource = null;
+        if(avatar != null && !avatar.isEmpty() && avatar.getContentType() != null && !avatar.getContentType().isEmpty()) {
+            avatarResource = createAvatarResource(courseRequestDTO, avatar, baseDirectory);
+            createAvatarSuperResource(courseRequestDTO, avatarResource, avatar);
+        }
 
-        Course course = buildCourse(courseRequestDTO, group, baseDirectory, avatarResource);
-        course = courseRepository.save(course);
+        Course newCourse = buildCourse(courseRequestDTO, group, baseDirectory, avatarResource);
+        courseRepository.save(newCourse);
 
-        return CourseResponseDTO.fromEntity(course, avatarSuperResource.getData(), courseRequestDTO.getAvatarType());
+        byte[] avatarData = avatar != null && !avatar.isEmpty() ? avatar.getBytes() : null;
+        String avatarType = avatar != null && !avatar.isEmpty() ? avatar.getContentType() : null;
+        return CourseResponseDTO.fromEntity(newCourse, avatarData, avatarType);
     }
 
     @Transactional
-    public CourseResponseDTO updateCourse(String code, CourseRequestDTO courseRequestDTO) throws NoSuchObjectException {
+    public CourseResponseDTO updateCourse(String code, CourseRequestDTO courseRequestDTO, MultipartFile avatar) throws IOException {
         validateCourseDTO(courseRequestDTO);
 
         Group group = fetchGroup(courseRequestDTO.getGroupId());
         Course course = fetchCourse(code);
 
         updateCourseDetails(course, courseRequestDTO, group);
-        updateAvatarIfProvided(course, courseRequestDTO);
 
+        updateBaseDirectoryName(course.getBaseDirectory(), courseRequestDTO.getName());
+        Resource avatarResource = updateOrCreateAvatarResource(avatar, course, courseRequestDTO);
+
+        course.setAvatarId(avatarResource != null ? avatarResource.getId() : null);
         course = courseRepository.save(course);
-        return CourseResponseDTO.fromEntity(
-                course,
-                course.getAvatarId() != null ? fetchSuperResourceData(course.getAvatarId()) : null,
-                course.getAvatarId() != null ? fetchResourceType(course.getAvatarId()) : null
-        );
+
+        return buildCourseResponseDTO(course, avatar);
+    }
+
+    private void updateBaseDirectoryName(ResourceDirectory baseDirectory, String courseName) {
+        baseDirectory.setName("Course_" + courseName + "_BaseDir");
+        resourceDirectoryRepository.save(baseDirectory);
+    }
+
+    private Resource updateOrCreateAvatarResource(MultipartFile avatar, Course course, CourseRequestDTO courseRequestDTO) throws IOException {
+        if (avatar == null) {
+            if (course.getAvatarId() != null) {
+                superResourceRepository.deleteByResourceIdIn(Collections.singletonList(course.getAvatarId()));
+                resourceRepository.deleteById(course.getAvatarId());
+            }
+            return null;
+        }
+
+        Resource avatarResource;
+        if (course.getAvatarId() == null) {
+            avatarResource = createAvatarResource(courseRequestDTO, avatar, course.getBaseDirectory());
+            createAvatarSuperResource(courseRequestDTO, avatarResource, avatar);
+        } else {
+            avatarResource = resourceRepository.findById(course.getAvatarId())
+                    .orElseThrow(() -> new NoSuchObjectException("Avatar resource not found"));
+            avatarResource.setName("Course_" + courseRequestDTO.getName() + "_Avatar");
+            resourceRepository.save(avatarResource);
+            updateAvatarIfProvided(course, avatar);
+        }
+        return avatarResource;
+    }
+
+    private CourseResponseDTO buildCourseResponseDTO(Course course, MultipartFile avatar) throws IOException {
+        byte[] avatarData = avatar != null && !avatar.isEmpty() ? avatar.getBytes() : null;
+        String avatarType = avatar != null && !avatar.isEmpty() ? avatar.getContentType() : null;
+        return CourseResponseDTO.fromEntity(course, avatarData, avatarType);
     }
 
     @Transactional
@@ -99,10 +147,7 @@ public class CourseService {
         deleteSuperResources(resourceIds);
         deleteResources(resourceIds);
         deleteSubDirectories(subDirectories);
-
         deleteCourse(course);
-        deleteBaseDirectory(baseDirectory);
-        courseAdminRepository.deleteByCourseCode(code);
     }
 
     @Transactional(readOnly = true)
@@ -148,30 +193,36 @@ public class CourseService {
         return resourceDirectoryRepository.save(baseDirectory);
     }
 
-    private Resource createAvatarResource(CourseRequestDTO courseRequestDTO, ResourceDirectory baseDirectory) {
+    private Resource createAvatarResource(CourseRequestDTO courseRequestDTO, MultipartFile avatar, ResourceDirectory baseDirectory) {
         Resource avatarResource = new Resource();
         avatarResource.setName("Course_" + courseRequestDTO.getName() + "_Avatar");
-        avatarResource.setType(courseRequestDTO.getAvatarType());
+        avatarResource.setType(avatar.getContentType());
+        avatarResource.setSize(avatar.getSize());
         avatarResource.setResourceDirectory(baseDirectory);
         return resourceRepository.save(avatarResource);
     }
 
-    private SuperResource createAvatarSuperResource(CourseRequestDTO courseRequestDTO, Resource avatarResource) {
+    private void createAvatarSuperResource(CourseRequestDTO courseRequestDTO, Resource avatarResource, MultipartFile avatar) throws IOException {
         SuperResource avatarSuperResource = new SuperResource();
-        avatarSuperResource.setData(courseRequestDTO.getAvatar());
+        avatarSuperResource.setData(avatar != null && !avatar.isEmpty() ? avatar.getBytes() : new byte[0]);
         avatarSuperResource.setResource(avatarResource);
-        return superResourceRepository.save(avatarSuperResource);
+        superResourceRepository.save(avatarSuperResource);
     }
 
     private Course buildCourse(CourseRequestDTO courseRequestDTO, Group group, ResourceDirectory baseDirectory, Resource avatarResource) {
         return Course.builder()
                 .code(courseRequestDTO.getCode())
                 .name(courseRequestDTO.getName())
-                .avatarId(avatarResource.getId())
+                .avatarId(avatarResource != null ? avatarResource.getId() : null)
                 .active(courseRequestDTO.isActive())
                 .group(group)
                 .baseDirectory(baseDirectory)
                 .build();
+    }
+
+    private void validateCourse(String code) throws NoSuchObjectException {
+        if(courseRepository.existsById(code))
+            throw new ValidationException("Course with code " + code + " already exists");
     }
 
     private Course fetchCourse(String code) throws NoSuchObjectException {
@@ -179,21 +230,24 @@ public class CourseService {
                 .orElseThrow(() -> new NoSuchObjectException("Course not found with code: " + code));
     }
 
-    private void updateCourseDetails(Course course, CourseRequestDTO courseRequestDTO, Group group) {
+    private void updateCourseDetails(Course course, CourseRequestDTO courseRequestDTO, Group group) throws NoSuchObjectException {
         course.setName(courseRequestDTO.getName());
         course.setActive(courseRequestDTO.isActive());
         course.setGroup(group);
     }
 
-    private void updateAvatarIfProvided(Course course, CourseRequestDTO courseRequestDTO) throws NoSuchObjectException {
-        if (courseRequestDTO.getAvatar() != null) {
+    private void updateAvatarIfProvided(Course course, MultipartFile avatar) throws IOException {
+        if (avatar != null) {
             Resource avatarResource = resourceRepository.findById(course.getAvatarId())
                     .orElseThrow(() -> new NoSuchObjectException("Avatar resource not found"));
 
             SuperResource avatarSuperResource = superResourceRepository.findByResourceId(avatarResource.getId())
                     .orElseThrow(() -> new NoSuchObjectException("Avatar super resource not found"));
-            avatarSuperResource.setData(courseRequestDTO.getAvatar());
+            avatarSuperResource.setData(avatar.getBytes());
             superResourceRepository.save(avatarSuperResource);
+
+            avatarResource.setSize(avatar.getSize());
+            resourceRepository.save(avatarResource);
         }
     }
 
@@ -300,6 +354,7 @@ public class CourseService {
                 .map(course -> {
                     byte[] avatar = avatarDataMap.get(course.getAvatarId());
                     String avatarType = avatarTypeMap.get(course.getAvatarId());
+
                     return CourseResponseDTO.fromEntity(course, avatar, avatarType);
                 })
                 .collect(Collectors.toList());
@@ -334,37 +389,48 @@ public class CourseService {
     }
 
     @Transactional
-    public void assignAdminsToCourse(String courseCode, List<UUID> adminIds) throws NoSuchObjectException {
+    public void assignAdminsToCourse(String courseCode, List<UUID> userIds) throws NoSuchObjectException {
         Course course = fetchCourse(courseCode);
+        courseAdminRepository.deleteByCourseCode(courseCode);
 
-        List<CourseAdmin> existingAssignments = courseAdminRepository.findByCourseCode(courseCode);
-        courseAdminRepository.deleteAll(existingAssignments);
+        // Fetch all admins in one query
+        List<Admin> admins = adminRepository.findByUser_UserIdIn(userIds);
+        Map<UUID, Admin> adminMap = admins.stream().collect(Collectors.toMap(admin -> admin.getUser().getUserId(), Function.identity()));
 
-        for (UUID adminId : adminIds) {
-            Admin admin = adminRepository.findByUser_UserId(adminId)
-                    .orElseThrow(() -> new NoSuchObjectException("Admin not found with ID: " + adminId));
+        // Validate if all admins exist
+        if (admins.size() != userIds.size()) {
+            List<UUID> missingAdmins = userIds.stream()
+                    .filter(id -> !adminMap.containsKey(id))
+                    .toList();
+            throw new NoSuchObjectException("Admins not found with IDs: " + missingAdmins);
+        }
 
+        // Create and save all CourseAdmin entries in one batch
+        List<CourseAdmin> courseAdmins = admins.stream().map(admin -> {
             CourseAdmin courseAdmin = new CourseAdmin();
             courseAdmin.setCourse(course);
             courseAdmin.setAdmin(admin);
-            courseAdminRepository.save(courseAdmin);
-        }
+            return courseAdmin;
+        }).collect(Collectors.toList());
+
+        courseAdminRepository.saveAll(courseAdmins);
     }
 
     @Transactional(readOnly = true)
-    public List<Admin> getCourseAdmins(String courseCode) throws NoSuchObjectException {
+    public List<AdminResponseDTO> getCourseAdmins(String courseCode) throws NoSuchObjectException {
         fetchCourse(courseCode);
         return courseAdminRepository.findByCourseCode(courseCode).stream()
                 .map(CourseAdmin::getAdmin)
-                .collect(Collectors.toList());
+                .map(AdminResponseDTO::fromEntity)
+                .toList();
     }
 
     @Transactional
-    public void removeAdminFromCourse(String courseCode, UUID adminId) throws NoSuchObjectException {
+    public void removeAdminFromCourse(String courseCode, UUID userId) throws NoSuchObjectException {
         fetchCourse(courseCode);
-        adminRepository.findById(adminId)
-                .orElseThrow(() -> new NoSuchObjectException("Admin not found with ID: " + adminId));
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchObjectException("Admin not found with ID: " + userId));
 
-        courseAdminRepository.deleteByCourseCodeAndAdminAdminId(courseCode, adminId);
+        courseAdminRepository.deleteByCourseCodeAndAdminId(courseCode, userId);
     }
 }
