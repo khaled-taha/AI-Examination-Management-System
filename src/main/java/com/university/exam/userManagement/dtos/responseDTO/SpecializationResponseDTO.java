@@ -14,7 +14,7 @@ public class SpecializationResponseDTO {
     public static SpecializationResponseDTO convertToSpecializationResponseDTO(Specialization specialization) {
         SpecializationResponseDTO specializationResponseDTO = new SpecializationResponseDTO();
         specializationResponseDTO.setSpecializationId(specialization.getSpecializationId());
-        specializationResponseDTO.setSpecializationName(specializationResponseDTO.getSpecializationName());
+        specializationResponseDTO.setSpecializationName(specialization.getSpecializationName());
         return specializationResponseDTO;
     }
 }

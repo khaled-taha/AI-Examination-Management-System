@@ -5,13 +5,16 @@ import com.university.exam.userManagement.dtos.requestDTO.AdminRequestDTO;
 import com.university.exam.userManagement.dtos.responseDTO.AdminResponseDTO;
 import com.university.exam.userManagement.services.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,6 +38,20 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAdminByUserId(userId));
     }
 
+    @GetMapping
+    @Operation(
+            summary = "Get all admins",
+            description = "Retrieves all admins.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Admins retrieved successfully",
+                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = AdminResponseDTO.class)))),
+                    @ApiResponse(responseCode = "404", description = "Admins not found")
+            }
+    )
+    public ResponseEntity<List<AdminResponseDTO>> getAdmins() throws Exception {
+        return ResponseEntity.ok(adminService.getAdmins());
+    }
+
     @PostMapping
     @Operation(
             summary = "Create a new admin",
@@ -45,7 +62,7 @@ public class AdminController {
                     @ApiResponse(responseCode = "400", description = "Invalid request payload")
             }
     )
-    public ResponseEntity<AdminResponseDTO> saveAdmin(@RequestBody AdminRequestDTO adminRequestDTO) throws Exception {
+    public ResponseEntity<AdminResponseDTO> saveAdmin(@Valid @RequestBody AdminRequestDTO adminRequestDTO) throws Exception {
         return ResponseEntity.ok(adminService.saveAdmin(adminRequestDTO));
     }
 }

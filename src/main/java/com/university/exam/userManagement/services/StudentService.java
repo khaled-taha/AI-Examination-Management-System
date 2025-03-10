@@ -2,12 +2,12 @@ package com.university.exam.userManagement.services;
 
 import com.university.exam.courseManagement.entities.Group;
 import com.university.exam.courseManagement.repos.GroupRepository;
+import com.university.exam.exceptions.ValidationException;
 import com.university.exam.userManagement.dtos.requestDTO.StudentRequestDTO;
 import com.university.exam.userManagement.dtos.requestDTO.UserRequestDTO;
 import com.university.exam.userManagement.dtos.responseDTO.StudentResponseDTO;
 import com.university.exam.userManagement.entities.Student;
 import com.university.exam.userManagement.entities.User;
-import com.university.exam.userManagement.repos.ClassStudyRepository;
 import com.university.exam.userManagement.repos.StudentRepository;
 import com.university.exam.userManagement.repos.UserRepository;
 import org.springframework.stereotype.Service;
@@ -38,6 +38,9 @@ public class StudentService {
 
     @Transactional
     public StudentResponseDTO saveStudent(StudentRequestDTO studentRequestDTO) throws Exception {
+        if (this.userRepository.existsByEmail(studentRequestDTO.getUserRequestDTO().getEmail()))
+            throw new ValidationException("This Email Already exists!");
+
         User user = UserRequestDTO.convertToUserEntity(studentRequestDTO.getUserRequestDTO(), "STUDENT");
         user = userRepository.save(user);
 

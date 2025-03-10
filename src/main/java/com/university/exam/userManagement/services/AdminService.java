@@ -32,8 +32,13 @@ public class AdminService {
     @Transactional(readOnly = true)
     public AdminResponseDTO getAdminByUserId(UUID userId) throws Exception {
         return adminRepository.findByUser_UserId(userId)
-                .map(AdminResponseDTO::convertToAdminResponseDTO)
+                .map(AdminResponseDTO::fromEntity)
                 .orElseThrow(() -> new NoSuchObjectException("Admin Not Found ["+ userId +"]"));
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminResponseDTO> getAdmins() {
+        return adminRepository.findAll().stream().map(AdminResponseDTO::fromEntity).toList();
     }
 
     @Transactional
@@ -49,6 +54,6 @@ public class AdminService {
         admin.setSpecialization(specialization);
         admin = adminRepository.save(admin);
 
-        return AdminResponseDTO.convertToAdminResponseDTO(admin);
+        return AdminResponseDTO.fromEntity(admin);
     }
 }

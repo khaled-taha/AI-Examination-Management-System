@@ -10,16 +10,8 @@ import java.util.List;
 public class AdminResponseDTO {
     private UserResponseDTO userResponseDTO;
     private SpecializationResponseDTO specializationResponseDTO;
-    private List<GroupResponseDTO> groupResponseDTOS;
 
-    public static AdminResponseDTO convertToAdminResponseDTO(Admin admin) {
-        AdminResponseDTO responseDTO = new AdminResponseDTO();
-        responseDTO.setUserResponseDTO(UserResponseDTO.convertToUserResponseDTO(admin.getUser()));
-        responseDTO.setSpecializationResponseDTO(SpecializationResponseDTO.convertToSpecializationResponseDTO(admin.getSpecialization()));
-        return responseDTO;
-    }
-
-    public static AdminResponseDTO convertToAdminResponseDTO(Admin admin, List<GroupResponseDTO> groupResponseDTOS) {
+    public static AdminResponseDTO fromEntity(Admin admin) {
         AdminResponseDTO responseDTO = new AdminResponseDTO();
         responseDTO.setUserResponseDTO(UserResponseDTO.convertToUserResponseDTO(admin.getUser()));
         responseDTO.setSpecializationResponseDTO(SpecializationResponseDTO.convertToSpecializationResponseDTO(admin.getSpecialization()));
