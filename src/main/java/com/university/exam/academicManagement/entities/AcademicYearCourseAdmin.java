@@ -31,11 +31,11 @@ public class AcademicYearCourseAdmin {
 
     @CreationTimestamp
     @Column(name = "created_at")
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime updatedAt;
 }
