@@ -39,4 +39,8 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public String getFullName(){
+        return this.firstName + " " + this.lastName;
+    }
 }

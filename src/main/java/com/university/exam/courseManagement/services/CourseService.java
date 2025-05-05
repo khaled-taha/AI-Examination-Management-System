@@ -13,12 +13,6 @@ import com.university.exam.resourceManagement.entities.SuperResource;
 import com.university.exam.resourceManagement.repos.ResourceDirectoryRepository;
 import com.university.exam.resourceManagement.repos.ResourceRepository;
 import com.university.exam.resourceManagement.repos.SuperResourceRepository;
-import com.university.exam.userManagement.dtos.responseDTO.AdminResponseDTO;
-import com.university.exam.userManagement.dtos.responseDTO.SpecializationResponseDTO;
-import com.university.exam.userManagement.entities.Admin;
-import com.university.exam.userManagement.entities.User;
-import com.university.exam.userManagement.repos.AdminRepository;
-import com.university.exam.userManagement.repos.UserRepository;
 import com.university.exam.utils.Utils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,15 +46,6 @@ public class CourseService {
 
     @Autowired
     private GroupRepository groupRepository;
-
-    @Autowired
-    private CourseAdminRepository courseAdminRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private AdminRepository adminRepository;
 
     @Transactional
     public CourseResponseDTO createCourse(CourseRequestDTO courseRequestDTO, MultipartFile avatar) throws IOException {
@@ -251,18 +236,6 @@ public class CourseService {
         }
     }
 
-    private byte[] fetchSuperResourceData(UUID resourceId) throws NoSuchObjectException {
-        return superResourceRepository.findByResourceId(resourceId)
-                .orElseThrow(() -> new NoSuchObjectException("Super resource not found"))
-                .getData();
-    }
-
-    private String fetchResourceType(UUID resourceId) throws NoSuchObjectException {
-        return resourceRepository.findById(resourceId)
-                .orElseThrow(() -> new NoSuchObjectException("Resource not found"))
-                .getType();
-    }
-
     private List<UUID> getDirectoryIds(ResourceDirectory baseDirectory, List<ResourceDirectory> subDirectories) {
         List<UUID> directoryIds = subDirectories.stream()
                 .map(ResourceDirectory::getId)
@@ -291,10 +264,6 @@ public class CourseService {
                         .map(ResourceDirectory::getId)
                         .collect(Collectors.toList())
         );
-    }
-
-    private void deleteBaseDirectory(ResourceDirectory baseDirectory) {
-        resourceDirectoryRepository.delete(baseDirectory);
     }
 
     private void deleteCourse(Course course) {
@@ -386,51 +355,5 @@ public class CourseService {
                         Resource::getId,
                         Resource::getType
                 ));
-    }
-
-    @Transactional
-    public void assignAdminsToCourse(String courseCode, List<UUID> userIds) throws NoSuchObjectException {
-        Course course = fetchCourse(courseCode);
-        courseAdminRepository.deleteByCourseCode(courseCode);
-
-        // Fetch all admins in one query
-        List<Admin> admins = adminRepository.findByUser_UserIdIn(userIds);
-        Map<UUID, Admin> adminMap = admins.stream().collect(Collectors.toMap(admin -> admin.getUser().getUserId(), Function.identity()));
-
-        // Validate if all admins exist
-        if (admins.size() != userIds.size()) {
-            List<UUID> missingAdmins = userIds.stream()
-                    .filter(id -> !adminMap.containsKey(id))
-                    .toList();
-            throw new NoSuchObjectException("Admins not found with IDs: " + missingAdmins);
-        }
-
-        // Create and save all CourseAdmin entries in one batch
-        List<CourseAdmin> courseAdmins = admins.stream().map(admin -> {
-            CourseAdmin courseAdmin = new CourseAdmin();
-            courseAdmin.setCourse(course);
-            courseAdmin.setAdmin(admin);
-            return courseAdmin;
-        }).collect(Collectors.toList());
-
-        courseAdminRepository.saveAll(courseAdmins);
-    }
-
-    @Transactional(readOnly = true)
-    public List<AdminResponseDTO> getCourseAdmins(String courseCode) throws NoSuchObjectException {
-        fetchCourse(courseCode);
-        return courseAdminRepository.findByCourseCode(courseCode).stream()
-                .map(CourseAdmin::getAdmin)
-                .map(AdminResponseDTO::fromEntity)
-                .toList();
-    }
-
-    @Transactional
-    public void removeAdminFromCourse(String courseCode, UUID userId) throws NoSuchObjectException {
-        fetchCourse(courseCode);
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchObjectException("Admin not found with ID: " + userId));
-
-        courseAdminRepository.deleteByCourseCodeAndAdminId(courseCode, userId);
     }
 }

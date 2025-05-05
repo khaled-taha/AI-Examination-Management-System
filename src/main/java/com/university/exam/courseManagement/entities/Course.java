@@ -52,8 +52,4 @@ public class Course {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "dir_doc_id", nullable = false)
     private ResourceDirectory baseDirectory;
-
-    @OneToMany(mappedBy = "course")
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private Set<CourseAdmin> courseAdmins = new HashSet<>();
 }

@@ -1,6 +1,5 @@
 package com.university.exam.userManagement.entities;
 
-import com.university.exam.courseManagement.entities.CourseAdmin;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,8 +27,6 @@ public class Admin {
     @JoinColumn(name = "specialization_id", nullable = false, unique = true)
     private Specialization specialization;
 
-    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
-    private Set<CourseAdmin> courseAdmins = new HashSet<>();
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

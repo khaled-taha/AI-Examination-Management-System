@@ -1,7 +1,6 @@
 package com.university.exam.resourceManagement.services;
 
 import com.university.exam.resourceManagement.dtos.requestDTO.ResourceDirectoryRequestDTO;
-import com.university.exam.resourceManagement.dtos.requestDTO.ResourceRequestDTO;
 import com.university.exam.resourceManagement.dtos.responseDTO.BaseDirResponseDTO;
 import com.university.exam.resourceManagement.dtos.responseDTO.DirectoryWithResourcesDTO;
 import com.university.exam.resourceManagement.dtos.responseDTO.ResourceDirectoryResponseDTO;

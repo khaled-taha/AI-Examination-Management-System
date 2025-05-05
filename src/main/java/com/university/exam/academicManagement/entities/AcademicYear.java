@@ -1,6 +1,5 @@
-package com.university.exam.courseManagement.entities;
+package com.university.exam.academicManagement.entities;
 
-import com.university.exam.userManagement.entities.Admin;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,32 +7,38 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "course_admin")
+@Table(name = "academic_years")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CourseAdmin {
+public class AcademicYear {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "course_code", nullable = false)
-    private Course course;
+    @Column(unique = true, nullable = false)
+    private String year;
 
-    @ManyToOne
-    @JoinColumn(name = "admin_id", nullable = false)
-    private Admin admin;
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    private String status;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at")
+    @Temporal(TemporalType.DATE)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
+    @Temporal(TemporalType.DATE)
     private LocalDateTime updatedAt;
-}
+} 

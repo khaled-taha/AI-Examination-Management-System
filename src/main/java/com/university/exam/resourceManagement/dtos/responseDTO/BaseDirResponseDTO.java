@@ -10,14 +10,14 @@ import java.util.UUID;
 
 @Data
 public class BaseDirResponseDTO {
-    private UUID baseId;
+    private UUID baseId; // The Id of the base (root) dir
     private String name;
     private String creator;
-    private UUID baseDirId;
+    private UUID baseDirId; // Parent Dir ID. (It will be null if the current dir is the root (base dir))
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<ResourceResponseDTO> baseResources;
-    private List<DirectoryWithResourcesDTO> subDirectory;
+    private List<ResourceResponseDTO> baseResources; // the resources of the root such as the course avatar
+    private List<DirectoryWithResourcesDTO> subDirectory; // all dirs of this root such as assignments.
 
 
     public static BaseDirResponseDTO fromEntity(ResourceDirectory baseDir, List<Resource> resources, List<DirectoryWithResourcesDTO> directoryWithResourcesDTOS) {
