@@ -10,6 +10,6 @@ import java.util.UUID;
 
 @Repository
 public interface AcademicTermRepository extends JpaRepository<AcademicTerm, UUID> {
-    Optional<AcademicTerm> findByIdAndAcademicYearId(UUID termId, UUID academicYearId);
     List<AcademicTerm> findByAcademicYearId(UUID academicYearId);
+    Optional<AcademicTerm> findByAcademicYearIdAndTermOrder(UUID academicYearId, Integer termOrder);
 }

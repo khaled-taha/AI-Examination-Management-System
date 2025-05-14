@@ -37,14 +37,14 @@ public class StudentController {
     @PostMapping
     @Operation(
             summary = "Create a new student",
-            description = "Saves a new student with the provided details.",
+            description = "Create a new student with the provided details.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Student created successfully",
                             content = @Content(schema = @Schema(implementation = StudentResponseDTO.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid request payload")
             }
     )
-    public ResponseEntity<StudentResponseDTO> saveStudent(@Valid @RequestBody StudentRequestDTO studentRequestDTO) throws Exception {
-        return ResponseEntity.ok(studentService.saveStudent(studentRequestDTO));
+    public ResponseEntity<StudentResponseDTO> createStudent(@Valid @RequestBody StudentRequestDTO studentRequestDTO) throws Exception {
+        return ResponseEntity.ok(studentService.createStudent(studentRequestDTO));
     }
 }

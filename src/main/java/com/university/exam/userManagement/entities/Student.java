@@ -22,9 +22,9 @@ public class Student {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "group_id", nullable = false)
-    private Group group;
+//    @ManyToOne
+//    @JoinColumn(name = "group_id", nullable = false)
+//    private Group group;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

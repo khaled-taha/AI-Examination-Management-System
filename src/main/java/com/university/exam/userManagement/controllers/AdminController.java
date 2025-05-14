@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -55,14 +54,14 @@ public class AdminController {
     @PostMapping
     @Operation(
             summary = "Create a new admin",
-            description = "Saves a new admin with the provided details.",
+            description = "Create a new admin with the provided details.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Admin created successfully",
                             content = @Content(schema = @Schema(implementation = AdminResponseDTO.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid request payload")
             }
     )
-    public ResponseEntity<AdminResponseDTO> saveAdmin(@Valid @RequestBody AdminRequestDTO adminRequestDTO) throws Exception {
-        return ResponseEntity.ok(adminService.saveAdmin(adminRequestDTO));
+    public ResponseEntity<AdminResponseDTO> createAdmin(@Valid @RequestBody AdminRequestDTO adminRequestDTO) throws Exception {
+        return ResponseEntity.ok(adminService.createAdmin(adminRequestDTO));
     }
 }

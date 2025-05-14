@@ -153,17 +153,14 @@ public class AcademicYearService {
     }
 
     private List<AcademicYearCourse> createAcademicYearCourses(AcademicYearCourseRequestDTO request) {
-        AcademicYear academicYear = academicYearRepository.findById(request.getAcademicYearId())
-                .orElseThrow(() -> new ValidationException("Academic year not found"));
+        AcademicTerm term = academicTermRepository.findById(request.getTermId())
+                .orElseThrow(() -> new ValidationException("Term not found."));
 
-        AcademicTerm term = academicTermRepository.findByIdAndAcademicYearId(request.getTermId(), request.getAcademicYearId())
-                .orElseThrow(() -> new ValidationException("Term not found or doesn't belong to the specified academic year"));
-
-        academicYearCourseRepository.deleteByAcademicYearId(request.getAcademicYearId());
+        academicYearCourseRepository.deleteByAcademicYearId(term.getAcademicYear().getId());
         academicYearCourseRepository.flush();
 
         List<AcademicYearCourse> courses = request.getCourseCodes().stream()
-                .map(code -> prepareAcademicYearCourses(academicYear, code, term))
+                .map(code -> prepareAcademicYearCourses(term.getAcademicYear(), code, term))
                 .toList();
     
         return academicYearCourseRepository.saveAll(courses);

@@ -1,6 +1,5 @@
 package com.university.exam.userManagement.services;
 
-import com.university.exam.courseManagement.entities.Group;
 import com.university.exam.userManagement.dtos.requestDTO.AdminRequestDTO;
 import com.university.exam.userManagement.dtos.requestDTO.UserRequestDTO;
 import com.university.exam.userManagement.dtos.responseDTO.AdminResponseDTO;
@@ -42,7 +41,7 @@ public class AdminService {
     }
 
     @Transactional
-    public AdminResponseDTO saveAdmin(AdminRequestDTO adminRequestDTO) throws Exception {
+    public AdminResponseDTO createAdmin(AdminRequestDTO adminRequestDTO) throws Exception {
         Specialization specialization = this.specializationRepository.findById(adminRequestDTO.getSpecializationId())
                 .orElseThrow(() -> new NoSuchObjectException("Specialization Not Found ["+ adminRequestDTO.getSpecializationId() +"]"));
 

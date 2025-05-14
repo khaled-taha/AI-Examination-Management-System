@@ -6,7 +6,6 @@ import java.util.UUID;
 
 @Data
 public class AcademicYearCourseRequestDTO {
-    private UUID academicYearId;
     private UUID termId;
     private List<String> courseCodes;
 } 

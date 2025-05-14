@@ -26,26 +26,34 @@ public class AcademicYearCourseAdminService {
 
     @Transactional
     public AcademicYearCourseAdminResponseDTO.CourseAdminResponse assignAdminToCourse(AcademicYearCourseAdminRequestDTO.AssignAdminRequest request) {
-        // Check if course exists
-        AcademicYearCourse course = academicYearCourseRepo.findById(request.getAcademicYearCourseId())
-                .orElseThrow(() -> new EntityNotFoundException("Academic year course ["+ request.getAcademicYearCourseId() +"] not found"));
+        AcademicYearCourse course = findCourse(request.getAcademicYearCourseId());
+        Admin admin = findAdmin(request.getAdminId());
+        validateAssignment(request.getAcademicYearCourseId(), request.getAdminId());
+        AcademicYearCourseAdmin savedAssignment = createAndSaveAssignment(course, admin);
+        return AcademicYearCourseAdminResponseDTO.CourseAdminResponse.fromEntity(savedAssignment);
+    }
 
-        // Check if admin exists
-        Admin admin = adminRepository.findByUser_UserId(request.getAdminId())
-                .orElseThrow(() -> new EntityNotFoundException("Admin ["+ request.getAdminId() +"] not found"));
+    private AcademicYearCourse findCourse(UUID courseId) {
+        return academicYearCourseRepo.findById(courseId)
+                .orElseThrow(() -> new EntityNotFoundException("Academic year course [" + courseId + "] not found"));
+    }
 
-        // Check if assignment already exists
-        if (academicYearCourseAdminRepository.existsByAcademicYearCourseIdAndAdmin_AdminId(request.getAcademicYearCourseId(), request.getAdminId())) {
+    private Admin findAdmin(UUID adminId) {
+        return adminRepository.findByUser_UserId(adminId)
+                .orElseThrow(() -> new EntityNotFoundException("Admin [" + adminId + "] not found"));
+    }
+
+    private void validateAssignment(UUID courseId, UUID adminId) {
+        if (academicYearCourseAdminRepository.existsByAcademicYearCourseIdAndAdmin_AdminId(courseId, adminId)) {
             throw new IllegalStateException("Admin is already assigned to this course");
         }
+    }
 
-        // Create new assignment
+    private AcademicYearCourseAdmin createAndSaveAssignment(AcademicYearCourse course, Admin admin) {
         AcademicYearCourseAdmin assignment = new AcademicYearCourseAdmin();
         assignment.setAcademicYearCourse(course);
         assignment.setAdmin(admin);
-
-        AcademicYearCourseAdmin savedAssignment = academicYearCourseAdminRepository.saveAndFlush(assignment);
-        return AcademicYearCourseAdminResponseDTO.CourseAdminResponse.fromEntity(savedAssignment);
+        return academicYearCourseAdminRepository.saveAndFlush(assignment);
     }
 
     @Transactional

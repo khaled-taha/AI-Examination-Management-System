@@ -55,7 +55,7 @@ public class AcademicYearController {
 
     @PostMapping("/academic-year-courses")
     @Operation(
-            summary = "Assign courses to academic year & term",
+            summary = "Assign courses to academic term",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Courses assigned successfully"),
                     @ApiResponse(responseCode = "400", description = "Invalid input"),
