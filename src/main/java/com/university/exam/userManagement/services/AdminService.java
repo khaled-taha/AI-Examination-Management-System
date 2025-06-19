@@ -21,12 +21,16 @@ import java.util.UUID;
 @Service
 public class AdminService {
 
+    private final SpecializationRepository specializationRepository;
+    private final AdminRepository adminRepository;
+    private final UserRepository userRepository;
+
     @Autowired
-    private SpecializationRepository specializationRepository;
-    @Autowired
-    private AdminRepository adminRepository;
-    @Autowired
-    private UserRepository userRepository;
+    public AdminService(AdminRepository adminRepository, SpecializationRepository specializationRepository, UserRepository userRepository) {
+        this.adminRepository = adminRepository;
+        this.specializationRepository = specializationRepository;
+        this.userRepository = userRepository;
+    }
 
     @Transactional(readOnly = true)
     public AdminResponseDTO getAdminByUserId(UUID userId) throws Exception {

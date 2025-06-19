@@ -1,6 +1,8 @@
 package com.university.exam.courseManagement.controllers;
 
+import com.university.exam.courseManagement.dtos.requestDTO.GroupRequestDTO;
 import com.university.exam.courseManagement.dtos.responseDTO.GroupResponseDTO;
+import com.university.exam.courseManagement.entities.Group;
 import com.university.exam.courseManagement.services.GroupService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,13 +11,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.rmi.NoSuchObjectException;
 import java.util.List;
@@ -65,5 +66,23 @@ public class GroupController {
             @Parameter(description = "ID of the group", required = true)
             @PathVariable UUID groupId) throws NoSuchObjectException {
         return ResponseEntity.ok(groupService.getGroupByGroupId(groupId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Group>> getAllGroups() {
+        List<Group> groups = groupService.getAllGroups();
+        return ResponseEntity.ok(groups);
+    }
+
+    @PostMapping
+    public ResponseEntity<Void> createGroup(@Valid @RequestBody GroupRequestDTO groupRequestDTO) {
+        groupService.createGroup(groupRequestDTO);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteGroup(@PathVariable UUID id) {
+        groupService.deleteGroup(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

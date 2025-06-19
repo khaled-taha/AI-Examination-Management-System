@@ -13,7 +13,9 @@ import java.util.UUID;
 
 @Repository
 public interface AcademicYearGroupRepository extends JpaRepository<AcademicYearGroup, UUID> {
-    List<AcademicYear> findByGroupId(UUID groupId);
+    @Query("SELECT ag.academicYear FROM AcademicYearGroup ag WHERE ag.group.id = :groupId")
+    List<AcademicYear> findByGroupId(@Param("groupId") UUID groupId);
+
     Optional<AcademicYearGroup> findByAcademicYearIdAndGroupId(UUID academicYearId, UUID groupId);
 
     @Query("SELECT ayg FROM AcademicYearGroup ayg " +
