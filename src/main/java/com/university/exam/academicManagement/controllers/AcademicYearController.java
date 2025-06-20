@@ -36,7 +36,7 @@ public class AcademicYearController {
         return ResponseEntity.ok(academicYearService.saveAcademicYearGroup(request));
     }
 
-    @PostMapping("/{academicYearId}/terms")
+    @PostMapping("/academicYear/terms")
     @Operation(
             summary = "Save terms for an academic year",
             responses = {
@@ -46,10 +46,9 @@ public class AcademicYearController {
             }
     )
     public ResponseEntity<AcademicYearResponseDTO.SaveAcademicYearTermsResponseDTO> saveAcademicYearTerms(
-            @PathVariable UUID academicYearId,
             @RequestBody AcademicYearRequestDTO.SaveTermsRequest request) {
 
-        request.setAcademicYearId(academicYearId);
+        request.setAcademicYearId(request.getAcademicYearId());
         return ResponseEntity.ok(academicYearService.saveAcademicYearTerms(request));
     }
 

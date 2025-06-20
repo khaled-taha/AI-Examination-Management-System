@@ -1,5 +1,6 @@
 package com.university.exam.userManagement.entities;
 
+import com.university.exam.academicManagement.entities.AcademicYearGroup;
 import com.university.exam.courseManagement.entities.Group;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -21,10 +22,6 @@ public class Student {
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
-
-//    @ManyToOne
-//    @JoinColumn(name = "group_id", nullable = false)
-//    private Group group;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

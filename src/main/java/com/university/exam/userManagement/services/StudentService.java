@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.rmi.NoSuchObjectException;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -46,9 +47,15 @@ public class StudentService {
 
     @Transactional(readOnly = true)
     public StudentResponseDTO getStudentByUserId(UUID userId) throws Exception {
-        return studentRepository.findByUser_UserId(userId)
-                .map(StudentResponseDTO::convertToStudentResponseDTO)
-                .orElseThrow(() -> new NoSuchObjectException("Student Not Found ["+ userId +"]"));
+
+       Student student = studentRepository.findByUser_UserId(userId)
+               .orElseThrow(() -> new NoSuchObjectException("Student Not Found ["+ userId +"]"));
+
+       Optional<StudentEnrollment> enrollment = this.studentEnrollmentRepository.findByStudent_StudentId(student.getStudentId());
+
+        return enrollment.map(studentEnrollment ->
+                StudentResponseDTO.convertToStudentResponseDTO(student, studentEnrollment.getAcademicYearGroup()))
+                .orElseGet(() -> StudentResponseDTO.convertToStudentResponseDTO(student));
     }
 
     @Transactional
@@ -63,7 +70,7 @@ public class StudentService {
 
         saveEnrollment(student, academicYearGroup, firstTerm);
 
-        return StudentResponseDTO.convertToStudentResponseDTO(student);
+        return StudentResponseDTO.convertToStudentResponseDTO(student, academicYearGroup);
     }
 
     private void validateEmail(String email) {
