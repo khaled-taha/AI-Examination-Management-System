@@ -70,7 +70,7 @@ public class StudentService {
 
         saveEnrollment(student, academicYearGroup, firstTerm);
 
-        return StudentResponseDTO.convertToStudentResponseDTO(student);
+        return StudentResponseDTO.convertToStudentResponseDTO(student, academicYearGroup);
     }
 
     private void validateEmail(String email) {
