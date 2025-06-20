@@ -26,9 +26,6 @@ public class UserRequestDTO {
     @Size(min = 8, max = 255, message = "Password must be between 8 and 255 characters")
     private String password;
 
-    @NotNull(message = "User type is required")
-    private String userType;
-
     public static User convertToUserEntity(UserRequestDTO userRequestDTO, String userType) {
         User user = new User();
         user.setFirstName(userRequestDTO.getFirstName());
