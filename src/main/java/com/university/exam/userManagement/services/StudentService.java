@@ -59,7 +59,7 @@ public class StudentService {
     }
 
 
-    public StudentResponseDTO getStudentByEmail(String email) {
+    public StudentResponseDTO getStudentByEmail(String email) throws NoSuchObjectException {
         Student student = studentRepository.findByUser_Email(email)
                 .orElseThrow(() -> new NoSuchObjectException("Student Not Found ["+ email +"]"));
 
