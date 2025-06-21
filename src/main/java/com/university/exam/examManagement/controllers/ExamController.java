@@ -45,6 +45,13 @@ public class ExamController {
         return ResponseEntity.ok(examService.listExams());
     }
 
+    @GetMapping("/academic-year/{academicYearGroupId}/term/{termId}")
+    public ResponseEntity<List<ExamResponseDTO>> getExamsByAcademicYearIdAndTermOrder(
+            @PathVariable UUID academicYearGroupId, 
+            @PathVariable UUID termId) {
+        return ResponseEntity.ok(examService.getExamsByAcademicYearIdAndTermOrder(academicYearGroupId, termId));
+    }
+
     // Section APIs
     @PostMapping("/{examId}/sections")
     public ResponseEntity<SectionResponseDTO> createSection(@PathVariable UUID examId, @Valid @RequestBody SectionRequestDTO request) {
@@ -60,6 +67,11 @@ public class ExamController {
     @PostMapping("/{examId}/questions")
     public ResponseEntity<QuestionResponseDTO> addQuestion(@PathVariable UUID examId, @Valid @RequestBody QuestionRequestDTO request) {
         return ResponseEntity.ok(examService.addQuestion(examId, request));
+    }
+
+    @PostMapping("/{examId}/questions/copy-from-pool")
+    public ResponseEntity<QuestionResponseDTO> copyQuestionFromPool(@PathVariable UUID examId, @Valid @RequestBody CopyQuestionFromPoolRequestDTO request) {
+        return ResponseEntity.ok(examService.copyQuestionFromPool(examId, request));
     }
 
     @GetMapping("/{examId}/questions")
@@ -127,6 +139,18 @@ public class ExamController {
         return ResponseEntity.ok(examService.listStudentAttempts());
     }
 
+    @GetMapping("/attempts/student/{studentId}/exam/{examId}")
+    public ResponseEntity<List<StudentAttemptResponseDTO>> listStudentAttemptsByStudentIdAndExamId(
+            @PathVariable UUID studentId, 
+            @PathVariable UUID examId) {
+        return ResponseEntity.ok(examService.listStudentAttemptsByStudentIdAndExamId(studentId, examId));
+    }
+
+    @GetMapping("/{examId}/attempts")
+    public ResponseEntity<List<StudentAttemptResponseDTO>> listStudentAttemptsByExamId(@PathVariable UUID examId) {
+        return ResponseEntity.ok(examService.listStudentAttemptsByExamId(examId));
+    }
+
     // Student Answers APIs
     @PostMapping("/attempts/{attemptId}/answers/choice")
     public ResponseEntity<StudentAnswerChoiceResponseDTO> submitChoiceAnswer(@PathVariable UUID attemptId, @Valid @RequestBody StudentAnswerChoiceRequestDTO request) {
@@ -147,5 +171,12 @@ public class ExamController {
     @GetMapping("/answers/code/{codeAnswerId}/test-results")
     public ResponseEntity<List<StudentCodingTestResultResponseDTO>> listCodingTestResults(@PathVariable UUID codeAnswerId) {
         return ResponseEntity.ok(examService.listCodingTestResults(codeAnswerId));
+    }
+
+    @GetMapping("/{examId}/can-enter/{studentId}")
+    public ResponseEntity<CanEnterExamResponseDTO> canStudentEnterExam(
+            @PathVariable UUID examId, 
+            @PathVariable UUID studentId) {
+        return ResponseEntity.ok(examService.canStudentEnterExam(studentId, examId));
     }
 }

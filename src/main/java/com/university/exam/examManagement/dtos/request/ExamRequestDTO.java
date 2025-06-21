@@ -10,6 +10,8 @@ public class ExamRequestDTO {
     @NotBlank(message = "Exam title must not be blank")
     private String title;
 
+    private String description;
+
     @NotNull(message = "Start date is required")
     @Future(message = "Start date must be in the future")
     private LocalDateTime startDate;

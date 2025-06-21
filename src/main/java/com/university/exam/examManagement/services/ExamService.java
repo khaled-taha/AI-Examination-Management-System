@@ -11,6 +11,8 @@ public interface ExamService {
     ExamResponseDTO updateExam(UUID id, ExamRequestDTO request);
     void deleteExam(UUID id);
     List<ExamResponseDTO> listExams();
+    List<ExamResponseDTO> getExamsByAcademicYearIdAndTermOrder(UUID academicYearGroupId, UUID termId);
+    CanEnterExamResponseDTO canStudentEnterExam(UUID studentId, UUID examId);
 
     SectionResponseDTO createSection(UUID examId, SectionRequestDTO request);
     List<SectionResponseDTO> listSections(UUID examId);
@@ -32,6 +34,8 @@ public interface ExamService {
     StudentAttemptResponseDTO createStudentAttempt(StudentAttemptRequestDTO request);
     StudentAttemptResponseDTO getStudentAttempt(UUID attemptId);
     List<StudentAttemptResponseDTO> listStudentAttempts();
+    List<StudentAttemptResponseDTO> listStudentAttemptsByStudentIdAndExamId(UUID studentId, UUID examId);
+    List<StudentAttemptResponseDTO> listStudentAttemptsByExamId(UUID examId);
 
     StudentAnswerChoiceResponseDTO submitChoiceAnswer(UUID attemptId, StudentAnswerChoiceRequestDTO request);
     StudentAnswerTextResponseDTO submitTextAnswer(UUID attemptId, StudentAnswerTextRequestDTO request);

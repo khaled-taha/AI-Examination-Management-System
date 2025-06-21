@@ -11,7 +11,4 @@ public class StudentAttemptRequestDTO {
 
     @NotNull(message = "Exam ID is required")
     private UUID examId;
-
-    @Min(value = 1, message = "Attempt number must be at least 1")
-    private int attemptNumber;
 } 
