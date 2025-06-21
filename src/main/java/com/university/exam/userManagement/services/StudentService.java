@@ -58,6 +58,18 @@ public class StudentService {
                 .orElseGet(() -> StudentResponseDTO.convertToStudentResponseDTO(student));
     }
 
+
+    public StudentResponseDTO getStudentByEmail(String email) {
+        Student student = studentRepository.findByUser_Email(email)
+                .orElseThrow(() -> new NoSuchObjectException("Student Not Found ["+ email +"]"));
+
+        Optional<StudentEnrollment> enrollment = this.studentEnrollmentRepository.findLatestByStudentId(student.getStudentId());
+
+        return enrollment.map(studentEnrollment ->
+                        StudentResponseDTO.convertToStudentResponseDTO(student, studentEnrollment.getAcademicYearGroup()))
+                .orElseGet(() -> StudentResponseDTO.convertToStudentResponseDTO(student));
+    }
+
     @Transactional
     public StudentResponseDTO createStudent(StudentRequestDTO studentRequestDTO) throws Exception {
         validateEmail(studentRequestDTO.getUserRequestDTO().getEmail());
@@ -118,8 +130,4 @@ public class StudentService {
         enrollment.setEnrollmentStatus(StudentEnrollment.EnrollmentStatus.ACTIVE);
         studentEnrollmentRepository.save(enrollment);
     }
-    
-    
-    
-    
 }

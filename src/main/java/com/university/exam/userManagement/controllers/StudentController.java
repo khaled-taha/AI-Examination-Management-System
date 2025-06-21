@@ -34,6 +34,21 @@ public class StudentController {
         return ResponseEntity.ok(studentService.getStudentByUserId(userId));
     }
 
+
+    @GetMapping("/{email}")
+    @Operation(
+            summary = "Get student by email",
+            description = "Retrieves a student by the associated email.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Student retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = StudentResponseDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Student not found")
+            }
+    )
+    public ResponseEntity<StudentResponseDTO> getStudentByUserEmail(@PathVariable String email) throws Exception {
+        return ResponseEntity.ok(studentService.getStudentByEmail(email));
+    }
+
     @PostMapping
     @Operation(
             summary = "Create a new student",
