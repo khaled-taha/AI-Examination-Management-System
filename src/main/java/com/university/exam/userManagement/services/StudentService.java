@@ -51,7 +51,7 @@ public class StudentService {
        Student student = studentRepository.findByUser_UserId(userId)
                .orElseThrow(() -> new NoSuchObjectException("Student Not Found ["+ userId +"]"));
 
-       Optional<StudentEnrollment> enrollment = this.studentEnrollmentRepository.findByStudent_StudentId(student.getStudentId());
+       Optional<StudentEnrollment> enrollment = this.studentEnrollmentRepository.findLatestByStudentId(student.getStudentId());
 
         return enrollment.map(studentEnrollment ->
                 StudentResponseDTO.convertToStudentResponseDTO(student, studentEnrollment.getAcademicYearGroup()))
