@@ -1,9 +1,6 @@
 package com.university.exam.examManagement.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -21,7 +18,9 @@ public class CodingTestCase {
     @Id
     private UUID id;
 
-    private UUID examQuestionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exam_question_id")
+    private ExamQuestion examQuestion;
 
     @Column(columnDefinition = "TEXT")
     private String input;

@@ -1,9 +1,6 @@
 package com.university.exam.examManagement.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -11,6 +8,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Stores correct answers for non-choice questions.
+ */
 @Entity
 @Table(name = "exam_question_answer_key")
 @Data
@@ -20,7 +20,9 @@ public class ExamQuestionAnswerKey {
     @Id
     private UUID id;
 
-    private UUID examQuestionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exam_question_id")
+    private ExamQuestion examQuestion;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String answerText;

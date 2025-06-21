@@ -1,9 +1,6 @@
 package com.university.exam.examManagement.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -20,16 +17,21 @@ public class StudentAnswerCode {
     @Id
     private UUID id;
 
-    @Column(nullable = false)
-    private UUID studentExamAttemptId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_exam_attempt_id", nullable = false)
+    private StudentExamAttempt studentExamAttempt;
 
-    @Column(nullable = false)
-    private UUID examQuestionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exam_question_id", nullable = false)
+    private ExamQuestion examQuestion;
 
     @Column(columnDefinition = "TEXT")
     private String submittedCode;
 
-    private UUID languageId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "language_id")
+    private ProgrammingLanguage language;
+
     private Double totalScore;
     private String resultSummary;
     private Double aiScore;

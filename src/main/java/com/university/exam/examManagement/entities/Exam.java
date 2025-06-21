@@ -1,9 +1,9 @@
 package com.university.exam.examManagement.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.university.exam.academicManagement.entities.AcademicTerm;
+import com.university.exam.academicManagement.entities.AcademicYearGroup;
+import com.university.exam.userManagement.entities.Admin;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -34,10 +34,19 @@ public class Exam {
     @Column(length = 50)
     private String status;
 
-    private UUID creatorId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id")
+    private Admin creator;
+
     private String courseCode;
-    private UUID termId;
-    private UUID academicYearGroupId;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "term_id")
+    private AcademicTerm term;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "academic_year_group_id")
+    private AcademicYearGroup academicYearGroup;
 
     @Column(nullable = false)
     private double successPercentage;

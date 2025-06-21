@@ -1,9 +1,6 @@
 package com.university.exam.examManagement.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -20,9 +17,17 @@ public class ExamQuestion {
     @Id
     private UUID id;
 
-    private UUID examId;
-    private UUID sectionId;
-    private UUID questionPoolId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exam_id")
+    private Exam exam;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "section_id")
+    private ExamSection section;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_pool_id")
+    private QuestionPool questionPool;
 
     @Column(columnDefinition = "TEXT")
     private String questionText;
@@ -33,7 +38,10 @@ public class ExamQuestion {
     @Column(columnDefinition = "TEXT")
     private String explanation;
 
-    private UUID programmingLanguageId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "programming_language_id")
+    private ProgrammingLanguage programmingLanguage;
+
     private Integer timeLimit;
     private Integer memoryLimit;
 

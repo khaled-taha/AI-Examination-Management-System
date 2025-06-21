@@ -1,9 +1,6 @@
 package com.university.exam.examManagement.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -11,6 +8,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Stores student answers for complete/matching.
+ */
 @Entity
 @Table(name = "student_answer_text")
 @Data
@@ -20,11 +20,13 @@ public class StudentAnswerText {
     @Id
     private UUID id;
 
-    @Column(nullable = false)
-    private UUID studentExamAttemptId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_exam_attempt_id", nullable = false)
+    private StudentExamAttempt studentExamAttempt;
 
-    @Column(nullable = false)
-    private UUID examQuestionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exam_question_id", nullable = false)
+    private ExamQuestion examQuestion;
 
     @Column(columnDefinition = "TEXT")
     private String questionPart;
