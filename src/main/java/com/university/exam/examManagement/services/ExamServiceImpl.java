@@ -1,5 +1,7 @@
 package com.university.exam.examManagement.services;
 
+import com.university.exam.academicManagement.entities.AcademicYearCourse;
+import com.university.exam.academicManagement.repos.AcademicYearCourseRepository;
 import com.university.exam.examManagement.dtos.request.*;
 import com.university.exam.examManagement.dtos.response.*;
 import com.university.exam.examManagement.entities.*;
@@ -46,8 +48,10 @@ public class ExamServiceImpl implements ExamService {
     private final StudentRepository studentRepository;
     private final AcademicTermRepository academicTermRepository;
     private final AcademicYearGroupRepository academicYearGroupRepository;
+    private final AcademicYearCourseRepository academicYearCourseRepository;
 
     @Override
+    @Transactional
     public ExamResponseDTO createExam(ExamRequestDTO request) {
         // Validate exam dates
         if (request.getStartDate().isAfter(request.getEndDate())) {
@@ -64,6 +68,10 @@ public class ExamServiceImpl implements ExamService {
         AcademicYearGroup academicYearGroup = academicYearGroupRepository.findById(request.getAcademicYearGroupId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year group not found with id: " + request.getAcademicYearGroupId()));
 
+        AcademicYearCourse academicYearCourse = academicYearCourseRepository.findById(request.getAcademicYearCourseId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year Course not found with id: " + request.getAcademicYearCourseId()));
+
+
         // Create new exam entity
         Exam exam = new Exam();
         exam.setId(UUID.randomUUID());
@@ -73,7 +81,7 @@ public class ExamServiceImpl implements ExamService {
         exam.setEndDate(request.getEndDate());
         exam.setStatus(request.getStatus() != null ? request.getStatus() : "DRAFT");
         exam.setCreator(creator);
-        exam.setCourseCode(request.getCourseCode());
+        exam.setAcademicYearCourse(academicYearCourse);
         exam.setTerm(term);
         exam.setAcademicYearGroup(academicYearGroup);
         exam.setSuccessPercentage(request.getSuccessPercentage());
@@ -93,6 +101,7 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
+    @Transactional
     public ExamResponseDTO updateExam(UUID id, ExamRequestDTO request) {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id: " + id));
@@ -112,6 +121,9 @@ public class ExamServiceImpl implements ExamService {
         AcademicYearGroup academicYearGroup = academicYearGroupRepository.findById(request.getAcademicYearGroupId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year group not found with id: " + request.getAcademicYearGroupId()));
 
+        AcademicYearCourse academicYearCourse = academicYearCourseRepository.findById(request.getAcademicYearCourseId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year Course not found with id: " + request.getAcademicYearCourseId()));
+
         // Update exam fields
         exam.setTitle(request.getTitle());
         exam.setDescription(request.getDescription());
@@ -119,7 +131,7 @@ public class ExamServiceImpl implements ExamService {
         exam.setEndDate(request.getEndDate());
         exam.setStatus(request.getStatus());
         exam.setCreator(creator);
-        exam.setCourseCode(request.getCourseCode());
+        exam.setAcademicYearCourse(academicYearCourse);
         exam.setTerm(term);
         exam.setAcademicYearGroup(academicYearGroup);
         exam.setSuccessPercentage(request.getSuccessPercentage());
@@ -213,7 +225,7 @@ public class ExamServiceImpl implements ExamService {
         response.setEndDate(exam.getEndDate());
         response.setStatus(exam.getStatus());
         response.setCreatorId(exam.getCreator().getAdminId());
-        response.setCourseCode(exam.getCourseCode());
+        response.setCourseCode(exam.getAcademicYearCourse().getCourseCode());
         response.setTermId(exam.getTerm().getId());
         response.setAcademicYearGroupId(exam.getAcademicYearGroup().getId());
         response.setSuccessPercentage(exam.getSuccessPercentage());

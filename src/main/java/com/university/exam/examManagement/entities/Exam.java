@@ -1,6 +1,7 @@
 package com.university.exam.examManagement.entities;
 
 import com.university.exam.academicManagement.entities.AcademicTerm;
+import com.university.exam.academicManagement.entities.AcademicYearCourse;
 import com.university.exam.academicManagement.entities.AcademicYearGroup;
 import com.university.exam.userManagement.entities.Admin;
 import jakarta.persistence.*;
@@ -37,8 +38,6 @@ public class Exam {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id")
     private Admin creator;
-
-    private String courseCode;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "term_id")
@@ -47,6 +46,10 @@ public class Exam {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "academic_year_group_id")
     private AcademicYearGroup academicYearGroup;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "academic_year_course_id")
+    private AcademicYearCourse academicYearCourse;
 
     @Column(nullable = false)
     private double successPercentage;

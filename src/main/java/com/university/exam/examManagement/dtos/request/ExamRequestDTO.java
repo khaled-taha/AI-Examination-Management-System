@@ -25,8 +25,8 @@ public class ExamRequestDTO {
     @NotNull(message = "Creator ID is required")
     private UUID creatorId;
 
-    @NotBlank(message = "Course code is required")
-    private String courseCode;
+    @NotNull(message = "Academic Year Course Id is required")
+    private UUID academicYearCourseId;
 
     @NotNull(message = "Term ID is required")
     private UUID termId;
