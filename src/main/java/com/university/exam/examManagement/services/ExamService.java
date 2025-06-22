@@ -43,7 +43,7 @@ public interface ExamService {
     List<StudentSectionViewDTO> getExamForStudent(UUID examId);
 
     StudentAnswerChoiceResponseDTO submitChoiceAnswer(UUID attemptId, StudentAnswerChoiceRequestDTO request);
-    List<StudentAnswerTextResponseDTO> submitTextAnswers(UUID attemptId, StudentAnswerTextRequestDTO request);
+    StudentAnswerTextResponseDTO submitTextAnswers(UUID attemptId, StudentAnswerTextRequestDTO request);
     StudentAnswerCodeResponseDTO submitCodeAnswer(UUID attemptId, StudentAnswerCodeRequestDTO request);
 
     List<StudentCodingTestResultResponseDTO> getCodingTestResults(UUID codeAnswerId);

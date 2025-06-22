@@ -791,7 +791,7 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public List<StudentAnswerTextResponseDTO> submitTextAnswers(UUID attemptId, StudentAnswerTextRequestDTO request) {
+    public StudentAnswerTextResponseDTO submitTextAnswers(UUID attemptId, StudentAnswerTextRequestDTO request) {
         // Validate that attempt exists
         StudentExamAttempt attempt = studentExamAttemptRepository.findById(attemptId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student attempt not found with id: " + attemptId));
@@ -997,20 +997,20 @@ public class ExamServiceImpl implements ExamService {
     }
 
     // Helper method to convert StudentAnswerText entity to StudentAnswerTextResponseDTO
-    private List<StudentAnswerTextResponseDTO> convertToStudentAnswerTextResponseDTO(List<StudentAnswerText> answers) {
-        List<StudentAnswerTextResponseDTO> studentAnswerTextResponseDTOS = new ArrayList<>();
-        if(answers == null || answers.isEmpty()) return List.of();
+    private StudentAnswerTextResponseDTO convertToStudentAnswerTextResponseDTO(List<StudentAnswerText> answers) {
+        if(answers == null || answers.isEmpty()) return new StudentAnswerTextResponseDTO();
+
+        StudentAnswerTextResponseDTO response = new StudentAnswerTextResponseDTO();
+        response.setStudentExamAttemptId(answers.get(0).getStudentExamAttempt().getId());
+        response.setExamQuestionId(answers.get(0).getExamQuestion().getId());
+        response.setAnswerTexts(new ArrayList<>());
 
         answers.forEach(answer -> {
-            StudentAnswerTextResponseDTO response = new StudentAnswerTextResponseDTO();
-            response.setId(answer.getId());
-            response.setStudentAnswer(answer.getStudentAnswer());
-            response.setQuestionPart(answer.getQuestionPart());
-            response.setSortOrder(answer.getSortOrder());
-            studentAnswerTextResponseDTOS.add(response);
+            response.getAnswerTexts().add(new StudentAnswerTextResponseDTO
+                    .AnswerText(answer.getId(), answer.getQuestionPart(), answer.getStudentAnswer(), answer.getSortOrder()));
         });
 
-        return studentAnswerTextResponseDTOS;
+        return response;
     }
 
     // Helper method to convert StudentAnswerCode entity to StudentAnswerCodeResponseDTO
