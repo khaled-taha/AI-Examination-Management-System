@@ -5,7 +5,6 @@ public enum QuestionType {
     MCQ,          // Single Choice
     MultiChoice,  // Multiple Correct
     Complete,     // Fill in the Blank
-    Choose,       // Dropdown Select
     Matching,
     Coding
 }

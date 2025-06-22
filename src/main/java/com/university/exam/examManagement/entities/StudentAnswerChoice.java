@@ -29,6 +29,9 @@ public class StudentAnswerChoice {
     @JoinColumn(name = "selected_choice_id")
     private ExamQuestionChoice selectedChoice;
 
+    private Boolean isCorrect;
+    private Double score;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

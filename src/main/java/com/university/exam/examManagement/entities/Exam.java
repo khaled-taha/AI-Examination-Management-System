@@ -57,6 +57,12 @@ public class Exam {
     @Column(nullable = false)
     private int allowedAttemptTimes = 1;
 
+    @Column(name = "questionsPerPage")
+    private byte questionsPerPage = 1;
+
+    @Column(name = "showResult")
+    private boolean showResult;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

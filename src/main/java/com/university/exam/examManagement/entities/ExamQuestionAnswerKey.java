@@ -34,10 +34,9 @@ public class ExamQuestionAnswerKey {
     private boolean caseSensitive = false;
 
     @Column(nullable = false)
-    private boolean acceptable = true;
-
-    @Column(nullable = false)
     private int sortOrder = 1;
+
+    private double score = 0;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

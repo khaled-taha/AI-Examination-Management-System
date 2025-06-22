@@ -10,6 +10,6 @@ public class AnswerKeyResponseDTO {
     private String answerText;
     private String questionPart;
     private boolean caseSensitive;
-    private boolean acceptable;
     private int sortOrder;
+    private Double score;
 } 

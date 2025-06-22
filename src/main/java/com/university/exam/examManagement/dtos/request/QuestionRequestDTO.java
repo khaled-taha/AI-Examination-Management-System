@@ -35,4 +35,6 @@ public class QuestionRequestDTO {
 
     @Min(value = 1, message = "Question position must be at least 1")
     private Integer position;
+
+    private boolean active; // for soft-delete and grade.
 } 

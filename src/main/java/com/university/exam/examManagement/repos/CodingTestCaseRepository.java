@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface CodingTestCaseRepository extends JpaRepository<CodingTestCase, UUID> {
     List<CodingTestCase> findByExamQuestion(ExamQuestion examQuestion);
+    List<CodingTestCase> findByExamQuestionAndIsSample(ExamQuestion examQuestion, boolean isSample);
     
     // Convenience method for backward compatibility
     default List<CodingTestCase> findByExamQuestionId(UUID examQuestionId) {

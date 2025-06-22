@@ -11,8 +11,5 @@ public class StudentAnswerTextResponseDTO {
     private UUID examQuestionId;
     private String questionPart;
     private String studentAnswer;
-    private LocalDateTime submittedAt;
-    private Boolean isCorrect;
-    private Double markObtained;
-    private Double similarityScore;
-} 
+    private int sortOrder;
+}

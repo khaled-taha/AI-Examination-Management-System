@@ -10,7 +10,4 @@ public class StudentAnswerCodeResponseDTO {
     private UUID examQuestionId;
     private String submittedCode;
     private UUID languageId;
-    private Double totalScore;
-    private String resultSummary;
-    private Double aiScore;
-} 
+}

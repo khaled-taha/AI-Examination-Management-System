@@ -1,5 +1,6 @@
 package com.university.exam.examManagement.dtos.request;
 
+import jakarta.persistence.Column;
 import lombok.Data;
 import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
@@ -40,4 +41,7 @@ public class ExamRequestDTO {
 
     @Min(value = 1, message = "Allowed attempt times must be at least 1")
     private int allowedAttemptTimes;
+
+    private boolean showResult;
+    private byte questionsPerPage;
 }

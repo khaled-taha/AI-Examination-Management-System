@@ -15,6 +15,6 @@ public class AnswerKeyRequestDTO {
     private String questionPart;
 
     private boolean caseSensitive = false;
-    private boolean acceptable = true;
     private int sortOrder = 1;
+    private Double score;
 } 

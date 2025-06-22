@@ -13,4 +13,4 @@ public class StudentCodingTestResultResponseDTO {
     private Integer executionTimeMs;
     private Integer memoryUsedKb;
     private String feedback;
-} 
+}

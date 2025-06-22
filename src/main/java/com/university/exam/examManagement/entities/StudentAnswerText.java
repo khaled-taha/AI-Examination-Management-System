@@ -29,15 +29,17 @@ public class StudentAnswerText {
     private ExamQuestion examQuestion;
 
     @Column(columnDefinition = "TEXT")
-    private String questionPart;
+    private String questionPart; // for matching
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String studentAnswer;
 
-    private LocalDateTime submittedAt;
+    @Column(nullable = false)
+    private int sortOrder = 1;
+
     private Boolean isCorrect;
     private Double markObtained;
-    private Double similarityScore;
+    private Double similarityScore; // for AI
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

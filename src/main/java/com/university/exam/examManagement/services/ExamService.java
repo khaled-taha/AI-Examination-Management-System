@@ -10,36 +10,41 @@ public interface ExamService {
     ExamResponseDTO getExam(UUID id);
     ExamResponseDTO updateExam(UUID id, ExamRequestDTO request);
     void deleteExam(UUID id);
-    List<ExamResponseDTO> listExams();
-    List<ExamResponseDTO> getExamsByAcademicYearIdAndTermOrder(UUID academicYearGroupId, UUID termId);
+    List<ExamResponseDTO> getExams();
+
+    List<ExamResponseDTO> getExamsByAcademicYearCourseId(UUID academicYearCourseId);
+
     CanEnterExamResponseDTO canStudentEnterExam(UUID studentId, UUID examId);
 
     SectionResponseDTO createSection(UUID examId, SectionRequestDTO request);
-    List<SectionResponseDTO> listSections(UUID examId);
+    List<SectionResponseDTO> getSections(UUID examId);
 
     QuestionResponseDTO addQuestion(UUID examId, QuestionRequestDTO request);
-    List<QuestionResponseDTO> listQuestions(UUID examId);
+
+    // List<QuestionResponseDTO> getQuestions(UUID examId);
+
     QuestionResponseDTO updateQuestion(UUID questionId, QuestionRequestDTO request);
     void deleteQuestion(UUID questionId);
 
     ChoiceResponseDTO addChoice(UUID questionId, ChoiceRequestDTO request);
-    List<ChoiceResponseDTO> listChoices(UUID questionId);
+    List<ChoiceResponseDTO> getChoices(UUID questionId);
 
     AnswerKeyResponseDTO addAnswerKey(UUID questionId, AnswerKeyRequestDTO request);
-    List<AnswerKeyResponseDTO> listAnswerKeys(UUID questionId);
+    List<AnswerKeyResponseDTO> getAnswerKeys(UUID questionId);
 
     CodingTestCaseResponseDTO addTestCase(UUID questionId, CodingTestCaseRequestDTO request);
-    List<CodingTestCaseResponseDTO> listTestCases(UUID questionId);
+    List<CodingTestCaseResponseDTO> getTestCases(UUID questionId);
 
     StudentAttemptResponseDTO createStudentAttempt(StudentAttemptRequestDTO request);
     StudentAttemptResponseDTO getStudentAttempt(UUID attemptId);
-    List<StudentAttemptResponseDTO> listStudentAttempts();
-    List<StudentAttemptResponseDTO> listStudentAttemptsByStudentIdAndExamId(UUID studentId, UUID examId);
-    List<StudentAttemptResponseDTO> listStudentAttemptsByExamId(UUID examId);
+    List<StudentAttemptResponseDTO> getStudentAttempts();
+    List<StudentAttemptResponseDTO> getStudentAttemptsByStudentIdAndExamId(UUID studentId, UUID examId);
+    List<StudentAttemptResponseDTO> getStudentAttemptsByExamId(UUID examId);
+    List<StudentSectionViewDTO> getExamForStudent(UUID examId);
 
     StudentAnswerChoiceResponseDTO submitChoiceAnswer(UUID attemptId, StudentAnswerChoiceRequestDTO request);
-    StudentAnswerTextResponseDTO submitTextAnswer(UUID attemptId, StudentAnswerTextRequestDTO request);
+    List<StudentAnswerTextResponseDTO> submitTextAnswers(UUID attemptId, StudentAnswerTextRequestDTO request);
     StudentAnswerCodeResponseDTO submitCodeAnswer(UUID attemptId, StudentAnswerCodeRequestDTO request);
 
-    List<StudentCodingTestResultResponseDTO> listCodingTestResults(UUID codeAnswerId);
+    List<StudentCodingTestResultResponseDTO> getCodingTestResults(UUID codeAnswerId);
 } 

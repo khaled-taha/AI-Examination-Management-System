@@ -49,6 +49,7 @@ public class ExamQuestion {
     private double mark;
 
     private Integer position;
+    private boolean active; // for soft-delete and grade.
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -17,5 +17,7 @@ public class ExamResponseDTO {
     private UUID academicYearGroupId;
     private double successPercentage;
     private int allowedAttemptTimes;
+    private boolean showResult;
+    private byte questionsPerPage;
     private LocalDateTime creationTime;
 } 
