@@ -796,7 +796,6 @@ public class ExamServiceImpl implements ExamService {
         answerKey.setQuestionPart(request.getQuestionPart());
         answerKey.setCaseSensitive(request.isCaseSensitive());
         answerKey.setSortOrder(request.getSortOrder());
-        answerKey.setScore(request.getScore());
         answerKey.setCreatedAt(LocalDateTime.now());
         answerKey.setUpdatedAt(LocalDateTime.now());
 
@@ -993,6 +992,9 @@ public class ExamServiceImpl implements ExamService {
             examQuestionAnswerKeyMap.put(key.getSortOrder(), key);
         });
 
+        double markObtained = !examQuestionAnswerKeyMap.isEmpty() ? question.getMark() / examQuestionAnswerKeyMap.size() : 0;
+
+
         List<StudentAnswerText> studentAnswerTexts = new ArrayList<>();
         answerTexts.forEach(answerText -> {
             // Create new student answer text entity
@@ -1014,7 +1016,9 @@ public class ExamServiceImpl implements ExamService {
                     !Utils.isEmpty(answerText.getStudentAnswer()) && answerText.getStudentAnswer().equalsIgnoreCase(answerKey.getAnswerText()));
 
             studentAnswer.setIsCorrect(isCorrect);
-            studentAnswer.setMarkObtained(isCorrect ? answerKey.getScore() : 0d);
+
+
+            studentAnswer.setMarkObtained(isCorrect ? markObtained : 0d);
             studentAnswer.setCreatedAt(LocalDateTime.now());
             studentAnswer.setUpdatedAt(LocalDateTime.now());
             studentAnswerTexts.add(studentAnswer);
@@ -1141,7 +1145,6 @@ public class ExamServiceImpl implements ExamService {
         response.setQuestionPart(answerKey.getQuestionPart());
         response.setCaseSensitive(answerKey.isCaseSensitive());
         response.setSortOrder(answerKey.getSortOrder());
-        response.setScore(answerKey.getScore());
         return response;
     }
 

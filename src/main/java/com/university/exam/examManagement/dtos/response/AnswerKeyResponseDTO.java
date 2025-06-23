@@ -11,5 +11,4 @@ public class AnswerKeyResponseDTO {
     private String questionPart;
     private boolean caseSensitive;
     private int sortOrder;
-    private Double score;
-} 
+}

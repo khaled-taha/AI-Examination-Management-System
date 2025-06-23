@@ -36,8 +36,6 @@ public class ExamQuestionAnswerKey {
     @Column(nullable = false)
     private int sortOrder = 1;
 
-    private double score = 0;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
