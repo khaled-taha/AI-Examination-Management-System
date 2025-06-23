@@ -286,6 +286,96 @@ public class ExamServiceImpl implements ExamService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
+    public PaginatedSectionsResponseDTO getSectionsPaginated(UUID examId, int page) {
+        // Validate that exam exists
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id: " + examId));
+
+        // Validate page number
+        if (page < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page number must be greater than 0");
+        }
+
+        int questionsPerPage = exam.getQuestionsPerPage();
+        if (questionsPerPage <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exam questionsPerPage must be greater than 0");
+        }
+
+        // Get all sections with their questions
+        List<ExamSection> allSections = examSectionRepository.findByExamId(examId);
+        
+        // Collect all questions from all sections with their section info
+        List<QuestionWithSection> allQuestions = new ArrayList<>();
+        for (ExamSection section : allSections) {
+            List<ExamQuestion> questions = examQuestionRepository.findBySection(section);
+            for (ExamQuestion question : questions) {
+                allQuestions.add(new QuestionWithSection(question, section));
+            }
+        }
+
+        // Sort questions by section position, then by question position
+        allQuestions.sort(Comparator.
+                comparingInt((QuestionWithSection q) -> q.section.getPosition())
+                .thenComparingInt(q -> q.question.getPosition()));
+
+        int totalQuestions = allQuestions.size();
+        int totalPages = (int) Math.ceil((double) totalQuestions / questionsPerPage);
+
+        // Validate page number
+        if (page > totalPages && totalPages > 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                "Page " + page + " does not exist. Total pages: " + totalPages);
+        }
+
+        // Calculate start and end indices for the requested page
+        int startIndex = (page - 1) * questionsPerPage;
+        int endIndex = Math.min(startIndex + questionsPerPage, totalQuestions);
+
+        // Get questions for the current page
+        List<QuestionWithSection> pageQuestions = allQuestions.subList(startIndex, endIndex);
+
+        // Group questions by section
+        Map<ExamSection, List<ExamQuestion>> questionsBySection = pageQuestions.stream()
+                .collect(Collectors.groupingBy(
+                    qws -> qws.section,
+                    Collectors.mapping(qws -> qws.question, Collectors.toList())
+                ));
+
+        // Create section DTOs with only the questions for this page
+        List<SectionResponseDTO> sections = new ArrayList<>();
+        for (ExamSection section : allSections) {
+            List<ExamQuestion> sectionQuestions = questionsBySection.get(section);
+            if (sectionQuestions != null && !sectionQuestions.isEmpty()) {
+                SectionResponseDTO sectionDto = new SectionResponseDTO();
+                sectionDto.setId(section.getId());
+                sectionDto.setExamId(section.getExam().getId());
+                sectionDto.setTitle(section.getTitle());
+                sectionDto.setPosition(section.getPosition());
+                
+                // Convert questions to DTOs
+                sectionDto.setQuestions(sectionQuestions.stream()
+                        .map(this::convertQuestionToPolymorphicDTO)
+                        .collect(Collectors.toList()));
+                
+                sections.add(sectionDto);
+            }
+        }
+
+        // Create pagination response
+        PaginatedSectionsResponseDTO response = new PaginatedSectionsResponseDTO();
+        response.setSections(sections);
+        response.setCurrentPage(page);
+        response.setTotalPages(totalPages);
+        response.setTotalQuestions(totalQuestions);
+        response.setQuestionsPerPage(questionsPerPage);
+        response.setHasNextPage(page < totalPages);
+        response.setHasPreviousPage(page > 1);
+
+        return response;
+    }
+
     private SectionResponseDTO convertSectionToResponseDTOWithQuestions(ExamSection section) {
         SectionResponseDTO dto = new SectionResponseDTO();
         dto.setId(section.getId());
@@ -386,6 +476,99 @@ public class ExamServiceImpl implements ExamService {
         return sections.stream()
                 .map(this::convertSectionToStudentViewDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginatedStudentSectionsResponseDTO getExamForStudentPaginated(UUID examId, int page) {
+        // Validate that exam exists
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id: " + examId));
+
+        // Validate page number
+        if (page < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page number must be greater than 0");
+        }
+
+        int questionsPerPage = exam.getQuestionsPerPage();
+        if (questionsPerPage <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exam questionsPerPage must be greater than 0");
+        }
+
+        // Get all sections with their questions
+        List<ExamSection> allSections = examSectionRepository.findByExam(exam);
+        
+        // Collect all questions from all sections with their section info
+        List<QuestionWithSection> allQuestions = new ArrayList<>();
+        for (ExamSection section : allSections) {
+            List<ExamQuestion> questions = examQuestionRepository.findBySection(section);
+            for (ExamQuestion question : questions) {
+                allQuestions.add(new QuestionWithSection(question, section));
+            }
+        }
+
+        // Sort questions by section position, then by question position
+        allQuestions.sort((q1, q2) -> {
+            int sectionCompare = Integer.compare(q1.section.getPosition(), q2.section.getPosition());
+            if (sectionCompare != 0) {
+                return sectionCompare;
+            }
+            return Integer.compare(q1.question.getPosition(), q2.question.getPosition());
+        });
+
+        int totalQuestions = allQuestions.size();
+        int totalPages = (int) Math.ceil((double) totalQuestions / questionsPerPage);
+
+        // Validate page number
+        if (page > totalPages && totalPages > 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                "Page " + page + " does not exist. Total pages: " + totalPages);
+        }
+
+        // Calculate start and end indices for the requested page
+        int startIndex = (page - 1) * questionsPerPage;
+        int endIndex = Math.min(startIndex + questionsPerPage, totalQuestions);
+
+        // Get questions for the current page
+        List<QuestionWithSection> pageQuestions = allQuestions.subList(startIndex, endIndex);
+
+        // Group questions by section
+        Map<ExamSection, List<ExamQuestion>> questionsBySection = pageQuestions.stream()
+                .collect(Collectors.groupingBy(
+                    qws -> qws.section,
+                    Collectors.mapping(qws -> qws.question, Collectors.toList())
+                ));
+
+        // Create section DTOs with only the questions for this page
+        List<StudentSectionViewDTO> sections = new ArrayList<>();
+        for (ExamSection section : allSections) {
+            List<ExamQuestion> sectionQuestions = questionsBySection.get(section);
+            if (sectionQuestions != null && !sectionQuestions.isEmpty()) {
+                StudentSectionViewDTO sectionDto = new StudentSectionViewDTO();
+                sectionDto.setId(section.getId());
+                sectionDto.setTitle(section.getTitle());
+                sectionDto.setPosition(section.getPosition());
+                
+                // Convert questions to student view DTOs
+                sectionDto.setQuestions(sectionQuestions.stream()
+                        .map(this::convertQuestionToStudentViewDTO)
+                        .collect(Collectors.toList()));
+                
+                sections.add(sectionDto);
+            }
+        }
+
+        // Create pagination response
+        PaginatedStudentSectionsResponseDTO response = new PaginatedStudentSectionsResponseDTO();
+        response.setSections(sections);
+        response.setCurrentPage(page);
+        response.setTotalPages(totalPages);
+        response.setTotalQuestions(totalQuestions);
+        response.setQuestionsPerPage(questionsPerPage);
+        response.setHasNextPage(page < totalPages);
+        response.setHasPreviousPage(page > 1);
+
+        return response;
     }
 
     private StudentSectionViewDTO convertSectionToStudentViewDTO(ExamSection section) {
@@ -1034,5 +1217,16 @@ public class ExamServiceImpl implements ExamService {
         response.setMemoryUsedKb(result.getMemoryUsedKb());
         response.setFeedback(result.getFeedback());
         return response;
+    }
+
+    // Helper class to keep track of questions with their sections
+    private static class QuestionWithSection {
+        final ExamQuestion question;
+        final ExamSection section;
+
+        QuestionWithSection(ExamQuestion question, ExamSection section) {
+            this.question = question;
+            this.section = section;
+        }
     }
 } 

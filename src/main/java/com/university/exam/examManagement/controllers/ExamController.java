@@ -62,6 +62,16 @@ public class ExamController {
         return ResponseEntity.ok(examService.getSections(examId));
     }
 
+    @GetMapping("/{examId}/sections/paginated")
+    public ResponseEntity<PaginatedSectionsResponseDTO> getSectionsPaginated(
+            @PathVariable UUID examId, 
+            @RequestParam(defaultValue = "1") int page) {
+        if (page < 1) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(examService.getSectionsPaginated(examId, page));
+    }
+
     // Question APIs
     @PostMapping("/{examId}/questions")
     public ResponseEntity<QuestionResponseDTO> addQuestion(@PathVariable UUID examId, @Valid @RequestBody QuestionRequestDTO request) {
@@ -145,6 +155,16 @@ public class ExamController {
         return ResponseEntity.ok(examService.getExamForStudent(examId));
     }
 
+    @GetMapping("/{examId}/student-view/paginated")
+    public ResponseEntity<PaginatedStudentSectionsResponseDTO> getExamForStudentPaginated(
+            @PathVariable UUID examId, 
+            @RequestParam(defaultValue = "1") int page) {
+        if (page < 1) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(examService.getExamForStudentPaginated(examId, page));
+    }
+
     // Student Answers APIs
     @PostMapping("/attempts/{attemptId}/answers/choice")
     public ResponseEntity<StudentAnswerChoiceResponseDTO> submitChoiceAnswer(@PathVariable UUID attemptId, @Valid @RequestBody StudentAnswerChoiceRequestDTO request) {
@@ -152,7 +172,7 @@ public class ExamController {
     }
 
     @PostMapping("/attempts/{attemptId}/answers/text")
-    public ResponseEntity<List<StudentAnswerTextResponseDTO>> submitTextAnswer(@PathVariable UUID attemptId, @Valid @RequestBody StudentAnswerTextRequestDTO request) {
+    public ResponseEntity<StudentAnswerTextResponseDTO> submitTextAnswer(@PathVariable UUID attemptId, @Valid @RequestBody StudentAnswerTextRequestDTO request) {
         return ResponseEntity.ok(examService.submitTextAnswers(attemptId, request));
     }
 

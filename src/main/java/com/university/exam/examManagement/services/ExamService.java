@@ -18,6 +18,7 @@ public interface ExamService {
 
     SectionResponseDTO createSection(UUID examId, SectionRequestDTO request);
     List<SectionResponseDTO> getSections(UUID examId);
+    PaginatedSectionsResponseDTO getSectionsPaginated(UUID examId, int page);
 
     QuestionResponseDTO addQuestion(UUID examId, QuestionRequestDTO request);
 
@@ -41,6 +42,7 @@ public interface ExamService {
     List<StudentAttemptResponseDTO> getStudentAttemptsByStudentIdAndExamId(UUID studentId, UUID examId);
     List<StudentAttemptResponseDTO> getStudentAttemptsByExamId(UUID examId);
     List<StudentSectionViewDTO> getExamForStudent(UUID examId);
+    PaginatedStudentSectionsResponseDTO getExamForStudentPaginated(UUID examId, int page);
 
     StudentAnswerChoiceResponseDTO submitChoiceAnswer(UUID attemptId, StudentAnswerChoiceRequestDTO request);
     StudentAnswerTextResponseDTO submitTextAnswers(UUID attemptId, StudentAnswerTextRequestDTO request);
