@@ -27,13 +27,13 @@ public interface ExamService {
     QuestionResponseDTO updateQuestion(UUID questionId, QuestionRequestDTO request);
     void deleteQuestion(UUID questionId);
 
-    ChoiceResponseDTO addChoice(UUID questionId, ChoiceRequestDTO request);
+    ChoiceResponseDTO saveChoice(UUID questionId, ChoiceRequestDTO request);
     List<ChoiceResponseDTO> getChoices(UUID questionId);
 
-    AnswerKeyResponseDTO addAnswerKey(UUID questionId, AnswerKeyRequestDTO request);
+    AnswerKeyResponseDTO saveAnswerKey(UUID questionId, AnswerKeyRequestDTO request);
     List<AnswerKeyResponseDTO> getAnswerKeys(UUID questionId);
 
-    CodingTestCaseResponseDTO addTestCase(UUID questionId, CodingTestCaseRequestDTO request);
+    CodingTestCaseResponseDTO saveTestCase(UUID questionId, CodingTestCaseRequestDTO request);
     List<CodingTestCaseResponseDTO> getTestCases(UUID questionId);
 
     StudentAttemptResponseDTO createStudentAttempt(StudentAttemptRequestDTO request);

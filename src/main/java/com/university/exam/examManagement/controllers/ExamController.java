@@ -92,7 +92,7 @@ public class ExamController {
     // Choices APIs
     @PostMapping("/questions/{questionId}/choices")
     public ResponseEntity<ChoiceResponseDTO> addChoice(@PathVariable UUID questionId, @Valid @RequestBody ChoiceRequestDTO request) {
-        return ResponseEntity.ok(examService.addChoice(questionId, request));
+        return ResponseEntity.ok(examService.saveChoice(questionId, request));
     }
 
     @GetMapping("/questions/{questionId}/choices")
@@ -103,7 +103,7 @@ public class ExamController {
     // Answer Key APIs
     @PostMapping("/questions/{questionId}/answer-keys")
     public ResponseEntity<AnswerKeyResponseDTO> addAnswerKey(@PathVariable UUID questionId, @Valid @RequestBody AnswerKeyRequestDTO request) {
-        return ResponseEntity.ok(examService.addAnswerKey(questionId, request));
+        return ResponseEntity.ok(examService.saveAnswerKey(questionId, request));
     }
 
     @GetMapping("/questions/{questionId}/answer-keys")
@@ -114,7 +114,7 @@ public class ExamController {
     // Coding Test Case APIs
     @PostMapping("/questions/{questionId}/test-cases")
     public ResponseEntity<CodingTestCaseResponseDTO> addTestCase(@PathVariable UUID questionId, @Valid @RequestBody CodingTestCaseRequestDTO request) {
-        return ResponseEntity.ok(examService.addTestCase(questionId, request));
+        return ResponseEntity.ok(examService.saveTestCase(questionId, request));
     }
 
     @GetMapping("/questions/{questionId}/test-cases")

@@ -749,14 +749,14 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public ChoiceResponseDTO addChoice(UUID questionId, ChoiceRequestDTO request) {
+    public ChoiceResponseDTO saveChoice(UUID questionId, ChoiceRequestDTO request) {
         // Validate that question exists
         ExamQuestion question = examQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
 
         // Create new choice entity
         ExamQuestionChoice choice = new ExamQuestionChoice();
-        choice.setId(UUID.randomUUID());
+        choice.setId(request.getId());
         choice.setExamQuestion(question);
         choice.setChoiceText(request.getChoiceText());
         choice.setIsCorrect(request.getIsCorrect());
@@ -783,14 +783,14 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public AnswerKeyResponseDTO addAnswerKey(UUID questionId, AnswerKeyRequestDTO request) {
+    public AnswerKeyResponseDTO saveAnswerKey(UUID questionId, AnswerKeyRequestDTO request) {
         // Validate that question exists
         ExamQuestion question = examQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
 
         // Create new answer key entity
         ExamQuestionAnswerKey answerKey = new ExamQuestionAnswerKey();
-        answerKey.setId(UUID.randomUUID());
+        answerKey.setId(request.getId());
         answerKey.setExamQuestion(question);
         answerKey.setAnswerText(request.getAnswerText());
         answerKey.setQuestionPart(request.getQuestionPart());
@@ -818,14 +818,14 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public CodingTestCaseResponseDTO addTestCase(UUID questionId, CodingTestCaseRequestDTO request) {
+    public CodingTestCaseResponseDTO saveTestCase(UUID questionId, CodingTestCaseRequestDTO request) {
         // Validate that question exists
        ExamQuestion examQuestion = examQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
 
         // Create new test case entity
         CodingTestCase testCase = new CodingTestCase();
-        testCase.setId(UUID.randomUUID());
+        testCase.setId(request.getId());
         testCase.setExamQuestion(examQuestion);
         testCase.setInput(request.getInput());
         testCase.setExpectedOutput(request.getExpectedOutput());

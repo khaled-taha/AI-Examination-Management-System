@@ -6,6 +6,9 @@ import java.util.UUID;
 
 @Data
 public class ChoiceRequestDTO {
+
+    private UUID id;
+
     @NotNull(message = "Exam question ID is required")
     private UUID examQuestionId;
 

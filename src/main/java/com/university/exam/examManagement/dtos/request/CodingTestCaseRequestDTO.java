@@ -7,6 +7,9 @@ import java.util.UUID;
 
 @Data
 public class CodingTestCaseRequestDTO {
+
+    private UUID id;
+
     @NotNull(message = "Exam question ID is required")
     private UUID examQuestionId;
 
