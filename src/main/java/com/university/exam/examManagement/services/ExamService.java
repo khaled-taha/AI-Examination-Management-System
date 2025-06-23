@@ -49,4 +49,10 @@ public interface ExamService {
     StudentAnswerCodeResponseDTO submitCodeAnswer(UUID attemptId, StudentAnswerCodeRequestDTO request);
 
     List<StudentCodingTestResultResponseDTO> getCodingTestResults(UUID codeAnswerId);
+
+    void deleteChoice(UUID questionId, UUID choiceId);
+    void deleteAnswerKey(UUID questionId, UUID answerKeyId);
+    void deleteTestCase(UUID questionId, UUID testCaseId);
+    StudentAttemptResponseDTO endExam(UUID attemptId);
+    double getExamTotalPoints(UUID examId);
 } 

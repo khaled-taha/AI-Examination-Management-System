@@ -100,6 +100,13 @@ public class ExamController {
         return ResponseEntity.ok(examService.getChoices(questionId));
     }
 
+    // Delete Choice
+    @DeleteMapping("/questions/{questionId}/choices/{choiceId}")
+    public ResponseEntity<Void> deleteChoice(@PathVariable UUID questionId, @PathVariable UUID choiceId) {
+        examService.deleteChoice(questionId, choiceId);
+        return ResponseEntity.noContent().build();
+    }
+
     // Answer Key APIs
     @PostMapping("/questions/{questionId}/answer-keys")
     public ResponseEntity<AnswerKeyResponseDTO> saveAnswerKey(@PathVariable UUID questionId, @Valid @RequestBody AnswerKeyRequestDTO request) {
@@ -111,6 +118,13 @@ public class ExamController {
         return ResponseEntity.ok(examService.getAnswerKeys(questionId));
     }
 
+    // Delete Answer Key
+    @DeleteMapping("/questions/{questionId}/answer-keys/{answerKeyId}")
+    public ResponseEntity<Void> deleteAnswerKey(@PathVariable UUID questionId, @PathVariable UUID answerKeyId) {
+        examService.deleteAnswerKey(questionId, answerKeyId);
+        return ResponseEntity.noContent().build();
+    }
+
     // Coding Test Case APIs
     @PostMapping("/questions/{questionId}/test-cases")
     public ResponseEntity<CodingTestCaseResponseDTO> saveTestCase(@PathVariable UUID questionId, @Valid @RequestBody CodingTestCaseRequestDTO request) {
@@ -120,6 +134,13 @@ public class ExamController {
     @GetMapping("/questions/{questionId}/test-cases")
     public ResponseEntity<List<CodingTestCaseResponseDTO>> listTestCases(@PathVariable UUID questionId) {
         return ResponseEntity.ok(examService.getTestCases(questionId));
+    }
+
+    // Delete Test Case
+    @DeleteMapping("/questions/{questionId}/test-cases/{testCaseId}")
+    public ResponseEntity<Void> deleteTestCase(@PathVariable UUID questionId, @PathVariable UUID testCaseId) {
+        examService.deleteTestCase(questionId, testCaseId);
+        return ResponseEntity.noContent().build();
     }
 
     // Student Attempt APIs
@@ -192,5 +213,17 @@ public class ExamController {
             @PathVariable UUID examId, 
             @PathVariable UUID studentId) {
         return ResponseEntity.ok(examService.canStudentEnterExam(studentId, examId));
+    }
+
+    // End Exam Attempt
+    @PostMapping("/attempts/{attemptId}/end")
+    public ResponseEntity<StudentAttemptResponseDTO> endExam(@PathVariable UUID attemptId) {
+        return ResponseEntity.ok(examService.endExam(attemptId));
+    }
+
+    // Get Exam Total Points
+    @GetMapping("/{examId}/total-points")
+    public ResponseEntity<Double> getExamTotalPoints(@PathVariable UUID examId) {
+        return ResponseEntity.ok(examService.getExamTotalPoints(examId));
     }
 }

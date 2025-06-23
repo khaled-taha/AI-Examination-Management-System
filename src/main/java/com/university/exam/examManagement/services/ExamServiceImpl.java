@@ -1232,4 +1232,82 @@ public class ExamServiceImpl implements ExamService {
             this.section = section;
         }
     }
+
+    @Override
+    @Transactional
+    public void deleteChoice(UUID questionId, UUID choiceId) {
+        examQuestionRepository.findById(questionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
+        ExamQuestionChoice choice = examQuestionChoiceRepository.findById(choiceId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Choice not found with id: " + choiceId));
+        if (!choice.getExamQuestion().getId().equals(questionId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choice does not belong to the specified question");
+        }
+        examQuestionChoiceRepository.delete(choice);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAnswerKey(UUID questionId, UUID answerKeyId) {
+        examQuestionRepository.findById(questionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
+        ExamQuestionAnswerKey answerKey = examQuestionAnswerKeyRepository.findById(answerKeyId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Answer key not found with id: " + answerKeyId));
+        if (!answerKey.getExamQuestion().getId().equals(questionId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Answer key does not belong to the specified question");
+        }
+        examQuestionAnswerKeyRepository.delete(answerKey);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTestCase(UUID questionId, UUID testCaseId) {
+        examQuestionRepository.findById(questionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
+        CodingTestCase testCase = codingTestCaseRepository.findById(testCaseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Test case not found with id: " + testCaseId));
+        if (!testCase.getExamQuestion().getId().equals(questionId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Test case does not belong to the specified question");
+        }
+        codingTestCaseRepository.delete(testCase);
+    }
+
+    @Override
+    @Transactional
+    public StudentAttemptResponseDTO endExam(UUID attemptId) {
+        StudentExamAttempt attempt = studentExamAttemptRepository.findById(attemptId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student attempt not found with id: " + attemptId));
+        if (attempt.getEndTime() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exam attempt already ended");
+        }
+        // Calculate final score (sum of all answers' marks for this attempt)
+        double successPercentage = attempt.getExam().getSuccessPercentage();
+        double examMark = getExamTotalPoints(attempt.getExam().getId());
+        double totalScore = 0d;
+        // Choice answers
+        List<StudentAnswerChoice> choiceAnswers = studentAnswerChoiceRepository.findByStudentExamAttempt(attempt);
+        totalScore += choiceAnswers.stream().mapToDouble(a -> a.getScore() != null ? a.getScore() : 0d).sum();
+        // Text answers
+        List<StudentAnswerText> textAnswers = studentAnswerTextRepository.findByStudentExamAttempt(attempt);
+        totalScore += textAnswers.stream().mapToDouble(a -> a.getMarkObtained() != null ? a.getMarkObtained() : 0d).sum();
+        // Code answers
+        List<StudentAnswerCode> codeAnswers = studentAnswerCodeRepository.findByStudentExamAttempt(attempt);
+        totalScore += codeAnswers.stream().mapToDouble(a -> a.getTotalScore() != null ? a.getTotalScore() : 0d).sum();
+        attempt.setEndTime(LocalDateTime.now());
+        attempt.setScore(totalScore);
+        attempt.setStatus((totalScore / examMark) * 100 >= successPercentage ? "SUCCESS" : "FAILED");
+        attempt.setUpdatedAt(LocalDateTime.now());
+        studentExamAttemptRepository.save(attempt);
+        return convertToStudentAttemptResponseDTO(attempt);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public double getExamTotalPoints(UUID examId) {
+        // Validate that exam exists
+        examRepository.findById(examId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id: " + examId));
+        List<ExamQuestion> questions = examQuestionRepository.findByExamId(examId);
+        return questions.stream().mapToDouble(ExamQuestion::getMark).sum();
+    }
 } 
