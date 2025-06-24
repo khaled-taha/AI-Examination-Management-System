@@ -247,8 +247,8 @@ public class ExamServiceImpl implements ExamService {
         response.setAcademicYearGroupId(exam.getAcademicYearGroup().getId());
         response.setSuccessPercentage(exam.getSuccessPercentage());
         response.setAllowedAttemptTimes(exam.getAllowedAttemptTimes());
-        exam.setQuestionsPerPage(exam.getQuestionsPerPage());
-        exam.setShowResult(exam.isShowResult());
+        response.setQuestionsPerPage(exam.getQuestionsPerPage());
+        response.setShowResult(exam.isShowResult());
         response.setCreationTime(exam.getCreatedAt());
         return response;
     }
