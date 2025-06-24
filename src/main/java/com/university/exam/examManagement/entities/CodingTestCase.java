@@ -16,6 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CodingTestCase {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
