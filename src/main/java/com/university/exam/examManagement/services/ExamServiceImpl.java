@@ -1153,6 +1153,7 @@ public class ExamServiceImpl implements ExamService {
             savedAnswerKey.setQuestionPart(key.getQuestionPart());
             savedAnswerKey.setCaseSensitive(key.isCaseSensitive());
             savedAnswerKey.setSortOrder(key.getSortOrder());
+            response.getAnswerKeys().add(savedAnswerKey);
         });
         return response;
     }
@@ -1171,6 +1172,7 @@ public class ExamServiceImpl implements ExamService {
             savedTestCase.setExpectedOutput(testCase.getExpectedOutput());
             savedTestCase.setMark(testCase.getMark());
             savedTestCase.setSample(testCase.isSample());
+            response.getTestCases().add(savedTestCase);
         });
 
         return response;
