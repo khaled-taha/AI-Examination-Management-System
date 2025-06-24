@@ -20,21 +20,21 @@ public interface ExamService {
     List<SectionResponseDTO> getSections(UUID examId);
     PaginatedSectionsResponseDTO getSectionsPaginated(UUID examId, int page);
 
-    QuestionResponseDTO addQuestion(UUID examId, QuestionRequestDTO request);
+    ExamQuestionResponseDTO addQuestion(UUID examId, QuestionRequestDTO request);
 
     // List<QuestionResponseDTO> getQuestions(UUID examId);
 
-    QuestionResponseDTO updateQuestion(UUID questionId, QuestionRequestDTO request);
+    ExamQuestionResponseDTO updateQuestion(UUID questionId, QuestionRequestDTO request);
     void deleteQuestion(UUID questionId);
 
-    ChoiceResponseDTO saveChoice(UUID questionId, ChoiceRequestDTO request);
-    List<ChoiceResponseDTO> getChoices(UUID questionId);
+    ExamQuestionChoicesResponseDTO saveChoice(UUID questionId, ExamQuestionChoicesRequestDTO request);
+    ExamQuestionChoicesResponseDTO getChoices(UUID questionId);
 
-    AnswerKeyResponseDTO saveAnswerKey(UUID questionId, AnswerKeyRequestDTO request);
-    List<AnswerKeyResponseDTO> getAnswerKeys(UUID questionId);
+    ExamQuestionAnswerKeysResponseDTO saveAnswerKey(UUID questionId, ExamQuestionAnswerKeyRequestDTO request);
+    ExamQuestionAnswerKeysResponseDTO getAnswerKeys(UUID questionId);
 
-    CodingTestCaseResponseDTO saveTestCase(UUID questionId, CodingTestCaseRequestDTO request);
-    List<CodingTestCaseResponseDTO> getTestCases(UUID questionId);
+    ExamQuestionCodingTestCaseResponseDTO saveTestCase(UUID questionId, ExamQuestionCodingTestCaseRequestDTO request);
+    ExamQuestionCodingTestCaseResponseDTO getTestCases(UUID questionId);
 
     StudentAttemptResponseDTO createStudentAttempt(StudentAttemptRequestDTO request);
     StudentAttemptResponseDTO getStudentAttempt(UUID attemptId);

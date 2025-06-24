@@ -10,7 +10,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class CodingQuestionResponseDTO extends QuestionResponseDTO {
+public class ExamQuestionCodingResponseDTO extends ExamQuestionResponseDTO {
     private UUID programmingLanguageId;
-    private List<CodingTestCaseResponseDTO> testCases;
+    private ExamQuestionCodingTestCaseResponseDTO testCases;
 } 

@@ -9,6 +9,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ChoiceQuestionResponseDTO extends QuestionResponseDTO {
-    private List<ChoiceResponseDTO> choices;
+public class ExamQuestionAnswerKeyResponseDTO extends ExamQuestionResponseDTO {
+    private ExamQuestionAnswerKeysResponseDTO answerKeys;
 } 

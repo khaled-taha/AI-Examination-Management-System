@@ -4,11 +4,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class AnswerKeyQuestionResponseDTO extends QuestionResponseDTO {
-    private List<AnswerKeyResponseDTO> answerKeys;
+public class ExamQuestionChoiceResponseDTO extends ExamQuestionResponseDTO {
+    private ExamQuestionChoicesResponseDTO choices;
 } 

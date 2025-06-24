@@ -74,12 +74,12 @@ public class ExamController {
 
     // Question APIs
     @PostMapping("/{examId}/questions")
-    public ResponseEntity<QuestionResponseDTO> addQuestion(@PathVariable UUID examId, @Valid @RequestBody QuestionRequestDTO request) {
+    public ResponseEntity<ExamQuestionResponseDTO> addQuestion(@PathVariable UUID examId, @Valid @RequestBody QuestionRequestDTO request) {
         return ResponseEntity.ok(examService.addQuestion(examId, request));
     }
 
     @PutMapping("/questions/{questionId}")
-    public ResponseEntity<QuestionResponseDTO> updateQuestion(@PathVariable UUID questionId, @Valid @RequestBody QuestionRequestDTO request) {
+    public ResponseEntity<ExamQuestionResponseDTO> updateQuestion(@PathVariable UUID questionId, @Valid @RequestBody QuestionRequestDTO request) {
         return ResponseEntity.ok(examService.updateQuestion(questionId, request));
     }
 
@@ -91,12 +91,12 @@ public class ExamController {
 
     // Choices APIs
     @PostMapping("/questions/{questionId}/choices")
-    public ResponseEntity<ChoiceResponseDTO> saveChoice(@PathVariable UUID questionId, @Valid @RequestBody ChoiceRequestDTO request) {
+    public ResponseEntity<ExamQuestionChoicesResponseDTO> saveChoices(@PathVariable UUID questionId, @Valid @RequestBody ExamQuestionChoicesRequestDTO request) {
         return ResponseEntity.ok(examService.saveChoice(questionId, request));
     }
 
     @GetMapping("/questions/{questionId}/choices")
-    public ResponseEntity<List<ChoiceResponseDTO>> listChoices(@PathVariable UUID questionId) {
+    public ResponseEntity<ExamQuestionChoicesResponseDTO> getChoices(@PathVariable UUID questionId) {
         return ResponseEntity.ok(examService.getChoices(questionId));
     }
 
@@ -109,12 +109,12 @@ public class ExamController {
 
     // Answer Key APIs
     @PostMapping("/questions/{questionId}/answer-keys")
-    public ResponseEntity<AnswerKeyResponseDTO> saveAnswerKey(@PathVariable UUID questionId, @Valid @RequestBody AnswerKeyRequestDTO request) {
+    public ResponseEntity<ExamQuestionAnswerKeysResponseDTO> saveAnswerKeys(@PathVariable UUID questionId, @Valid @RequestBody ExamQuestionAnswerKeyRequestDTO request) {
         return ResponseEntity.ok(examService.saveAnswerKey(questionId, request));
     }
 
     @GetMapping("/questions/{questionId}/answer-keys")
-    public ResponseEntity<List<AnswerKeyResponseDTO>> listAnswerKeys(@PathVariable UUID questionId) {
+    public ResponseEntity<ExamQuestionAnswerKeysResponseDTO> getAnswerKeys(@PathVariable UUID questionId) {
         return ResponseEntity.ok(examService.getAnswerKeys(questionId));
     }
 
@@ -127,12 +127,12 @@ public class ExamController {
 
     // Coding Test Case APIs
     @PostMapping("/questions/{questionId}/test-cases")
-    public ResponseEntity<CodingTestCaseResponseDTO> saveTestCase(@PathVariable UUID questionId, @Valid @RequestBody CodingTestCaseRequestDTO request) {
+    public ResponseEntity<ExamQuestionCodingTestCaseResponseDTO> saveTestCases(@PathVariable UUID questionId, @Valid @RequestBody ExamQuestionCodingTestCaseRequestDTO request) {
         return ResponseEntity.ok(examService.saveTestCase(questionId, request));
     }
 
     @GetMapping("/questions/{questionId}/test-cases")
-    public ResponseEntity<List<CodingTestCaseResponseDTO>> listTestCases(@PathVariable UUID questionId) {
+    public ResponseEntity<ExamQuestionCodingTestCaseResponseDTO> getTestCases(@PathVariable UUID questionId) {
         return ResponseEntity.ok(examService.getTestCases(questionId));
     }
 

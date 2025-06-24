@@ -10,5 +10,5 @@ public class SectionResponseDTO {
     private UUID examId;
     private String title;
     private Integer position;
-    private List<QuestionResponseDTO> questions;
+    private List<ExamQuestionResponseDTO> questions;
 } 

@@ -23,7 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -390,40 +389,34 @@ public class ExamServiceImpl implements ExamService {
         return dto;
     }
 
-    private QuestionResponseDTO convertQuestionToPolymorphicDTO(ExamQuestion question) {
-        QuestionResponseDTO dto;
+    private ExamQuestionResponseDTO convertQuestionToPolymorphicDTO(ExamQuestion question) {
+        ExamQuestionResponseDTO dto;
 
         switch (QuestionType.valueOf(question.getQuestionType())) {
             case TF:
             case MCQ:
             case MultiChoice:
-                ChoiceQuestionResponseDTO choiceDto = new ChoiceQuestionResponseDTO();
+                ExamQuestionChoiceResponseDTO choiceDto = new ExamQuestionChoiceResponseDTO();
                 List<ExamQuestionChoice> choices = examQuestionChoiceRepository.findByExamQuestion(question);
-                choiceDto.setChoices(choices.stream()
-                        .map(this::convertToChoiceResponseDTO)
-                        .collect(Collectors.toList()));
+                choiceDto.setChoices(convertToExamQuestionChoicesResponseDTO(choices));
                 dto = choiceDto;
                 break;
 
             case Complete:
             case Matching:
-                AnswerKeyQuestionResponseDTO answerDto = new AnswerKeyQuestionResponseDTO();
+                ExamQuestionAnswerKeyResponseDTO answerDto = new ExamQuestionAnswerKeyResponseDTO();
                 List<ExamQuestionAnswerKey> answerKeys = examQuestionAnswerKeyRepository.findByExamQuestion(question);
-                answerDto.setAnswerKeys(answerKeys.stream()
-                        .map(this::convertToAnswerKeyResponseDTO)
-                        .collect(Collectors.toList()));
+                answerDto.setAnswerKeys(convertToAnswerKeyResponseDTO(answerKeys));
                 dto = answerDto;
                 break;
 
             case Coding:
-                CodingQuestionResponseDTO codingDto = new CodingQuestionResponseDTO();
+                ExamQuestionCodingResponseDTO codingDto = new ExamQuestionCodingResponseDTO();
                 if (question.getProgrammingLanguage() != null) {
                     codingDto.setProgrammingLanguageId(question.getProgrammingLanguage().getId());
                 }
                 List<CodingTestCase> testCases = codingTestCaseRepository.findByExamQuestion(question);
-                codingDto.setTestCases(testCases.stream()
-                        .map(this::convertToCodingTestCaseResponseDTO)
-                        .collect(Collectors.toList()));
+                codingDto.setTestCases(convertToCodingTestCaseResponseDTO(testCases));
                 dto = codingDto;
 
                 break;
@@ -639,7 +632,7 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public QuestionResponseDTO addQuestion(UUID examId, QuestionRequestDTO request) {
+    public ExamQuestionResponseDTO addQuestion(UUID examId, QuestionRequestDTO request) {
         // Validate that exam exists
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id: " + examId));
@@ -689,7 +682,7 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public QuestionResponseDTO updateQuestion(UUID questionId, QuestionRequestDTO request) {
+    public ExamQuestionResponseDTO updateQuestion(UUID questionId, QuestionRequestDTO request) {
         ExamQuestion question = examQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
 
@@ -749,106 +742,112 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public ChoiceResponseDTO saveChoice(UUID questionId, ChoiceRequestDTO request) {
+    public ExamQuestionChoicesResponseDTO saveChoice(UUID questionId, ExamQuestionChoicesRequestDTO request) {
         // Validate that question exists
         ExamQuestion question = examQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
 
-        // Create new choice entity
-        ExamQuestionChoice choice = new ExamQuestionChoice();
-        choice.setId(request.getId());
-        choice.setExamQuestion(question);
-        choice.setChoiceText(request.getChoiceText());
-        choice.setIsCorrect(request.getIsCorrect());
-        choice.setMarkValue(request.getMarkValue());
-        choice.setCreatedAt(LocalDateTime.now());
-        choice.setUpdatedAt(LocalDateTime.now());
+        if(Utils.isEmpty(request.getChoices()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty Choices for the question : " + questionId);
 
-        ExamQuestionChoice savedChoice = examQuestionChoiceRepository.save(choice);
-        return convertToChoiceResponseDTO(savedChoice);
+        List<ExamQuestionChoice> choices = new ArrayList<>();
+        request.getChoices().forEach(choice -> {
+            ExamQuestionChoice savedChoice = new ExamQuestionChoice();
+            savedChoice.setId(choice.getId());
+            savedChoice.setExamQuestion(question);
+            savedChoice.setChoiceText(choice.getChoiceText());
+            savedChoice.setIsCorrect(choice.getIsCorrect());
+            savedChoice.setMarkValue(choice.getMarkValue());
+            choices.add(savedChoice);
+        });
+
+        List<ExamQuestionChoice> savedChoice = examQuestionChoiceRepository.saveAll(choices);
+        return convertToExamQuestionChoicesResponseDTO(savedChoice);
     }
 
     @Override
     @Transactional
-    public List<ChoiceResponseDTO> getChoices(UUID questionId) {
+    public ExamQuestionChoicesResponseDTO getChoices(UUID questionId) {
         // Validate that question exists
         examQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
 
         List<ExamQuestionChoice> choices = examQuestionChoiceRepository.findByExamQuestionId(questionId);
-        return choices.stream()
-                .map(this::convertToChoiceResponseDTO)
-                .collect(Collectors.toList());
+        return convertToExamQuestionChoicesResponseDTO(choices);
     }
 
     @Override
     @Transactional
-    public AnswerKeyResponseDTO saveAnswerKey(UUID questionId, AnswerKeyRequestDTO request) {
+    public ExamQuestionAnswerKeysResponseDTO saveAnswerKey(UUID questionId, ExamQuestionAnswerKeyRequestDTO request) {
         // Validate that question exists
         ExamQuestion question = examQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
 
-        // Create new answer key entity
-        ExamQuestionAnswerKey answerKey = new ExamQuestionAnswerKey();
-        answerKey.setId(request.getId());
-        answerKey.setExamQuestion(question);
-        answerKey.setAnswerText(request.getAnswerText());
-        answerKey.setQuestionPart(request.getQuestionPart());
-        answerKey.setCaseSensitive(request.isCaseSensitive());
-        answerKey.setSortOrder(request.getSortOrder());
-        answerKey.setCreatedAt(LocalDateTime.now());
-        answerKey.setUpdatedAt(LocalDateTime.now());
+        if(Utils.isEmpty(request.getAnswerKeys()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty Keys for the question : " + questionId);
 
-        ExamQuestionAnswerKey savedAnswerKey = examQuestionAnswerKeyRepository.save(answerKey);
+        List<ExamQuestionAnswerKey> keys = new ArrayList<>();
+        request.getAnswerKeys().forEach(key -> {
+            ExamQuestionAnswerKey answerKey = new ExamQuestionAnswerKey();
+            answerKey.setId(key.getId());
+            answerKey.setExamQuestion(question);
+            answerKey.setAnswerText(key.getAnswerText());
+            answerKey.setQuestionPart(key.getQuestionPart());
+            answerKey.setCaseSensitive(key.isCaseSensitive());
+            answerKey.setSortOrder(key.getSortOrder());
+            keys.add(answerKey);
+        });
+
+        List<ExamQuestionAnswerKey> savedAnswerKey = examQuestionAnswerKeyRepository.saveAll(keys);
         return convertToAnswerKeyResponseDTO(savedAnswerKey);
     }
 
     @Override
     @Transactional
-    public List<AnswerKeyResponseDTO> getAnswerKeys(UUID questionId) {
+    public ExamQuestionAnswerKeysResponseDTO getAnswerKeys(UUID questionId) {
         // Validate that question exists
         examQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
 
         List<ExamQuestionAnswerKey> answerKeys = examQuestionAnswerKeyRepository.findByExamQuestionId(questionId);
-        return answerKeys.stream()
-                .map(this::convertToAnswerKeyResponseDTO)
-                .collect(Collectors.toList());
+        return convertToAnswerKeyResponseDTO(answerKeys);
     }
 
     @Override
     @Transactional
-    public CodingTestCaseResponseDTO saveTestCase(UUID questionId, CodingTestCaseRequestDTO request) {
+    public ExamQuestionCodingTestCaseResponseDTO saveTestCase(UUID questionId, ExamQuestionCodingTestCaseRequestDTO request) {
         // Validate that question exists
        ExamQuestion examQuestion = examQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
 
-        // Create new test case entity
-        CodingTestCase testCase = new CodingTestCase();
-        testCase.setId(request.getId());
-        testCase.setExamQuestion(examQuestion);
-        testCase.setInput(request.getInput());
-        testCase.setExpectedOutput(request.getExpectedOutput());
-        testCase.setMark(request.getMark());
-        testCase.setSample(request.isSample());
-        testCase.setCreatedAt(LocalDateTime.now());
-        testCase.setUpdatedAt(LocalDateTime.now());
+        if(Utils.isEmpty(request.getTestCases()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty Test Cases for the question : " + questionId);
 
-        CodingTestCase savedTestCase = codingTestCaseRepository.save(testCase);
+        List<CodingTestCase> testCases = new ArrayList<>();
+        request.getTestCases().forEach(testCase -> {
+            CodingTestCase savedTestCase = new CodingTestCase();
+            savedTestCase.setId(testCase.getId());
+            savedTestCase.setExamQuestion(examQuestion);
+            savedTestCase.setInput(testCase.getInput());
+            savedTestCase.setExpectedOutput(testCase.getExpectedOutput());
+            savedTestCase.setMark(testCase.getMark());
+            savedTestCase.setSample(testCase.isSample());
+            testCases.add(savedTestCase);
+        });
+
+        List<CodingTestCase> savedTestCase = codingTestCaseRepository.saveAll(testCases);
         return convertToCodingTestCaseResponseDTO(savedTestCase);
     }
 
     @Override
     @Transactional
-    public List<CodingTestCaseResponseDTO> getTestCases(UUID questionId) {
+    public ExamQuestionCodingTestCaseResponseDTO getTestCases(UUID questionId) {
         // Validate that question exists
         examQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
 
         List<CodingTestCase> testCases = codingTestCaseRepository.findByExamQuestionId(questionId);
-        return testCases.stream()
-                .map(this::convertToCodingTestCaseResponseDTO)
-                .collect(Collectors.toList());
+        return convertToCodingTestCaseResponseDTO(testCases);
     }
 
     @Override
@@ -1071,8 +1070,8 @@ public class ExamServiceImpl implements ExamService {
     }
 
     // Helper method to convert ExamQuestion entity to QuestionResponseDTO
-    private QuestionResponseDTO convertToQuestionResponseDTO(ExamQuestion question) {
-        QuestionResponseDTO response = QuestionResponseDTO.createQuestionResponse(question.getQuestionType());
+    private ExamQuestionResponseDTO convertToQuestionResponseDTO(ExamQuestion question) {
+        ExamQuestionResponseDTO response = ExamQuestionResponseDTO.createQuestionResponse(question.getQuestionType());
         
         // Set common fields
         response.setId(question.getId());
@@ -1093,31 +1092,25 @@ public class ExamServiceImpl implements ExamService {
             case TF:
             case MCQ:
             case MultiChoice:
-                ChoiceQuestionResponseDTO choiceDto = (ChoiceQuestionResponseDTO) response;
+                ExamQuestionChoiceResponseDTO choiceDto = (ExamQuestionChoiceResponseDTO) response;
                 List<ExamQuestionChoice> choices = examQuestionChoiceRepository.findByExamQuestion(question);
-                choiceDto.setChoices(choices.stream()
-                        .map(this::convertToChoiceResponseDTO)
-                        .collect(Collectors.toList()));
+                choiceDto.setChoices(convertToExamQuestionChoicesResponseDTO(choices));
                 break;
 
             case Complete:
             case Matching:
-                AnswerKeyQuestionResponseDTO answerDto = (AnswerKeyQuestionResponseDTO) response;
+                ExamQuestionAnswerKeyResponseDTO answerDto = (ExamQuestionAnswerKeyResponseDTO) response;
                 List<ExamQuestionAnswerKey> answerKeys = examQuestionAnswerKeyRepository.findByExamQuestion(question);
-                answerDto.setAnswerKeys(answerKeys.stream()
-                        .map(this::convertToAnswerKeyResponseDTO)
-                        .collect(Collectors.toList()));
+                answerDto.setAnswerKeys(convertToAnswerKeyResponseDTO(answerKeys));
                 break;
 
             case Coding:
-                CodingQuestionResponseDTO codingDto = (CodingQuestionResponseDTO) response;
+                ExamQuestionCodingResponseDTO codingDto = (ExamQuestionCodingResponseDTO) response;
                 if (question.getProgrammingLanguage() != null) {
                     codingDto.setProgrammingLanguageId(question.getProgrammingLanguage().getId());
                 }
                 List<CodingTestCase> testCases = codingTestCaseRepository.findByExamQuestion(question);
-                codingDto.setTestCases(testCases.stream()
-                        .map(this::convertToCodingTestCaseResponseDTO)
-                        .collect(Collectors.toList()));
+                codingDto.setTestCases(convertToCodingTestCaseResponseDTO(testCases));
                 break;
 
             default:
@@ -1128,35 +1121,54 @@ public class ExamServiceImpl implements ExamService {
     }
 
     // Helper method to convert ExamQuestionChoice entity to ChoiceResponseDTO
-    private ChoiceResponseDTO convertToChoiceResponseDTO(ExamQuestionChoice choice) {
-        ChoiceResponseDTO response = new ChoiceResponseDTO();
-        response.setId(choice.getId());
-        response.setChoiceText(choice.getChoiceText());
-        response.setIsCorrect(choice.getIsCorrect());
-        response.setMarkValue(choice.getMarkValue());
+    private ExamQuestionChoicesResponseDTO convertToExamQuestionChoicesResponseDTO(List<ExamQuestionChoice> choices) {
+        ExamQuestionChoicesResponseDTO response = new ExamQuestionChoicesResponseDTO();
+        response.setChoices(new ArrayList<>());
+        response.setExamQuestionId(choices.get(0).getExamQuestion().getId());
+
+        choices.forEach(choice -> {
+            ExamQuestionChoicesResponseDTO.Choice savedChoice = new ExamQuestionChoicesResponseDTO.Choice();
+            savedChoice.setId(choice.getId());
+            savedChoice.setChoiceText(choice.getChoiceText());
+            savedChoice.setIsCorrect(choice.getIsCorrect());
+            savedChoice.setMarkValue(choice.getMarkValue());
+            response.getChoices().add(savedChoice);
+        });
         return response;
     }
 
     // Helper method to convert ExamQuestionAnswerKey entity to AnswerKeyResponseDTO
-    private AnswerKeyResponseDTO convertToAnswerKeyResponseDTO(ExamQuestionAnswerKey answerKey) {
-        AnswerKeyResponseDTO response = new AnswerKeyResponseDTO();
-        response.setId(answerKey.getId());
-        response.setAnswerText(answerKey.getAnswerText());
-        response.setQuestionPart(answerKey.getQuestionPart());
-        response.setCaseSensitive(answerKey.isCaseSensitive());
-        response.setSortOrder(answerKey.getSortOrder());
+    private ExamQuestionAnswerKeysResponseDTO convertToAnswerKeyResponseDTO(List<ExamQuestionAnswerKey> answerKeys) {
+        ExamQuestionAnswerKeysResponseDTO response = new ExamQuestionAnswerKeysResponseDTO();
+        response.setAnswerKeys(new ArrayList<>());
+        response.setExamQuestionId(answerKeys.get(0).getExamQuestion().getId());
+
+        answerKeys.forEach(key -> {
+            ExamQuestionAnswerKeysResponseDTO.AnswerKey savedAnswerKey = new ExamQuestionAnswerKeysResponseDTO.AnswerKey();
+            savedAnswerKey.setId(key.getId());
+            savedAnswerKey.setAnswerText(key.getAnswerText());
+            savedAnswerKey.setQuestionPart(key.getQuestionPart());
+            savedAnswerKey.setCaseSensitive(key.isCaseSensitive());
+            savedAnswerKey.setSortOrder(key.getSortOrder());
+        });
         return response;
     }
 
     // Helper method to convert CodingTestCase entity to CodingTestCaseResponseDTO
-    private CodingTestCaseResponseDTO convertToCodingTestCaseResponseDTO(CodingTestCase testCase) {
-        CodingTestCaseResponseDTO response = new CodingTestCaseResponseDTO();
-        response.setId(testCase.getId());
-        response.setExamQuestionId(testCase.getExamQuestion().getId());
-        response.setInput(testCase.getInput());
-        response.setExpectedOutput(testCase.getExpectedOutput());
-        response.setMark(testCase.getMark());
-        response.setSample(testCase.isSample());
+    private ExamQuestionCodingTestCaseResponseDTO convertToCodingTestCaseResponseDTO(List<CodingTestCase> testCases) {
+        ExamQuestionCodingTestCaseResponseDTO response = new ExamQuestionCodingTestCaseResponseDTO();
+        response.setTestCases(new ArrayList<>());
+        response.setExamQuestionId(testCases.get(0).getExamQuestion().getId());
+
+        testCases.forEach(testCase -> {
+            ExamQuestionCodingTestCaseResponseDTO.TestCase savedTestCase = new ExamQuestionCodingTestCaseResponseDTO.TestCase();
+            savedTestCase.setId(testCase.getId());
+            savedTestCase.setInput(testCase.getInput());
+            savedTestCase.setExpectedOutput(testCase.getExpectedOutput());
+            savedTestCase.setMark(testCase.getMark());
+            savedTestCase.setSample(testCase.isSample());
+        });
+
         return response;
     }
 
