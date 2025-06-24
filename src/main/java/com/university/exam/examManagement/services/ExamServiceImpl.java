@@ -1200,7 +1200,7 @@ public class ExamServiceImpl implements ExamService {
 
     // Helper method to convert StudentAnswerText entity to StudentAnswerTextResponseDTO
     private StudentAnswerTextResponseDTO convertToStudentAnswerTextResponseDTO(List<StudentAnswerText> answers) {
-        if(answers == null || answers.isEmpty()) return new StudentAnswerTextResponseDTO();
+        if(Utils.isEmpty(answers)) return new StudentAnswerTextResponseDTO();
 
         StudentAnswerTextResponseDTO response = new StudentAnswerTextResponseDTO();
         response.setStudentExamAttemptId(answers.get(0).getStudentExamAttempt().getId());
