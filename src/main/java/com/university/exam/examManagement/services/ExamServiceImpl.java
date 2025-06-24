@@ -1123,7 +1123,9 @@ public class ExamServiceImpl implements ExamService {
     // Helper method to convert ExamQuestionChoice entity to ChoiceResponseDTO
     private ExamQuestionChoicesResponseDTO convertToExamQuestionChoicesResponseDTO(List<ExamQuestionChoice> choices) {
         ExamQuestionChoicesResponseDTO response = new ExamQuestionChoicesResponseDTO();
-        response.setChoices(new ArrayList<>());
+        if(Utils.isEmpty(choices)) return response;
+
+                response.setChoices(new ArrayList<>());
         response.setExamQuestionId(choices.get(0).getExamQuestion().getId());
 
         choices.forEach(choice -> {
@@ -1140,6 +1142,7 @@ public class ExamServiceImpl implements ExamService {
     // Helper method to convert ExamQuestionAnswerKey entity to AnswerKeyResponseDTO
     private ExamQuestionAnswerKeysResponseDTO convertToAnswerKeyResponseDTO(List<ExamQuestionAnswerKey> answerKeys) {
         ExamQuestionAnswerKeysResponseDTO response = new ExamQuestionAnswerKeysResponseDTO();
+        if(Utils.isEmpty(answerKeys)) return response;
         response.setAnswerKeys(new ArrayList<>());
         response.setExamQuestionId(answerKeys.get(0).getExamQuestion().getId());
 
@@ -1157,6 +1160,7 @@ public class ExamServiceImpl implements ExamService {
     // Helper method to convert CodingTestCase entity to CodingTestCaseResponseDTO
     private ExamQuestionCodingTestCaseResponseDTO convertToCodingTestCaseResponseDTO(List<CodingTestCase> testCases) {
         ExamQuestionCodingTestCaseResponseDTO response = new ExamQuestionCodingTestCaseResponseDTO();
+        if(Utils.isEmpty(testCases)) return response;
         response.setTestCases(new ArrayList<>());
         response.setExamQuestionId(testCases.get(0).getExamQuestion().getId());
 
