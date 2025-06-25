@@ -174,6 +174,10 @@ public class ExamServiceImpl implements ExamService {
     @Transactional
     public List<ExamResponseDTO> getExams() {
         List<Exam> exams = examRepository.findAll();
+
+        List<Exam> updatedStatusExam = checkExamStatus(exams);
+        if(!Utils.isEmpty(updatedStatusExam)) this.examRepository.saveAll(updatedStatusExam);
+
         return exams.stream()
                 .map(this::convertToExamResponseDTO)
                 .collect(Collectors.toList());
@@ -184,11 +188,34 @@ public class ExamServiceImpl implements ExamService {
     public List<ExamResponseDTO> getExamsByAcademicYearCourseId(UUID academicYearCourseId) {
         // Use the new repository method with @Query
         List<Exam> exams = examRepository.findExamsByAcademicYearCourse(academicYearCourseId);
-        
+
+        List<Exam> updatedStatusExam = checkExamStatus(exams);
+        if(!Utils.isEmpty(updatedStatusExam)) this.examRepository.saveAll(updatedStatusExam);
+
         return exams.stream()
                 .map(this::convertToExamResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    private List<Exam> checkExamStatus(List<Exam> exams) {
+        LocalDateTime now = LocalDateTime.now();
+
+        return exams.stream()
+                .filter(exam -> {
+                    boolean isOngoing = !now.isBefore(exam.getStartDate()) && now.isBefore(exam.getEndDate());
+                    String targetStatus = isOngoing ? ExamStatus.ACTIVE.name() : ExamStatus.EXPIRED.name();
+
+                    if (!targetStatus.equalsIgnoreCase(exam.getStatus())) {
+                        exam.setStatus(targetStatus);
+                        return true;
+                    }
+                    return false;
+                })
+                .collect(Collectors.toList());
+    }
+
+
+
 
     @Override
     @Transactional

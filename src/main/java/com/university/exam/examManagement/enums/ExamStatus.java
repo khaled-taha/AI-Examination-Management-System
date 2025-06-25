@@ -1,7 +1,7 @@
 package com.university.exam.examManagement.enums;
 
 public enum ExamStatus {
-    IN_PROGRESS,
+    ACTIVE,
     COMPLETED,
     GRADED,
     EXPIRED
