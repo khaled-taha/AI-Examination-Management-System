@@ -23,6 +23,6 @@ public class ExamQuestionAnswerKeyRequestDTO {
         private String questionPart;
 
         private boolean caseSensitive = false;
-        private int sortOrder = 1;
+        private int sortOrder;
     }
 }

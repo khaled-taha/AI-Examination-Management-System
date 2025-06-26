@@ -27,6 +27,6 @@ public class ExamQuestionCodingTestCaseRequestDTO {
         @DecimalMin(value = "0.0", message = "Mark must be at least 0")
         private BigDecimal mark;
 
-        private boolean isSample = false;
+        private boolean isSample;
     }
 } 
