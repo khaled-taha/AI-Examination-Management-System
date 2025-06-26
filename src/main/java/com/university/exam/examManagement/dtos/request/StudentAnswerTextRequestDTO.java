@@ -18,6 +18,9 @@ public class StudentAnswerTextRequestDTO {
 
     @Data
     public static class AnswerText {
+
+        private UUID id;
+
         private String questionPart;
 
         @NotBlank(message = "Student answer must not be blank")

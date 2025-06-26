@@ -18,6 +18,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class StudentAnswerText {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)

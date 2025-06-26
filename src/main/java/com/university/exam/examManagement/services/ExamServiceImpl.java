@@ -984,7 +984,7 @@ public class ExamServiceImpl implements ExamService {
 
         // Create new student answer choice entity
         StudentAnswerChoice studentAnswer = new StudentAnswerChoice();
-        studentAnswer.setId(UUID.randomUUID());
+        studentAnswer.setId(request.getId());
         studentAnswer.setStudentExamAttempt(attempt);
         studentAnswer.setExamQuestion(question);
         studentAnswer.setSelectedChoice(choice);
@@ -1025,7 +1025,7 @@ public class ExamServiceImpl implements ExamService {
         answerTexts.forEach(answerText -> {
             // Create new student answer text entity
             StudentAnswerText studentAnswer = new StudentAnswerText();
-            studentAnswer.setId(UUID.randomUUID());
+            studentAnswer.setId(answerText.getId());
             studentAnswer.setStudentExamAttempt(attempt);
             studentAnswer.setExamQuestion(question);
             studentAnswer.setQuestionPart(answerText.getQuestionPart());
@@ -1071,7 +1071,7 @@ public class ExamServiceImpl implements ExamService {
 
         // Create new student answer code entity
         StudentAnswerCode studentAnswer = new StudentAnswerCode();
-        studentAnswer.setId(UUID.randomUUID());
+        studentAnswer.setId(request.getId());
         studentAnswer.setStudentExamAttempt(attempt);
         studentAnswer.setExamQuestion(question);
         studentAnswer.setSubmittedCode(request.getSubmittedCode());
