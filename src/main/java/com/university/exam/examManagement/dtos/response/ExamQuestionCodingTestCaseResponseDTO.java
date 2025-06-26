@@ -16,6 +16,6 @@ public class ExamQuestionCodingTestCaseResponseDTO {
         private String input;
         private String expectedOutput;
         private BigDecimal mark;
-        private boolean isSample;
+        private boolean sample;
     }
 } 
