@@ -2,6 +2,8 @@ package com.university.exam.examManagement.dtos.request;
 
 import lombok.Data;
 import jakarta.validation.constraints.*;
+import lombok.ToString;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +16,7 @@ public class ExamQuestionCodingTestCaseRequestDTO {
     private List<TestCase> testCases;
 
     @Data
+    @ToString
     public static class TestCase {
         private UUID id;
 
@@ -28,5 +31,9 @@ public class ExamQuestionCodingTestCaseRequestDTO {
         private BigDecimal mark;
 
         private boolean isSample;
+
+
+
+
     }
 } 

@@ -856,6 +856,7 @@ public class ExamServiceImpl implements ExamService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty Test Cases for the question : " + questionId);
 
         List<CodingTestCase> testCases = new ArrayList<>();
+        System.out.println(request.getTestCases());
         request.getTestCases().forEach(testCase -> {
             CodingTestCase savedTestCase = new CodingTestCase();
             savedTestCase.setId(testCase.getId());
