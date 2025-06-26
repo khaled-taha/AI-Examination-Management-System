@@ -1152,7 +1152,7 @@ public class ExamServiceImpl implements ExamService {
         ExamQuestionChoicesResponseDTO response = new ExamQuestionChoicesResponseDTO();
         if(Utils.isEmpty(choices)) return response;
 
-                response.setChoices(new ArrayList<>());
+        response.setChoices(new ArrayList<>());
         response.setExamQuestionId(choices.get(0).getExamQuestion().getId());
 
         choices.forEach(choice -> {
@@ -1224,6 +1224,8 @@ public class ExamServiceImpl implements ExamService {
         StudentAnswerChoiceResponseDTO response = new StudentAnswerChoiceResponseDTO();
         response.setId(answer.getId());
         response.setSelectedChoiceId(answer.getSelectedChoice() != null ? answer.getSelectedChoice().getId() : null);
+        response.setStudentExamAttemptId(answer.getStudentExamAttempt().getId());
+        response.setExamQuestionId(answer.getExamQuestion().getId());
         return response;
     }
 
