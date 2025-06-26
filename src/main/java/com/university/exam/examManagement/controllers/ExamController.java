@@ -231,21 +231,21 @@ public class ExamController {
     @GetMapping("/attempts/{attemptId}/questions/{questionId}/choice-answer")
     public ResponseEntity<StudentAnswerChoiceResponseDTO> getStudentChoiceAnswer(
             @PathVariable UUID attemptId,
-            @RequestParam UUID questionId) {
+            @PathVariable UUID questionId) {
         return ResponseEntity.ok(examService.getStudentChoiceAnswer(attemptId, questionId));
     }
 
     @GetMapping("/attempts/{attemptId}/questions/{questionId}/text-answers")
     public ResponseEntity<StudentAnswerTextResponseDTO> getStudentTextAnswers(
             @PathVariable UUID attemptId,
-            @RequestParam UUID questionId) {
+            @PathVariable UUID questionId) {
         return ResponseEntity.ok(examService.getStudentTextAnswers(attemptId, questionId));
     }
 
     @GetMapping("/attempts/{attemptId}/questions/{questionId}/code-answer")
     public ResponseEntity<StudentAnswerCodeResponseDTO> getStudentCodeAnswer(
             @PathVariable UUID attemptId,
-            @RequestParam UUID questionId) {
+            @PathVariable UUID questionId) {
         return ResponseEntity.ok(examService.getStudentCodeAnswer(attemptId, questionId));
     }
 }
