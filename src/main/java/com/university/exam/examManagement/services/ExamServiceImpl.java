@@ -417,62 +417,60 @@ public class ExamServiceImpl implements ExamService {
     }
 
     private ExamQuestionResponseDTO convertQuestionToPolymorphicDTO(ExamQuestion question) {
-        ExamQuestionResponseDTO dto;
+        ExamQuestionResponseDTO response = ExamQuestionResponseDTO.createQuestionResponse(question.getQuestionType());
+        
+        // Set common fields
+        response.setId(question.getId());
+        if (question.getExam() != null) {
+            response.setExamId(question.getExam().getId());
+        }
+        if (question.getSection() != null) {
+            response.setSectionId(question.getSection().getId());
+        }
+        if (question.getQuestionPool() != null) {
+            response.setQuestionPoolId(question.getQuestionPool().getId());
+        }
+        response.setQuestionText(question.getQuestionText());
+        response.setQuestionType(question.getQuestionType());
+        response.setExplanation(question.getExplanation());
+        response.setTimeLimit(question.getTimeLimit());
+        response.setMemoryLimit(question.getMemoryLimit());
+        response.setMark(question.getMark());
+        response.setPosition(question.getPosition());
+        response.setActive(question.isActive());
 
+        // Set type-specific fields
         switch (QuestionType.valueOf(question.getQuestionType())) {
             case TF:
             case MCQ:
             case MultiChoice:
-                ExamQuestionChoiceResponseDTO choiceDto = new ExamQuestionChoiceResponseDTO();
+                ExamQuestionChoiceResponseDTO choiceDto = (ExamQuestionChoiceResponseDTO) response;
                 List<ExamQuestionChoice> choices = examQuestionChoiceRepository.findByExamQuestion(question);
                 choiceDto.setChoices(convertToExamQuestionChoicesResponseDTO(choices));
-                dto = choiceDto;
                 break;
 
             case Complete:
+                break;
             case Matching:
-                ExamQuestionAnswerKeyResponseDTO answerDto = new ExamQuestionAnswerKeyResponseDTO();
+                ExamQuestionAnswerKeyResponseDTO answerDto = (ExamQuestionAnswerKeyResponseDTO) response;
                 List<ExamQuestionAnswerKey> answerKeys = examQuestionAnswerKeyRepository.findByExamQuestion(question);
                 answerDto.setAnswerKeys(convertToAnswerKeyResponseDTO(answerKeys));
-                dto = answerDto;
                 break;
 
             case Coding:
-                ExamQuestionCodingResponseDTO codingDto = new ExamQuestionCodingResponseDTO();
+                ExamQuestionCodingResponseDTO codingDto = (ExamQuestionCodingResponseDTO) response;
                 if (question.getProgrammingLanguage() != null) {
                     codingDto.setProgrammingLanguageId(question.getProgrammingLanguage().getId());
                 }
                 List<CodingTestCase> testCases = codingTestCaseRepository.findByExamQuestion(question);
                 codingDto.setTestCases(convertToCodingTestCaseResponseDTO(testCases));
-                dto = codingDto;
-
                 break;
 
             default:
                 throw new IllegalStateException("Unsupported question type: " + question.getQuestionType());
         }
-        
-        // Populate common fields
-        dto.setId(question.getId());
-        if (question.getExam() != null) {
-            dto.setExamId(question.getExam().getId());
-        }
-        if (question.getSection() != null) {
-            dto.setSectionId(question.getSection().getId());
-        }
-        if (question.getQuestionPool() != null) {
-            dto.setQuestionPoolId(question.getQuestionPool().getId());
-        }
-        dto.setQuestionText(question.getQuestionText());
-        dto.setQuestionType(question.getQuestionType());
-        dto.setExplanation(question.getExplanation());
-        dto.setTimeLimit(question.getTimeLimit());
-        dto.setMemoryLimit(question.getMemoryLimit());
-        dto.setMark(question.getMark());
-        dto.setPosition(question.getPosition());
-        dto.setActive(question.isActive());
 
-        return dto;
+        return response;
     }
 
     // Helper method to convert ExamSection entity to SectionResponseDTO
@@ -635,9 +633,14 @@ public class ExamServiceImpl implements ExamService {
             case Complete:
                 // For answer key questions, students just see the question text
                 // No additional data needed in student view
+                break;
 
             case Matching:
-
+                StudentAnswerKeyQuestionViewDTO matchingDto = (StudentAnswerKeyQuestionViewDTO) questionViewDTO;
+                List<ExamQuestionAnswerKey> answerKeys = examQuestionAnswerKeyRepository.findByExamQuestion(question);
+                matchingDto.setMatchingItems(answerKeys.stream()
+                        .map(key -> new StudentAnswerKeyQuestionViewDTO.MatchingItem(key.getId(), key.getQuestionPart(), key.getSortOrder()))
+                        .collect(Collectors.toList()));
                 break;
 
             case Coding:
@@ -1139,6 +1142,7 @@ public class ExamServiceImpl implements ExamService {
                 break;
 
             case Complete:
+                break;
             case Matching:
                 ExamQuestionAnswerKeyResponseDTO answerDto = (ExamQuestionAnswerKeyResponseDTO) response;
                 List<ExamQuestionAnswerKey> answerKeys = examQuestionAnswerKeyRepository.findByExamQuestion(question);
