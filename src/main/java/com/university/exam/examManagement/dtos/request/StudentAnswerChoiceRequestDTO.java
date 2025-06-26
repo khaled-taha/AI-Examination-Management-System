@@ -9,9 +9,6 @@ public class StudentAnswerChoiceRequestDTO {
 
     private UUID id;
 
-    @NotNull(message = "Student exam attempt ID is required")
-    private UUID studentExamAttemptId;
-
     @NotNull(message = "Exam question ID is required")
     private UUID examQuestionId;
 
