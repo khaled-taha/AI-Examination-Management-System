@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface StudentAnswerCodeRepository extends JpaRepository<StudentAnswerCode, UUID> {
@@ -14,4 +15,6 @@ public interface StudentAnswerCodeRepository extends JpaRepository<StudentAnswer
     boolean existsByQuestionId(UUID questionId);
 
     List<StudentAnswerCode> findByStudentExamAttempt(StudentExamAttempt attempt);
+
+    Optional<StudentAnswerCode> findByStudentExamAttemptIdAndExamQuestionId(UUID attemptId, UUID questionId);
 }

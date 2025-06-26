@@ -55,4 +55,8 @@ public interface ExamService {
     void deleteTestCase(UUID questionId, UUID testCaseId);
     StudentAttemptResponseDTO endExam(UUID attemptId);
     double getExamTotalPoints(UUID examId);
+
+    StudentAnswerChoiceResponseDTO getStudentChoiceAnswer(UUID attemptId, UUID questionId);
+    StudentAnswerTextResponseDTO getStudentTextAnswers(UUID attemptId, UUID questionId);
+    StudentAnswerCodeResponseDTO getStudentCodeAnswer(UUID attemptId, UUID questionId);
 } 

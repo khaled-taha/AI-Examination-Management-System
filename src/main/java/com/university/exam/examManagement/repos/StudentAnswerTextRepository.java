@@ -14,4 +14,6 @@ public interface StudentAnswerTextRepository extends JpaRepository<StudentAnswer
     boolean existsByQuestionId(UUID questionId);
 
     List<StudentAnswerText> findByStudentExamAttempt(StudentExamAttempt attempt);
+
+    List<StudentAnswerText> findByStudentExamAttemptIdAndExamQuestionId(UUID attemptId, UUID questionId);
 } 

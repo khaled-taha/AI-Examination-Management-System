@@ -633,9 +633,11 @@ public class ExamServiceImpl implements ExamService {
                 break;
 
             case Complete:
-            case Matching:
                 // For answer key questions, students just see the question text
                 // No additional data needed in student view
+
+            case Matching:
+
                 break;
 
             case Coding:
@@ -1370,5 +1372,51 @@ public class ExamServiceImpl implements ExamService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id: " + examId));
         List<ExamQuestion> questions = examQuestionRepository.findByExamId(examId);
         return questions.stream().mapToDouble(ExamQuestion::getMark).sum();
+    }
+
+    @Override
+    public StudentAnswerChoiceResponseDTO getStudentChoiceAnswer(UUID attemptId, UUID questionId) {
+        return studentAnswerChoiceRepository.findByStudentExamAttemptIdAndExamQuestionId(attemptId, questionId)
+                .map(entity -> {
+                    StudentAnswerChoiceResponseDTO dto = new StudentAnswerChoiceResponseDTO();
+                    dto.setId(entity.getId());
+                    dto.setStudentExamAttemptId(entity.getStudentExamAttempt().getId());
+                    dto.setExamQuestionId(entity.getExamQuestion().getId());
+                    dto.setSelectedChoiceId(entity.getSelectedChoice() != null ? entity.getSelectedChoice().getId() : null);
+                    return dto;
+                })
+                .orElse(null);
+    }
+
+    @Override
+    public StudentAnswerTextResponseDTO getStudentTextAnswers(UUID attemptId, UUID questionId) {
+        var answers = studentAnswerTextRepository.findByStudentExamAttemptIdAndExamQuestionId(attemptId, questionId);
+        StudentAnswerTextResponseDTO dto = new StudentAnswerTextResponseDTO();
+        dto.setStudentExamAttemptId(attemptId);
+        dto.setExamQuestionId(questionId);
+        dto.setAnswerTexts(answers.stream().map(entity ->
+                new StudentAnswerTextResponseDTO.AnswerText(
+                        entity.getId(),
+                        entity.getQuestionPart(),
+                        entity.getStudentAnswer(),
+                        entity.getSortOrder()
+                )
+        ).toList());
+        return dto;
+    }
+
+    @Override
+    public StudentAnswerCodeResponseDTO getStudentCodeAnswer(UUID attemptId, UUID questionId) {
+        return studentAnswerCodeRepository.findByStudentExamAttemptIdAndExamQuestionId(attemptId, questionId)
+                .map(entity -> {
+                    StudentAnswerCodeResponseDTO dto = new StudentAnswerCodeResponseDTO();
+                    dto.setId(entity.getId());
+                    dto.setStudentExamAttemptId(entity.getStudentExamAttempt().getId());
+                    dto.setExamQuestionId(entity.getExamQuestion().getId());
+                    dto.setSubmittedCode(entity.getSubmittedCode());
+                    dto.setLanguageId(entity.getLanguage() != null ? entity.getLanguage().getId() : null);
+                    return dto;
+                })
+                .orElse(null);
     }
 } 
