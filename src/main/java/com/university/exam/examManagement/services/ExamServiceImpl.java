@@ -1250,6 +1250,8 @@ public class ExamServiceImpl implements ExamService {
         response.setId(answer.getId());
         response.setSubmittedCode(answer.getSubmittedCode());
         response.setLanguageId(answer.getLanguage() != null ? answer.getLanguage().getId() : null);
+        response.setStudentExamAttemptId(answer.getStudentExamAttempt().getId());
+        response.setExamQuestionId(answer.getExamQuestion().getId());
         return response;
     }
 
