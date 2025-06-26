@@ -55,10 +55,10 @@ public class Exam {
     private double successPercentage;
 
     @Column(nullable = false)
-    private int allowedAttemptTimes = 1;
+    private int allowedAttemptTimes;
 
     @Column(name = "questionsPerPage")
-    private byte questionsPerPage = 1;
+    private byte questionsPerPage;
 
     @Column(name = "showResult")
     private boolean showResult;

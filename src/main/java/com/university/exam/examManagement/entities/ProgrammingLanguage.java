@@ -39,7 +39,7 @@ public class ProgrammingLanguage {
     private String fileExtension;
 
     @Column(nullable = false)
-    private boolean enabled = true;
+    private boolean enabled;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

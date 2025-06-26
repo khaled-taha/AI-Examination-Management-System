@@ -33,7 +33,7 @@ public class CodingTestCase {
     private BigDecimal mark;
 
     @Column(nullable = false)
-    private boolean isSample = false;
+    private boolean isSample;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
