@@ -974,6 +974,10 @@ public class ExamServiceImpl implements ExamService {
         StudentExamAttempt attempt = studentExamAttemptRepository.findById(attemptId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student attempt not found with id: " + attemptId));
 
+        if (attempt.getEndTime() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exam attempt already ended");
+        }
+
         // Validate that question exists
         ExamQuestion question = examQuestionRepository.findById(request.getExamQuestionId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + request.getExamQuestionId()));
@@ -1003,6 +1007,10 @@ public class ExamServiceImpl implements ExamService {
         // Validate that attempt exists
         StudentExamAttempt attempt = studentExamAttemptRepository.findById(attemptId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student attempt not found with id: " + attemptId));
+
+        if (attempt.getEndTime() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exam attempt already ended");
+        }
 
         // Validate that question exists
         ExamQuestion question = examQuestionRepository.findById(request.getExamQuestionId())
@@ -1060,6 +1068,10 @@ public class ExamServiceImpl implements ExamService {
         // Validate that attempt exists
         StudentExamAttempt attempt = studentExamAttemptRepository.findById(attemptId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student attempt not found with id: " + attemptId));
+
+        if (attempt.getEndTime() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exam attempt already ended");
+        }
 
         // Validate that question exists
         ExamQuestion question = examQuestionRepository.findById(request.getExamQuestionId())
