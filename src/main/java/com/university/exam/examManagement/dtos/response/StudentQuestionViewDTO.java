@@ -11,15 +11,15 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "questionType")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = StudentChoiceQuestionViewDTO.class, name = "TF"),
-        @JsonSubTypes.Type(value = StudentChoiceQuestionViewDTO.class, name = "MCQ"),
-        @JsonSubTypes.Type(value = StudentChoiceQuestionViewDTO.class, name = "MultiChoice"),
-        @JsonSubTypes.Type(value = StudentAnswerKeyQuestionViewDTO.class, name = "Complete"),
-        @JsonSubTypes.Type(value = StudentAnswerKeyQuestionViewDTO.class, name = "Matching"),
-        @JsonSubTypes.Type(value = StudentCodingQuestionViewDTO.class, name = "Coding")
-})
+//@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "questionType")
+//@JsonSubTypes({
+//        @JsonSubTypes.Type(value = StudentChoiceQuestionViewDTO.class, name = "TF"),
+//        @JsonSubTypes.Type(value = StudentChoiceQuestionViewDTO.class, name = "MCQ"),
+//        @JsonSubTypes.Type(value = StudentChoiceQuestionViewDTO.class, name = "MultiChoice"),
+//        @JsonSubTypes.Type(value = StudentAnswerKeyQuestionViewDTO.class, name = "Complete"),
+//        @JsonSubTypes.Type(value = StudentAnswerKeyQuestionViewDTO.class, name = "Matching"),
+//        @JsonSubTypes.Type(value = StudentCodingQuestionViewDTO.class, name = "Coding")
+//})
 public abstract class StudentQuestionViewDTO {
     private UUID id;
     private String questionText;
