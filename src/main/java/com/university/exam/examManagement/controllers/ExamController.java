@@ -40,10 +40,9 @@ public class ExamController {
     }
 
     @GetMapping("/academic-year/{academicYearCourseId}")
-    public ResponseEntity<Page<ExamResponseDTO>> getExamsByAcademicYearCourse(
-            @PathVariable UUID academicYearCourseId,
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(examService.getExamsByAcademicYearCourseId(academicYearCourseId, pageable));
+    public ResponseEntity<List<ExamResponseDTO>> getExamsByAcademicYearCourse(
+            @PathVariable UUID academicYearCourseId) {
+        return ResponseEntity.ok(examService.getExamsByAcademicYearCourseId(academicYearCourseId));
     }
 
 
@@ -142,8 +141,9 @@ public class ExamController {
 
     @GetMapping("/academic-year/{academicYearCourseId}")
     @Deprecated
-    public ResponseEntity<List<ExamResponseDTO>> getExamsByAcademicYearCourse(
-            @PathVariable UUID academicYearCourseId) {
-        return ResponseEntity.ok(examService.getExamsByAcademicYearCourseId(academicYearCourseId));
+    public ResponseEntity<Page<ExamResponseDTO>> getExamsByAcademicYearCourse(
+            @PathVariable UUID academicYearCourseId,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(examService.getExamsByAcademicYearCourseId(academicYearCourseId, pageable));
     }
 }
