@@ -77,7 +77,7 @@ public class StudentService {
 
     @Transactional(readOnly = true)
     public Page<StudentResponseDTO> getAllStudents(Integer page, Integer size) {
-        Sort sort = Sort.by(Sort.Direction.fromString("DESC"), "created_at");
+        Sort sort = Sort.by(Sort.Direction.fromString("DESC"), "createdAt");
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Student> students = studentRepository.findAll(pageable);
 
