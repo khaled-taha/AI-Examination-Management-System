@@ -9,6 +9,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,17 +53,24 @@ public class StudentController {
         return ResponseEntity.ok(studentService.getStudentByEmail(email));
     }
 
+    @GetMapping
+    public ResponseEntity<Page<StudentResponseDTO>> listStudents(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(studentService.getAllStudents(pageable));
+    }
+
+
     @PostMapping
     @Operation(
-            summary = "Create a new student",
-            description = "Create a new student with the provided details.",
+            summary = "Save a student",
+            description = "Save a student with the provided details.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Student created successfully",
                             content = @Content(schema = @Schema(implementation = StudentResponseDTO.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid request payload")
             }
     )
-    public ResponseEntity<StudentResponseDTO> createStudent(@Valid @RequestBody StudentRequestDTO studentRequestDTO) throws Exception {
-        return ResponseEntity.ok(studentService.createStudent(studentRequestDTO));
+    public ResponseEntity<StudentResponseDTO> saveStudent(@Valid @RequestBody StudentRequestDTO studentRequestDTO) throws Exception {
+        return ResponseEntity.ok(studentService.saveStudent(studentRequestDTO));
     }
 }

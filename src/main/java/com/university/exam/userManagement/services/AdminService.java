@@ -5,6 +5,7 @@ import com.university.exam.userManagement.dtos.requestDTO.UserRequestDTO;
 import com.university.exam.userManagement.dtos.responseDTO.AdminResponseDTO;
 import com.university.exam.userManagement.entities.Admin;
 import com.university.exam.userManagement.entities.Specialization;
+import com.university.exam.userManagement.entities.Student;
 import com.university.exam.userManagement.entities.User;
 import com.university.exam.userManagement.repos.AdminRepository;
 import com.university.exam.userManagement.repos.SpecializationRepository;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.rmi.NoSuchObjectException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -52,7 +54,13 @@ public class AdminService {
         User user = UserRequestDTO.convertToUserEntity(adminRequestDTO.getUserRequestDTO(), "ADMIN");
         user = userRepository.save(user);
 
-        Admin admin = new Admin();
+        Admin admin = null;
+        if(user.getUserId() == null || user.getUserId().toString().isBlank()) admin = new Admin();
+
+        Optional<Admin> savedAdmin = this.adminRepository.findByUser_UserId(user.getUserId());
+        if(savedAdmin.isPresent()) admin = savedAdmin.get();
+
+        if(admin == null) admin = new Admin();
         admin.setUser(user);
         admin.setSpecialization(specialization);
         admin = adminRepository.save(admin);

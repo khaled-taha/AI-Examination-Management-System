@@ -7,8 +7,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class UserRequestDTO {
+
+    private UUID id;
+
     @NotBlank(message = "First name is required")
     @Size(max = 50, message = "First name cannot exceed 50 characters")
     private String firstName;
@@ -28,6 +33,7 @@ public class UserRequestDTO {
 
     public static User convertToUserEntity(UserRequestDTO userRequestDTO, String userType) {
         User user = new User();
+        user.setUserId(userRequestDTO.getId());
         user.setFirstName(userRequestDTO.getFirstName());
         user.setLastName(userRequestDTO.getLastName());
         user.setEmail(userRequestDTO.getEmail());

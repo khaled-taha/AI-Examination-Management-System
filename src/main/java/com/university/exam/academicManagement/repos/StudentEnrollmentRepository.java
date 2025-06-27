@@ -13,4 +13,17 @@ public interface StudentEnrollmentRepository extends JpaRepository<StudentEnroll
 
     @Query("SELECT e FROM StudentEnrollment e WHERE e.student.studentId = :studentId ORDER BY e.term.startDate DESC")
     Optional<StudentEnrollment> findLatestByStudentId(@Param("studentId") UUID studentId);
+
+    @Query("""
+    SELECT COUNT(e) > 0 FROM StudentEnrollment e
+    WHERE e.student.studentId = :studentId
+      AND e.academicYearGroup.id = :academicYearGroupId
+      AND e.term.id = :termId
+      AND e.enrollmentStatus = 'ACTIVE'
+""")
+    boolean isStudentEnrolledInYearGroupAndTerm(
+            @Param("studentId") UUID studentId,
+            @Param("academicYearGroupId") UUID academicYearGroupId,
+            @Param("termId") UUID termId
+    );
 }

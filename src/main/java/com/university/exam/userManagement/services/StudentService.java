@@ -16,6 +16,9 @@ import com.university.exam.userManagement.entities.Student;
 import com.university.exam.userManagement.entities.User;
 import com.university.exam.userManagement.repos.StudentRepository;
 import com.university.exam.userManagement.repos.UserRepository;
+import com.university.exam.utils.Utils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,14 +73,27 @@ public class StudentService {
                 .orElseGet(() -> StudentResponseDTO.convertToStudentResponseDTO(student));
     }
 
+    @Transactional(readOnly = true)
+    public Page<StudentResponseDTO> getAllStudents(Pageable pageable) {
+        Page<Student> students = studentRepository.findAll(pageable);
+
+        return students.map(student -> {
+            Optional<StudentEnrollment> enrollment = this.studentEnrollmentRepository.findLatestByStudentId(student.getStudentId());
+            return enrollment.map(e ->
+                            StudentResponseDTO.convertToStudentResponseDTO(student, e.getAcademicYearGroup()))
+                    .orElseGet(() -> StudentResponseDTO.convertToStudentResponseDTO(student));
+        });
+    }
+
+
     @Transactional
-    public StudentResponseDTO createStudent(StudentRequestDTO studentRequestDTO) throws Exception {
+    public StudentResponseDTO saveStudent(StudentRequestDTO studentRequestDTO) throws Exception {
         validateEmail(studentRequestDTO.getUserRequestDTO().getEmail());
 
         User user = saveUser(studentRequestDTO.getUserRequestDTO());
         Group group = findGroup(studentRequestDTO.getGroupId());
         AcademicYearGroup academicYearGroup = findAcademicYearGroup(group);
-        Student student = createStudent(user);
+        Student student = saveStudent(user);
         AcademicTerm firstTerm = findFirstTerm(academicYearGroup);
 
         saveEnrollment(student, academicYearGroup, firstTerm);
@@ -108,8 +124,14 @@ public class StudentService {
                                 "Please create an Academic Year for this Group and try again."));
     }
 
-    private Student createStudent(User user) {
-        Student student = new Student();
+    private Student saveStudent(User user) {
+        Student student = null;
+        if(user.getUserId() == null || user.getUserId().toString().isBlank()) student = new Student();
+
+        Optional<Student> savedStudent = this.studentRepository.findByUser_UserId(user.getUserId());
+        if(savedStudent.isPresent()) student = savedStudent.get();
+
+        if(student == null) student = new Student();
         student.setUser(user);
         return studentRepository.saveAndFlush(student);
     }
@@ -123,6 +145,9 @@ public class StudentService {
     }
 
     private void saveEnrollment(Student student, AcademicYearGroup academicYearGroup, AcademicTerm firstTerm) {
+        boolean found = this.studentEnrollmentRepository.isStudentEnrolledInYearGroupAndTerm(student.getStudentId(),academicYearGroup.getId(),firstTerm.getId());
+        if(found) return;
+
         StudentEnrollment enrollment = new StudentEnrollment();
         enrollment.setStudent(student);
         enrollment.setAcademicYearGroup(academicYearGroup);
