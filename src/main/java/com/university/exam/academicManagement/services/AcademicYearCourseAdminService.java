@@ -44,7 +44,7 @@ public class AcademicYearCourseAdminService {
     }
 
     private void validateAssignment(UUID courseId, UUID adminId) {
-        if (academicYearCourseAdminRepository.existsByAcademicYearCourseIdAndAdmin_AdminId(courseId, adminId)) {
+        if (academicYearCourseAdminRepository.existsByAcademicYearCourseIdAndAdminId(courseId, adminId)) {
             throw new IllegalStateException("Admin is already assigned to this course");
         }
     }
