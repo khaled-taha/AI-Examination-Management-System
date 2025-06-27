@@ -16,6 +16,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -53,11 +54,9 @@ public class StudentController {
         return ResponseEntity.ok(studentService.getStudentByEmail(email));
     }
 
-    @GetMapping("/{page}/{size}")
-    public ResponseEntity<Page<StudentResponseDTO>> listStudents(
-            @PathVariable("page") Integer page,
-            @PathVariable("size") Integer size)  {
-        return ResponseEntity.ok(studentService.getAllStudents(page, size));
+    @GetMapping
+    public ResponseEntity<List<StudentResponseDTO>> listStudents()  {
+        return ResponseEntity.ok(studentService.getAllStudents());
     }
 
 

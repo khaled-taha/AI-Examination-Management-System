@@ -1,5 +1,6 @@
 package com.university.exam.userManagement.services;
 
+import com.university.exam.exceptions.ValidationException;
 import com.university.exam.userManagement.dtos.requestDTO.AdminRequestDTO;
 import com.university.exam.userManagement.dtos.requestDTO.UserRequestDTO;
 import com.university.exam.userManagement.dtos.responseDTO.AdminResponseDTO;
@@ -10,6 +11,7 @@ import com.university.exam.userManagement.entities.User;
 import com.university.exam.userManagement.repos.AdminRepository;
 import com.university.exam.userManagement.repos.SpecializationRepository;
 import com.university.exam.userManagement.repos.UserRepository;
+import com.university.exam.utils.Utils;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +53,9 @@ public class AdminService {
         Specialization specialization = this.specializationRepository.findById(adminRequestDTO.getSpecializationId())
                 .orElseThrow(() -> new NoSuchObjectException("Specialization Not Found ["+ adminRequestDTO.getSpecializationId() +"]"));
 
+        validateEmail(adminRequestDTO.getUserRequestDTO().getId().toString(),
+                adminRequestDTO.getUserRequestDTO().getEmail());
+
         User user = UserRequestDTO.convertToUserEntity(adminRequestDTO.getUserRequestDTO(), "ADMIN");
         user = userRepository.save(user);
 
@@ -66,5 +71,16 @@ public class AdminService {
         admin = adminRepository.save(admin);
 
         return AdminResponseDTO.fromEntity(admin);
+    }
+
+    private void validateEmail(String userId, String email) {
+        Optional<User> user = this.userRepository.findByEmail(email);
+        if(user.isEmpty()) return;
+
+        boolean sameEmail = email.equals(user.get().getEmail());
+
+        if ( (Utils.isEmpty(userId) && sameEmail) || (!user.get().getUserId().toString().equals(userId)) ) {
+            throw new ValidationException("This Email Already exists!");
+        }
     }
 }
