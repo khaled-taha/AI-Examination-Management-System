@@ -18,7 +18,9 @@ import com.university.exam.userManagement.repos.StudentRepository;
 import com.university.exam.userManagement.repos.UserRepository;
 import com.university.exam.utils.Utils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,7 +76,9 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StudentResponseDTO> getAllStudents(Pageable pageable) {
+    public Page<StudentResponseDTO> getAllStudents(Integer page, Integer size) {
+        Sort sort = Sort.by(Sort.Direction.fromString("DESC"), "created_at");
+        Pageable pageable = PageRequest.of(page, size, sort);
         Page<Student> students = studentRepository.findAll(pageable);
 
         return students.map(student -> {

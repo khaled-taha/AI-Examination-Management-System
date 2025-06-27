@@ -53,10 +53,11 @@ public class StudentController {
         return ResponseEntity.ok(studentService.getStudentByEmail(email));
     }
 
-    @GetMapping
+    @GetMapping("/{page}/{size}")
     public ResponseEntity<Page<StudentResponseDTO>> listStudents(
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(studentService.getAllStudents(pageable));
+            @PathVariable("page") Integer page,
+            @PathVariable("size") Integer size)  {
+        return ResponseEntity.ok(studentService.getAllStudents(page, size));
     }
 
 
