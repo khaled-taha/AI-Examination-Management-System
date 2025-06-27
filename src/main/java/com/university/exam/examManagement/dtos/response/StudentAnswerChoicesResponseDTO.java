@@ -8,17 +8,16 @@ import java.util.List;
 import java.util.UUID;
 
 @Data
-public class StudentAnswerCodeResponseDTO {
+public class StudentAnswerChoicesResponseDTO {
     private UUID studentExamAttemptId;
-    private List<CodeAnswer> answers;
+    private List<Answer> answers;
 
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class CodeAnswer {
+    public static class Answer {
         private UUID id;
         private UUID examQuestionId;
-        private String submittedCode;
-        private UUID languageId;
+        private UUID selectedChoiceId;
     }
-}
+} 

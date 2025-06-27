@@ -2,29 +2,29 @@ package com.university.exam.examManagement.services;
 
 import com.university.exam.examManagement.dtos.request.*;
 import com.university.exam.examManagement.dtos.response.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.UUID;
 
 public interface ExamService {
-    ExamResponseDTO createExam(ExamRequestDTO request);
+    ExamResponseDTO saveExam(ExamRequestDTO request);
     ExamResponseDTO getExam(UUID id);
-    ExamResponseDTO updateExam(UUID id, ExamRequestDTO request);
     void deleteExam(UUID id);
     List<ExamResponseDTO> getExams();
 
     List<ExamResponseDTO> getExamsByAcademicYearCourseId(UUID academicYearCourseId);
+    Page<ExamResponseDTO> getExamsByAcademicYearCourseId(UUID academicYearCourseId, Pageable pageable);
 
     CanEnterExamResponseDTO canStudentEnterExam(UUID studentId, UUID examId);
 
-    SectionResponseDTO createSection(UUID examId, SectionRequestDTO request);
+    SectionResponseDTO saveSection(UUID examId, SectionRequestDTO request);
     List<SectionResponseDTO> getSections(UUID examId);
     PaginatedSectionsResponseDTO getSectionsPaginated(UUID examId, int page);
 
-    ExamQuestionResponseDTO addQuestion(UUID examId, QuestionRequestDTO request);
+    ExamQuestionResponseDTO saveQuestion(UUID examId, QuestionRequestDTO request);
 
-    // List<QuestionResponseDTO> getQuestions(UUID examId);
-
-    ExamQuestionResponseDTO updateQuestion(UUID questionId, QuestionRequestDTO request);
     void deleteQuestion(UUID questionId);
 
     ExamQuestionChoicesResponseDTO saveChoice(UUID questionId, ExamQuestionChoicesRequestDTO request);
@@ -44,9 +44,9 @@ public interface ExamService {
     List<StudentSectionViewDTO> getExamForStudent(UUID examId);
     PaginatedStudentSectionsResponseDTO getExamForStudentPaginated(UUID examId, int page);
 
-    StudentAnswerChoiceResponseDTO submitChoiceAnswer(UUID attemptId, StudentAnswerChoiceRequestDTO request);
-    StudentAnswerTextResponseDTO submitTextAnswers(UUID attemptId, StudentAnswerTextRequestDTO request);
-    StudentAnswerCodeResponseDTO submitCodeAnswer(UUID attemptId, StudentAnswerCodeRequestDTO request);
+    StudentAnswerChoicesResponseDTO submitChoiceAnswer(UUID attemptId, List<StudentAnswerChoiceRequestDTO> requests);
+    StudentAnswerTextResponseDTO submitTextAnswers(UUID attemptId, List<StudentAnswerTextRequestDTO> requests);
+    StudentAnswerCodeResponseDTO submitCodeAnswer(UUID attemptId, List<StudentAnswerCodeRequestDTO> requests);
 
     List<StudentCodingTestResultResponseDTO> getCodingTestResults(UUID codeAnswerId);
 
@@ -56,7 +56,9 @@ public interface ExamService {
     StudentAttemptResponseDTO endExam(UUID attemptId);
     double getExamTotalPoints(UUID examId);
 
-    StudentAnswerChoiceResponseDTO getStudentChoiceAnswer(UUID attemptId, UUID questionId);
+    StudentAnswerChoicesResponseDTO getStudentChoiceAnswer(UUID attemptId, UUID questionId);
     StudentAnswerTextResponseDTO getStudentTextAnswers(UUID attemptId, UUID questionId);
     StudentAnswerCodeResponseDTO getStudentCodeAnswer(UUID attemptId, UUID questionId);
+    
+    StudentExamResultResponseDTO getStudentExamResult(UUID attemptId);
 } 

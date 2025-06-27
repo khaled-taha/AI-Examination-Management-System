@@ -19,6 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Exam {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(nullable = false, length = 255)

@@ -5,6 +5,10 @@ import com.university.exam.examManagement.dtos.response.*;
 import com.university.exam.examManagement.services.ExamService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -20,18 +24,13 @@ public class ExamController {
     }
 
     @PostMapping
-    public ResponseEntity<ExamResponseDTO> createExam(@Valid @RequestBody ExamRequestDTO request) {
-        return ResponseEntity.ok(examService.createExam(request));
+    public ResponseEntity<ExamResponseDTO> saveExam(@Valid @RequestBody ExamRequestDTO request) {
+        return ResponseEntity.ok(examService.saveExam(request));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ExamResponseDTO> getExam(@PathVariable UUID id) {
         return ResponseEntity.ok(examService.getExam(id));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ExamResponseDTO> updateExam(@PathVariable UUID id, @Valid @RequestBody ExamRequestDTO request) {
-        return ResponseEntity.ok(examService.updateExam(id, request));
     }
 
     @DeleteMapping("/{id}")
@@ -40,25 +39,22 @@ public class ExamController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    public ResponseEntity<List<ExamResponseDTO>> listExams() {
-        return ResponseEntity.ok(examService.getExams());
+    @GetMapping("/academic-year/{academicYearCourseId}")
+    public ResponseEntity<Page<ExamResponseDTO>> getExamsByAcademicYearCourse(
+            @PathVariable UUID academicYearCourseId,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(examService.getExamsByAcademicYearCourseId(academicYearCourseId, pageable));
     }
 
-    @GetMapping("/academic-year/{academicYearCourseId}")
-    public ResponseEntity<List<ExamResponseDTO>> getExamsByAcademicYearCourse(
-            @PathVariable UUID academicYearCourseId) {
-        return ResponseEntity.ok(examService.getExamsByAcademicYearCourseId(academicYearCourseId));
-    }
 
     // Section APIs
     @PostMapping("/{examId}/sections")
-    public ResponseEntity<SectionResponseDTO> createSection(@PathVariable UUID examId, @Valid @RequestBody SectionRequestDTO request) {
-        return ResponseEntity.ok(examService.createSection(examId, request));
+    public ResponseEntity<SectionResponseDTO> saveSection(@PathVariable UUID examId, @Valid @RequestBody SectionRequestDTO request) {
+        return ResponseEntity.ok(examService.saveSection(examId, request));
     }
 
     @GetMapping("/{examId}/sections")
-    public ResponseEntity<List<SectionResponseDTO>> listSections(@PathVariable UUID examId) {
+    public ResponseEntity<List<SectionResponseDTO>> getSections(@PathVariable UUID examId) {
         return ResponseEntity.ok(examService.getSections(examId));
     }
 
@@ -74,13 +70,8 @@ public class ExamController {
 
     // Question APIs
     @PostMapping("/{examId}/questions")
-    public ResponseEntity<ExamQuestionResponseDTO> addQuestion(@PathVariable UUID examId, @Valid @RequestBody QuestionRequestDTO request) {
-        return ResponseEntity.ok(examService.addQuestion(examId, request));
-    }
-
-    @PutMapping("/questions/{questionId}")
-    public ResponseEntity<ExamQuestionResponseDTO> updateQuestion(@PathVariable UUID questionId, @Valid @RequestBody QuestionRequestDTO request) {
-        return ResponseEntity.ok(examService.updateQuestion(questionId, request));
+    public ResponseEntity<ExamQuestionResponseDTO> saveQuestion(@PathVariable UUID examId, @Valid @RequestBody QuestionRequestDTO request) {
+        return ResponseEntity.ok(examService.saveQuestion(examId, request));
     }
 
     @DeleteMapping("/questions/{questionId}")
@@ -143,109 +134,16 @@ public class ExamController {
         return ResponseEntity.noContent().build();
     }
 
-    // Student Attempt APIs
-    @PostMapping("/attempts")
-    public ResponseEntity<StudentAttemptResponseDTO> createStudentAttempt(@Valid @RequestBody StudentAttemptRequestDTO request) {
-        return ResponseEntity.ok(examService.createStudentAttempt(request));
+    @GetMapping
+    @Deprecated
+    public ResponseEntity<List<ExamResponseDTO>> getExams() {
+        return ResponseEntity.ok(examService.getExams());
     }
 
-    @GetMapping("/attempts/{attemptId}")
-    public ResponseEntity<StudentAttemptResponseDTO> getStudentAttempt(@PathVariable UUID attemptId) {
-        return ResponseEntity.ok(examService.getStudentAttempt(attemptId));
-    }
-
-    @GetMapping("/attempts")
-    public ResponseEntity<List<StudentAttemptResponseDTO>> listStudentAttempts() {
-        return ResponseEntity.ok(examService.getStudentAttempts());
-    }
-
-    @GetMapping("/attempts/student/{studentId}/exam/{examId}")
-    public ResponseEntity<List<StudentAttemptResponseDTO>> listStudentAttemptsByStudentIdAndExamId(
-            @PathVariable UUID studentId, 
-            @PathVariable UUID examId) {
-        return ResponseEntity.ok(examService.getStudentAttemptsByStudentIdAndExamId(studentId, examId));
-    }
-
-    @GetMapping("/{examId}/attempts")
-    public ResponseEntity<List<StudentAttemptResponseDTO>> listStudentAttemptsByExamId(@PathVariable UUID examId) {
-        return ResponseEntity.ok(examService.getStudentAttemptsByExamId(examId));
-    }
-
-    @GetMapping("/{examId}/student-view")
-    public ResponseEntity<List<StudentSectionViewDTO>> getExamForStudent(@PathVariable UUID examId) {
-        return ResponseEntity.ok(examService.getExamForStudent(examId));
-    }
-
-    @GetMapping("/{examId}/student-view/paginated")
-    public ResponseEntity<PaginatedStudentSectionsResponseDTO> getExamForStudentPaginated(
-            @PathVariable UUID examId, 
-            @RequestParam(defaultValue = "1") int page) {
-        if (page < 1) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(examService.getExamForStudentPaginated(examId, page));
-    }
-
-    // Student Answers APIs
-    @PostMapping("/attempts/{attemptId}/answers/choice")
-    public ResponseEntity<StudentAnswerChoiceResponseDTO> submitChoiceAnswer(@PathVariable UUID attemptId, @Valid @RequestBody StudentAnswerChoiceRequestDTO request) {
-        return ResponseEntity.ok(examService.submitChoiceAnswer(attemptId, request));
-    }
-
-    @PostMapping("/attempts/{attemptId}/answers/text")
-    public ResponseEntity<StudentAnswerTextResponseDTO> submitTextAnswer(@PathVariable UUID attemptId, @Valid @RequestBody StudentAnswerTextRequestDTO request) {
-        return ResponseEntity.ok(examService.submitTextAnswers(attemptId, request));
-    }
-
-    @PostMapping("/attempts/{attemptId}/answers/code")
-    public ResponseEntity<StudentAnswerCodeResponseDTO> submitCodeAnswer(@PathVariable UUID attemptId, @Valid @RequestBody StudentAnswerCodeRequestDTO request) {
-        return ResponseEntity.ok(examService.submitCodeAnswer(attemptId, request));
-    }
-
-    // Student Coding Test Result APIs
-    @GetMapping("/answers/code/{codeAnswerId}/test-results")
-    public ResponseEntity<List<StudentCodingTestResultResponseDTO>> listCodingTestResults(@PathVariable UUID codeAnswerId) {
-        return ResponseEntity.ok(examService.getCodingTestResults(codeAnswerId));
-    }
-
-    @GetMapping("/{examId}/can-enter/{studentId}")
-    public ResponseEntity<CanEnterExamResponseDTO> canStudentEnterExam(
-            @PathVariable UUID examId, 
-            @PathVariable UUID studentId) {
-        return ResponseEntity.ok(examService.canStudentEnterExam(studentId, examId));
-    }
-
-    // End Exam Attempt
-    @PostMapping("/attempts/{attemptId}/end")
-    public ResponseEntity<StudentAttemptResponseDTO> endExam(@PathVariable UUID attemptId) {
-        return ResponseEntity.ok(examService.endExam(attemptId));
-    }
-
-    // Get Exam Total Points
-    @GetMapping("/{examId}/total-points")
-    public ResponseEntity<Double> getExamTotalPoints(@PathVariable UUID examId) {
-        return ResponseEntity.ok(examService.getExamTotalPoints(examId));
-    }
-
-    // Student Answers Retrieval APIs
-    @GetMapping("/attempts/{attemptId}/questions/{questionId}/choice-answer")
-    public ResponseEntity<StudentAnswerChoiceResponseDTO> getStudentChoiceAnswer(
-            @PathVariable UUID attemptId,
-            @PathVariable UUID questionId) {
-        return ResponseEntity.ok(examService.getStudentChoiceAnswer(attemptId, questionId));
-    }
-
-    @GetMapping("/attempts/{attemptId}/questions/{questionId}/text-answers")
-    public ResponseEntity<StudentAnswerTextResponseDTO> getStudentTextAnswers(
-            @PathVariable UUID attemptId,
-            @PathVariable UUID questionId) {
-        return ResponseEntity.ok(examService.getStudentTextAnswers(attemptId, questionId));
-    }
-
-    @GetMapping("/attempts/{attemptId}/questions/{questionId}/code-answer")
-    public ResponseEntity<StudentAnswerCodeResponseDTO> getStudentCodeAnswer(
-            @PathVariable UUID attemptId,
-            @PathVariable UUID questionId) {
-        return ResponseEntity.ok(examService.getStudentCodeAnswer(attemptId, questionId));
+    @GetMapping("/academic-year/{academicYearCourseId}")
+    @Deprecated
+    public ResponseEntity<List<ExamResponseDTO>> getExamsByAcademicYearCourse(
+            @PathVariable UUID academicYearCourseId) {
+        return ResponseEntity.ok(examService.getExamsByAcademicYearCourseId(academicYearCourseId));
     }
 }

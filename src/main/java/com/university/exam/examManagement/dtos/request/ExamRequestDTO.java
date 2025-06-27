@@ -8,6 +8,8 @@ import java.util.UUID;
 
 @Data
 public class ExamRequestDTO {
+    private UUID id;
+
     @NotBlank(message = "Exam title must not be blank")
     private String title;
 

@@ -6,6 +6,9 @@ import java.util.UUID;
 
 @Data
 public class SectionRequestDTO {
+
+    private UUID id;
+
     @NotNull(message = "Exam ID is required")
     private UUID examId;
 

@@ -17,6 +17,8 @@ import com.university.exam.academicManagement.repos.AcademicYearGroupRepository;
 import com.university.exam.userManagement.repos.AdminRepository;
 import com.university.exam.userManagement.repos.StudentRepository;
 import com.university.exam.utils.Utils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service("DefaultExamServiceImpl")
 @RequiredArgsConstructor
@@ -54,7 +57,7 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public ExamResponseDTO createExam(ExamRequestDTO request) {
+    public ExamResponseDTO saveExam(ExamRequestDTO request) {
         // Validate exam dates
         if (request.getStartDate().isAfter(request.getEndDate())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date cannot be after end date");
@@ -79,7 +82,7 @@ public class ExamServiceImpl implements ExamService {
 
         // Create new exam entity
         Exam exam = new Exam();
-        exam.setId(UUID.randomUUID());
+        exam.setId(request.getId());
         exam.setTitle(request.getTitle());
         exam.setDescription(request.getDescription());
         exam.setStartDate(request.getStartDate());
@@ -106,54 +109,6 @@ public class ExamServiceImpl implements ExamService {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id: " + id));
         return convertToExamResponseDTO(exam);
-    }
-
-    @Override
-    @Transactional
-    public ExamResponseDTO updateExam(UUID id, ExamRequestDTO request) {
-        Exam exam = examRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id: " + id));
-
-        // Validate exam dates
-        if (request.getStartDate().isAfter(request.getEndDate())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date cannot be after end date");
-        }
-
-        // Validate related entities exist
-        Admin creator = adminRepository.findById(request.getCreatorId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found with id: " + request.getCreatorId()));
-        
-        AcademicTerm term = academicTermRepository.findById(request.getTermId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic term not found with id: " + request.getTermId()));
-        
-        AcademicYearGroup academicYearGroup = academicYearGroupRepository.findById(request.getAcademicYearGroupId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year group not found with id: " + request.getAcademicYearGroupId()));
-
-        AcademicYearCourse academicYearCourse = academicYearCourseRepository.findById(request.getAcademicYearCourseId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year Course not found with id: " + request.getAcademicYearCourseId()));
-
-        if (LocalDateTime.now().isAfter(request.getEndDate())) {
-            request.setStatus(ExamStatus.EXPIRED.name());
-        }
-
-        // Update exam fields
-        exam.setTitle(request.getTitle());
-        exam.setDescription(request.getDescription());
-        exam.setStartDate(request.getStartDate());
-        exam.setEndDate(request.getEndDate());
-        exam.setStatus(request.getStatus());
-        exam.setCreator(creator);
-        exam.setAcademicYearCourse(academicYearCourse);
-        exam.setTerm(term);
-        exam.setAcademicYearGroup(academicYearGroup);
-        exam.setSuccessPercentage(request.getSuccessPercentage());
-        exam.setAllowedAttemptTimes(request.getAllowedAttemptTimes());
-        exam.setQuestionsPerPage(request.getQuestionsPerPage());
-        exam.setShowResult(request.isShowResult());
-        exam.setUpdatedAt(LocalDateTime.now());
-
-        Exam updatedExam = examRepository.save(exam);
-        return convertToExamResponseDTO(updatedExam);
     }
 
     @Override
@@ -196,6 +151,18 @@ public class ExamServiceImpl implements ExamService {
                 .map(this::convertToExamResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional
+    public Page<ExamResponseDTO> getExamsByAcademicYearCourseId(UUID academicYearCourseId, Pageable pageable) {
+        Page<Exam> examsPage = examRepository.findExamsByAcademicYearCourse(academicYearCourseId, pageable);
+
+        List<Exam> updatedStatusExam = checkExamStatus(examsPage.getContent());
+        if (!Utils.isEmpty(updatedStatusExam)) this.examRepository.saveAll(updatedStatusExam);
+
+        return examsPage.map(this::convertToExamResponseDTO);
+    }
+
 
     private List<Exam> checkExamStatus(List<Exam> exams) {
         LocalDateTime now = LocalDateTime.now();
@@ -281,14 +248,14 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
-    public SectionResponseDTO createSection(UUID examId, SectionRequestDTO request) {
+    public SectionResponseDTO saveSection(UUID examId, SectionRequestDTO request) {
         // Validate that exam exists
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id: " + examId));
 
         // Create new section entity
         ExamSection section = new ExamSection();
-        section.setId(UUID.randomUUID());
+        section.setId(request.getId());
         section.setExam(exam);
         section.setTitle(request.getTitle());
         section.setPosition(request.getPosition());
@@ -664,7 +631,7 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public ExamQuestionResponseDTO addQuestion(UUID examId, QuestionRequestDTO request) {
+    public ExamQuestionResponseDTO saveQuestion(UUID examId, QuestionRequestDTO request) {
         // Validate that exam exists
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id: " + examId));
@@ -692,7 +659,7 @@ public class ExamServiceImpl implements ExamService {
 
         // Create new question entity
         ExamQuestion question = new ExamQuestion();
-        question.setId(UUID.randomUUID());
+        question.setId(request.getId());
         question.setExam(exam);
         question.setSection(section);
         question.setQuestionPool(questionPool);
@@ -710,51 +677,6 @@ public class ExamServiceImpl implements ExamService {
 
         ExamQuestion savedQuestion = examQuestionRepository.save(question);
         return convertToQuestionResponseDTO(savedQuestion);
-    }
-
-    @Override
-    @Transactional
-    public ExamQuestionResponseDTO updateQuestion(UUID questionId, QuestionRequestDTO request) {
-        ExamQuestion question = examQuestionRepository.findById(questionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
-
-        // Validate that section exists if provided
-        ExamSection examSection = null;
-        if (request.getSectionId() != null) {
-            examSection = examSectionRepository.findById(request.getSectionId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found with id: " + request.getSectionId()));
-        }
-
-        // Validate that question pool exists if provided
-        QuestionPool questionPool = null;
-        if (request.getQuestionPoolId() != null) {
-            questionPool = questionPoolRepository.findById(request.getQuestionPoolId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question pool not found with id: " + request.getQuestionPoolId()));
-        }
-
-        // Validate that programming language exists if provided
-        ProgrammingLanguage programmingLanguage = null;
-        if (request.getProgrammingLanguageId() != null) {
-            programmingLanguage = programmingLanguageRepository.findById(request.getProgrammingLanguageId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Programming language not found with id: " + request.getProgrammingLanguageId()));
-        }
-
-        // Update question fields
-        question.setSection(examSection);
-        question.setQuestionPool(questionPool);
-        question.setQuestionText(request.getQuestionText());
-        question.setQuestionType(request.getQuestionType());
-        question.setExplanation(request.getExplanation());
-        question.setProgrammingLanguage(programmingLanguage);
-        question.setTimeLimit(request.getTimeLimit());
-        question.setMemoryLimit(request.getMemoryLimit());
-        question.setMark(request.getMark());
-        question.setPosition(request.getPosition());
-        question.setActive(request.isActive());
-        question.setUpdatedAt(LocalDateTime.now());
-
-        ExamQuestion updatedQuestion = examQuestionRepository.save(question);
-        return convertToQuestionResponseDTO(updatedQuestion);
     }
 
     @Override
@@ -975,7 +897,10 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public StudentAnswerChoiceResponseDTO submitChoiceAnswer(UUID attemptId, StudentAnswerChoiceRequestDTO request) {
+    public StudentAnswerChoicesResponseDTO submitChoiceAnswer(UUID attemptId, List<StudentAnswerChoiceRequestDTO> requests) {
+
+        if(Utils.isEmpty(requests)) throw  new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trying to save Empty Question Answers!");
+
         // Validate that attempt exists
         StudentExamAttempt attempt = studentExamAttemptRepository.findById(attemptId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student attempt not found with id: " + attemptId));
@@ -984,32 +909,37 @@ public class ExamServiceImpl implements ExamService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exam attempt already ended");
         }
 
-        // Validate that question exists
-        ExamQuestion question = examQuestionRepository.findById(request.getExamQuestionId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + request.getExamQuestionId()));
+        List<StudentAnswerChoice> choices = requests.stream().map(request -> {
 
-        // Validate that choice exists
-        ExamQuestionChoice choice = examQuestionChoiceRepository.findById(request.getSelectedChoiceId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Choice not found with id: " + request.getSelectedChoiceId()));
+            // Validate that question exists
+            ExamQuestion question = examQuestionRepository.findById(request.getExamQuestionId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + request.getExamQuestionId()));
 
-        // Create new student answer choice entity
-        StudentAnswerChoice studentAnswer = new StudentAnswerChoice();
-        studentAnswer.setId(request.getId());
-        studentAnswer.setStudentExamAttempt(attempt);
-        studentAnswer.setExamQuestion(question);
-        studentAnswer.setSelectedChoice(choice);
-        studentAnswer.setIsCorrect(choice.getIsCorrect());
-        studentAnswer.setScore(choice.getMarkValue());
-        studentAnswer.setCreatedAt(LocalDateTime.now());
-        studentAnswer.setUpdatedAt(LocalDateTime.now());
+            // Validate that choice exists
+            ExamQuestionChoice choice = examQuestionChoiceRepository.findById(request.getSelectedChoiceId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Choice not found with id: " + request.getSelectedChoiceId()));
 
-        StudentAnswerChoice savedAnswer = studentAnswerChoiceRepository.save(studentAnswer);
+            // Create new student answer choice entity
+            StudentAnswerChoice studentAnswer = new StudentAnswerChoice();
+            studentAnswer.setId(request.getId());
+            studentAnswer.setStudentExamAttempt(attempt);
+            studentAnswer.setExamQuestion(question);
+            studentAnswer.setSelectedChoice(choice);
+            studentAnswer.setIsCorrect(choice.getIsCorrect());
+            studentAnswer.setScore(choice.getMarkValue());
+            return studentAnswer;
+        }).toList();
+
+        List<StudentAnswerChoice> savedAnswer = studentAnswerChoiceRepository.saveAll(choices);
         return convertToStudentAnswerChoiceResponseDTO(savedAnswer);
     }
 
     @Override
     @Transactional
-    public StudentAnswerTextResponseDTO submitTextAnswers(UUID attemptId, StudentAnswerTextRequestDTO request) {
+    public StudentAnswerTextResponseDTO submitTextAnswers(UUID attemptId, List<StudentAnswerTextRequestDTO> requests) {
+
+        if(Utils.isEmpty(requests)) throw  new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trying to save Empty Question Answers!");
+
         // Validate that attempt exists
         StudentExamAttempt attempt = studentExamAttemptRepository.findById(attemptId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student attempt not found with id: " + attemptId));
@@ -1018,59 +948,62 @@ public class ExamServiceImpl implements ExamService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exam attempt already ended");
         }
 
-        // Validate that question exists
-        ExamQuestion question = examQuestionRepository.findById(request.getExamQuestionId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + request.getExamQuestionId()));
+        List<StudentAnswerText> savedStudentAnswerTexts = requests.stream().flatMap(request -> {
 
-        List<ExamQuestionAnswerKey> answerKeys = examQuestionAnswerKeyRepository.findByExamQuestionId(request.getExamQuestionId());
-        List<StudentAnswerTextRequestDTO.AnswerText> answerTexts = request.getAnswerTexts();
+            // Validate that question exists
+            ExamQuestion question = examQuestionRepository.findById(request.getExamQuestionId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + request.getExamQuestionId()));
 
-        if(answerKeys == null || answerTexts == null || answerKeys.isEmpty() || answerTexts.isEmpty()) return null;
+            List<ExamQuestionAnswerKey> answerKeys = examQuestionAnswerKeyRepository.findByExamQuestionId(request.getExamQuestionId());
+            List<StudentAnswerTextRequestDTO.AnswerText> answerTexts = request.getAnswerTexts();
 
-        Map<Integer, ExamQuestionAnswerKey> examQuestionAnswerKeyMap = new HashMap<>();
-        answerKeys.forEach(key -> {
-            examQuestionAnswerKeyMap.put(key.getSortOrder(), key);
-        });
+            if(Utils.isEmpty(answerKeys) || Utils.isEmpty(answerTexts)) return Stream.empty();
 
-        double markObtained = !examQuestionAnswerKeyMap.isEmpty() ? question.getMark() / examQuestionAnswerKeyMap.size() : 0;
+            Map<Integer, ExamQuestionAnswerKey> examQuestionAnswerKeyMap = new HashMap<>();
+            answerKeys.forEach(key -> {
+                examQuestionAnswerKeyMap.put(key.getSortOrder(), key);
+            });
+
+            double markObtained = !examQuestionAnswerKeyMap.isEmpty() ? question.getMark() / examQuestionAnswerKeyMap.size() : 0;
+
+            return answerTexts.stream().map(answerText -> {
+                // Create new student answer text entity
+                StudentAnswerText studentAnswer = new StudentAnswerText();
+                studentAnswer.setId(answerText.getId());
+                studentAnswer.setStudentExamAttempt(attempt);
+                studentAnswer.setExamQuestion(question);
+                studentAnswer.setQuestionPart(answerText.getQuestionPart());
+                studentAnswer.setStudentAnswer(answerText.getStudentAnswer());
+                studentAnswer.setSortOrder(answerText.getSortOrder());
+
+                ExamQuestionAnswerKey answerKey = examQuestionAnswerKeyMap.get(answerText.getSortOrder());
+
+                boolean isCorrect = !QuestionType.Matching.name().equals(question.getQuestionType()) ||
+                        !Utils.isEmpty(answerText.getQuestionPart()) && answerKey.getQuestionPart().equals(answerText.getQuestionPart());
+
+                isCorrect = isCorrect && ((answerKey.isCaseSensitive()) ?
+                        !Utils.isEmpty(answerText.getStudentAnswer()) && answerText.getStudentAnswer().equals(answerKey.getAnswerText()) :
+                        !Utils.isEmpty(answerText.getStudentAnswer()) && answerText.getStudentAnswer().equalsIgnoreCase(answerKey.getAnswerText()));
+
+                studentAnswer.setIsCorrect(isCorrect);
+                studentAnswer.setMarkObtained(isCorrect ? markObtained : 0d);
+                return studentAnswer;
+            });
+
+        }).toList();
 
 
-        List<StudentAnswerText> studentAnswerTexts = new ArrayList<>();
-        answerTexts.forEach(answerText -> {
-            // Create new student answer text entity
-            StudentAnswerText studentAnswer = new StudentAnswerText();
-            studentAnswer.setId(answerText.getId());
-            studentAnswer.setStudentExamAttempt(attempt);
-            studentAnswer.setExamQuestion(question);
-            studentAnswer.setQuestionPart(answerText.getQuestionPart());
-            studentAnswer.setStudentAnswer(answerText.getStudentAnswer());
-            studentAnswer.setSortOrder(answerText.getSortOrder());
 
-            ExamQuestionAnswerKey answerKey = examQuestionAnswerKeyMap.get(answerText.getSortOrder());
-
-            boolean isCorrect = !QuestionType.Matching.name().equals(question.getQuestionType()) ||
-                    !Utils.isEmpty(answerText.getQuestionPart()) && answerKey.getQuestionPart().equals(answerText.getQuestionPart());
-
-            isCorrect = isCorrect && ((answerKey.isCaseSensitive()) ?
-                    !Utils.isEmpty(answerText.getStudentAnswer()) && answerText.getStudentAnswer().equals(answerKey.getAnswerText()) :
-                    !Utils.isEmpty(answerText.getStudentAnswer()) && answerText.getStudentAnswer().equalsIgnoreCase(answerKey.getAnswerText()));
-
-            studentAnswer.setIsCorrect(isCorrect);
-
-
-            studentAnswer.setMarkObtained(isCorrect ? markObtained : 0d);
-            studentAnswer.setCreatedAt(LocalDateTime.now());
-            studentAnswer.setUpdatedAt(LocalDateTime.now());
-            studentAnswerTexts.add(studentAnswer);
-        });
-
-        List<StudentAnswerText> savedAnswer = studentAnswerTextRepository.saveAll(studentAnswerTexts);
+        List<StudentAnswerText> savedAnswer = studentAnswerTextRepository.saveAll(savedStudentAnswerTexts);
         return convertToStudentAnswerTextResponseDTO(savedAnswer);
     }
 
     @Override
     @Transactional
-    public StudentAnswerCodeResponseDTO submitCodeAnswer(UUID attemptId, StudentAnswerCodeRequestDTO request) {
+    public StudentAnswerCodeResponseDTO submitCodeAnswer(UUID attemptId, List<StudentAnswerCodeRequestDTO> requests) {
+
+        if(Utils.isEmpty(requests)) throw  new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trying to save Empty Question Answers!");
+
         // Validate that attempt exists
         StudentExamAttempt attempt = studentExamAttemptRepository.findById(attemptId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student attempt not found with id: " + attemptId));
@@ -1079,26 +1012,28 @@ public class ExamServiceImpl implements ExamService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exam attempt already ended");
         }
 
-        // Validate that question exists
-        ExamQuestion question = examQuestionRepository.findById(request.getExamQuestionId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + request.getExamQuestionId()));
+        List<StudentAnswerCode> studentAnswerCodes = requests.stream().map(request -> {
 
-        // Validate that programming language exists
-        ProgrammingLanguage language = programmingLanguageRepository.findById(request.getLanguageId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Programming language not found with id: " + request.getLanguageId()));
+            // Validate that question exists
+            ExamQuestion question = examQuestionRepository.findById(request.getExamQuestionId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + request.getExamQuestionId()));
 
-        // Create new student answer code entity
-        StudentAnswerCode studentAnswer = new StudentAnswerCode();
-        studentAnswer.setId(request.getId());
-        studentAnswer.setStudentExamAttempt(attempt);
-        studentAnswer.setExamQuestion(question);
-        studentAnswer.setSubmittedCode(request.getSubmittedCode());
-        studentAnswer.setLanguage(language);
-        studentAnswer.setCreatedAt(LocalDateTime.now());
-        studentAnswer.setUpdatedAt(LocalDateTime.now());
+            // Validate that programming language exists
+            ProgrammingLanguage language = programmingLanguageRepository.findById(request.getLanguageId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Programming language not found with id: " + request.getLanguageId()));
 
-        StudentAnswerCode savedAnswer = studentAnswerCodeRepository.save(studentAnswer);
-        return convertToStudentAnswerCodeResponseDTO(savedAnswer);
+            // Create new student answer code entity
+            StudentAnswerCode studentAnswer = new StudentAnswerCode();
+            studentAnswer.setId(request.getId());
+            studentAnswer.setStudentExamAttempt(attempt);
+            studentAnswer.setExamQuestion(question);
+            studentAnswer.setSubmittedCode(request.getSubmittedCode());
+            studentAnswer.setLanguage(language);
+            return studentAnswer;
+        }).toList();
+
+        List<StudentAnswerCode> savedAnswers = studentAnswerCodeRepository.saveAll(studentAnswerCodes);
+        return convertToStudentAnswerCodeResponseDTO(savedAnswers);
     }
 
     @Override
@@ -1239,12 +1174,21 @@ public class ExamServiceImpl implements ExamService {
     }
 
     // Helper method to convert StudentAnswerChoice entity to StudentAnswerChoiceResponseDTO
-    private StudentAnswerChoiceResponseDTO convertToStudentAnswerChoiceResponseDTO(StudentAnswerChoice answer) {
-        StudentAnswerChoiceResponseDTO response = new StudentAnswerChoiceResponseDTO();
-        response.setId(answer.getId());
-        response.setSelectedChoiceId(answer.getSelectedChoice() != null ? answer.getSelectedChoice().getId() : null);
-        response.setStudentExamAttemptId(answer.getStudentExamAttempt().getId());
-        response.setExamQuestionId(answer.getExamQuestion().getId());
+    private StudentAnswerChoicesResponseDTO convertToStudentAnswerChoiceResponseDTO(List<StudentAnswerChoice> answers) {
+        if(Utils.isEmpty(answers)) return new StudentAnswerChoicesResponseDTO();
+
+        StudentAnswerChoicesResponseDTO response = new StudentAnswerChoicesResponseDTO();
+        response.setStudentExamAttemptId(answers.get(0).getStudentExamAttempt().getId());
+
+        List<StudentAnswerChoicesResponseDTO.Answer> answerList = answers.stream().map(answer -> {
+            StudentAnswerChoicesResponseDTO.Answer studentAnswer = new StudentAnswerChoicesResponseDTO.Answer();
+            studentAnswer.setId(answer.getId());
+            studentAnswer.setSelectedChoiceId(answer.getSelectedChoice() != null ? answer.getSelectedChoice().getId() : null);
+            studentAnswer.setExamQuestionId(answer.getExamQuestion().getId());
+            return studentAnswer;
+        }).toList();
+
+        response.setAnswers(answerList);
         return response;
     }
 
@@ -1254,25 +1198,41 @@ public class ExamServiceImpl implements ExamService {
 
         StudentAnswerTextResponseDTO response = new StudentAnswerTextResponseDTO();
         response.setStudentExamAttemptId(answers.get(0).getStudentExamAttempt().getId());
-        response.setExamQuestionId(answers.get(0).getExamQuestion().getId());
-        response.setAnswerTexts(new ArrayList<>());
 
-        answers.forEach(answer -> {
-            response.getAnswerTexts().add(new StudentAnswerTextResponseDTO
-                    .AnswerText(answer.getId(), answer.getQuestionPart(), answer.getStudentAnswer(), answer.getSortOrder()));
-        });
+        Map<String, List<StudentAnswerText>> examQuestionListMap = answers.stream().collect(Collectors.groupingBy(
+                answer -> answer.getExamQuestion().getId().toString(),
+                Collectors.toList()
+        ));
+
+        response.setStudentQuestionAnswerTexts(answers.stream().map(answer -> {
+            StudentAnswerTextResponseDTO.StudentQuestionAnswerText studentQuestionAnswerText = new StudentAnswerTextResponseDTO.StudentQuestionAnswerText();
+            studentQuestionAnswerText.setExamQuestionId(answer.getExamQuestion().getId());
+
+            List<StudentAnswerText> answerTexts = examQuestionListMap.getOrDefault(answer.getExamQuestion().getId().toString(), List.of());
+
+            studentQuestionAnswerText.setAnswerTexts(answerTexts.stream().map(answerText -> new StudentAnswerTextResponseDTO.StudentQuestionAnswerText
+                    .AnswerText(answerText.getId(), answerText.getQuestionPart(), answerText.getStudentAnswer(), answerText.getSortOrder())).toList());
+
+            return studentQuestionAnswerText;
+        }).toList());
 
         return response;
     }
 
     // Helper method to convert StudentAnswerCode entity to StudentAnswerCodeResponseDTO
-    private StudentAnswerCodeResponseDTO convertToStudentAnswerCodeResponseDTO(StudentAnswerCode answer) {
+    private StudentAnswerCodeResponseDTO convertToStudentAnswerCodeResponseDTO(List<StudentAnswerCode> answers) {
+        if(Utils.isEmpty(answers)) return new StudentAnswerCodeResponseDTO();
         StudentAnswerCodeResponseDTO response = new StudentAnswerCodeResponseDTO();
-        response.setId(answer.getId());
-        response.setSubmittedCode(answer.getSubmittedCode());
-        response.setLanguageId(answer.getLanguage() != null ? answer.getLanguage().getId() : null);
-        response.setStudentExamAttemptId(answer.getStudentExamAttempt().getId());
-        response.setExamQuestionId(answer.getExamQuestion().getId());
+        response.setStudentExamAttemptId(answers.get(0).getStudentExamAttempt().getId());
+        response.setAnswers(answers.stream().map(answer -> {
+            StudentAnswerCodeResponseDTO.CodeAnswer codeAnswer = new StudentAnswerCodeResponseDTO.CodeAnswer();
+            codeAnswer.setId(answer.getId());
+            codeAnswer.setSubmittedCode(answer.getSubmittedCode());
+            codeAnswer.setLanguageId(answer.getLanguage() != null ? answer.getLanguage().getId() : null);
+            codeAnswer.setExamQuestionId(answer.getExamQuestion().getId());
+            return codeAnswer;
+        }).toList());
+
         return response;
     }
 
@@ -1380,14 +1340,13 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
-    public StudentAnswerChoiceResponseDTO getStudentChoiceAnswer(UUID attemptId, UUID questionId) {
+    public StudentAnswerChoicesResponseDTO getStudentChoiceAnswer(UUID attemptId, UUID questionId) {
         return studentAnswerChoiceRepository.findByStudentExamAttemptIdAndExamQuestionId(attemptId, questionId)
                 .map(entity -> {
-                    StudentAnswerChoiceResponseDTO dto = new StudentAnswerChoiceResponseDTO();
-                    dto.setId(entity.getId());
+                    StudentAnswerChoicesResponseDTO dto = new StudentAnswerChoicesResponseDTO();
                     dto.setStudentExamAttemptId(entity.getStudentExamAttempt().getId());
-                    dto.setExamQuestionId(entity.getExamQuestion().getId());
-                    dto.setSelectedChoiceId(entity.getSelectedChoice() != null ? entity.getSelectedChoice().getId() : null);
+                    dto.setAnswers(List.of(new StudentAnswerChoicesResponseDTO.Answer(entity.getId(), entity.getExamQuestion().getId(),
+                            entity.getSelectedChoice() != null ? entity.getSelectedChoice().getId() : null)));
                     return dto;
                 })
                 .orElse(null);
@@ -1395,33 +1354,200 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     public StudentAnswerTextResponseDTO getStudentTextAnswers(UUID attemptId, UUID questionId) {
-        var answers = studentAnswerTextRepository.findByStudentExamAttemptIdAndExamQuestionId(attemptId, questionId);
+        List<StudentAnswerText> answers = studentAnswerTextRepository.findByStudentExamAttemptIdAndExamQuestionId(attemptId, questionId);
         StudentAnswerTextResponseDTO dto = new StudentAnswerTextResponseDTO();
         dto.setStudentExamAttemptId(attemptId);
-        dto.setExamQuestionId(questionId);
-        dto.setAnswerTexts(answers.stream().map(entity ->
-                new StudentAnswerTextResponseDTO.AnswerText(
-                        entity.getId(),
-                        entity.getQuestionPart(),
-                        entity.getStudentAnswer(),
-                        entity.getSortOrder()
-                )
-        ).toList());
+        dto.setStudentQuestionAnswerTexts(List.of(new StudentAnswerTextResponseDTO.StudentQuestionAnswerText(
+                questionId,
+                answers.stream().map(answer ->
+                        new StudentAnswerTextResponseDTO.StudentQuestionAnswerText.AnswerText(
+                                answer.getId(),
+                                answer.getQuestionPart(),
+                                answer.getStudentAnswer(),
+                                answer.getSortOrder()
+                        )
+                ).toList()
+        )));
         return dto;
     }
 
     @Override
     public StudentAnswerCodeResponseDTO getStudentCodeAnswer(UUID attemptId, UUID questionId) {
         return studentAnswerCodeRepository.findByStudentExamAttemptIdAndExamQuestionId(attemptId, questionId)
-                .map(entity -> {
+                .map(code -> {
                     StudentAnswerCodeResponseDTO dto = new StudentAnswerCodeResponseDTO();
-                    dto.setId(entity.getId());
-                    dto.setStudentExamAttemptId(entity.getStudentExamAttempt().getId());
-                    dto.setExamQuestionId(entity.getExamQuestion().getId());
-                    dto.setSubmittedCode(entity.getSubmittedCode());
-                    dto.setLanguageId(entity.getLanguage() != null ? entity.getLanguage().getId() : null);
+                    dto.setStudentExamAttemptId(code.getStudentExamAttempt().getId());
+                    dto.setAnswers(List.of(new StudentAnswerCodeResponseDTO.CodeAnswer(code.getId(),
+                            code.getExamQuestion().getId(),
+                            code.getSubmittedCode(),
+                            code.getLanguage() != null ? code.getLanguage().getId() : null)));
                     return dto;
                 })
                 .orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentExamResultResponseDTO getStudentExamResult(UUID attemptId) {
+        // Get student attempt
+        StudentExamAttempt attempt = studentExamAttemptRepository.findById(attemptId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student attempt not found with id: " + attemptId));
+
+        // Get exam details
+        Exam exam = attempt.getExam();
+        
+        // Calculate total exam score
+        List<ExamQuestion> examQuestions = examQuestionRepository.findByExam(exam);
+        double totalExamScore = examQuestions.stream().mapToDouble(ExamQuestion::getMark).sum();
+        
+        // Get student score from attempt
+        double totalStudentScore = attempt.getScore() != null ? attempt.getScore() : 0.0;
+        
+        // Calculate percentage
+        double percentage = totalExamScore > 0 ? (totalStudentScore / totalExamScore) * 100 : 0.0;
+        
+        // Determine attempt status
+        String attemptStatus = percentage >= exam.getSuccessPercentage() ? "SUCCESS" : "FAILED";
+        
+        // Group questions by section
+        Map<ExamSection, List<ExamQuestion>> questionsBySection = examQuestions.stream()
+                .collect(Collectors.groupingBy(ExamQuestion::getSection));
+        
+        // Build section results
+        List<StudentExamResultResponseDTO.SectionResultDTO> sectionResults = new ArrayList<>();
+        
+        for (Map.Entry<ExamSection, List<ExamQuestion>> entry : questionsBySection.entrySet()) {
+            ExamSection section = entry.getKey();
+            List<ExamQuestion> sectionQuestions = entry.getValue();
+            
+            StudentExamResultResponseDTO.SectionResultDTO sectionResult = new StudentExamResultResponseDTO.SectionResultDTO();
+            sectionResult.setSectionId(section.getId());
+            sectionResult.setSectionTitle(section.getTitle());
+            sectionResult.setSectionPosition(section.getPosition());
+            
+            List<StudentExamResultResponseDTO.QuestionResultDTO> questionResults = new ArrayList<>();
+            
+            for (ExamQuestion question : sectionQuestions) {
+                StudentExamResultResponseDTO.QuestionResultDTO questionResult = new StudentExamResultResponseDTO.QuestionResultDTO();
+                questionResult.setQuestionId(question.getId());
+                questionResult.setQuestionText(question.getQuestionText());
+                questionResult.setQuestionType(question.getQuestionType());
+                questionResult.setExplanation(question.getExplanation());
+                questionResult.setQuestionScore(question.getMark());
+                
+                // Get student answer and score based on question type
+                switch (QuestionType.valueOf(question.getQuestionType())) {
+                    case TF:
+                    case MCQ:
+                    case MultiChoice:
+                        StudentAnswerChoice choiceAnswer = studentAnswerChoiceRepository
+                                .findByStudentExamAttemptIdAndExamQuestionId(attemptId, question.getId())
+                                .orElse(null);
+                        if (choiceAnswer != null) {
+                            questionResult.setStudentAnswer(choiceAnswer.getSelectedChoice() != null ? 
+                                    choiceAnswer.getSelectedChoice().getChoiceText() : "No answer");
+                            questionResult.setStudentScore(choiceAnswer.getScore() != null ? choiceAnswer.getScore() : 0.0);
+                            questionResult.setCorrect(choiceAnswer.getIsCorrect() != null ? choiceAnswer.getIsCorrect() : false);
+                        } else {
+                            questionResult.setStudentAnswer("No answer");
+                            questionResult.setStudentScore(0.0);
+                            questionResult.setCorrect(false);
+                        }
+                        break;
+                        
+                    case Complete:
+                        List<StudentAnswerText> completeAnswers = studentAnswerTextRepository
+                                .findByStudentExamAttemptIdAndExamQuestionId(attemptId, question.getId());
+                        if (!completeAnswers.isEmpty()) {
+                            double totalCompleteScore = completeAnswers.stream()
+                                    .mapToDouble(answer -> answer.getMarkObtained() != null ? answer.getMarkObtained() : 0.0)
+                                    .sum();
+                            questionResult.setStudentScore(totalCompleteScore);
+                            questionResult.setCorrect(totalCompleteScore == question.getMark());
+                            
+                            // For Complete questions, combine all answers (questionPart is null)
+                            String combinedCompleteAnswer = completeAnswers.stream()
+                                    .map(StudentAnswerText::getStudentAnswer)
+                                    .collect(Collectors.joining("; "));
+                            questionResult.setStudentAnswer(combinedCompleteAnswer);
+                        } else {
+                            questionResult.setStudentAnswer("No answer");
+                            questionResult.setStudentScore(0.0);
+                            questionResult.setCorrect(false);
+                        }
+                        break;
+                        
+                    case Matching:
+                        List<StudentAnswerText> matchingAnswers = studentAnswerTextRepository
+                                .findByStudentExamAttemptIdAndExamQuestionId(attemptId, question.getId());
+                        if (!matchingAnswers.isEmpty()) {
+                            double totalMatchingScore = matchingAnswers.stream()
+                                    .mapToDouble(answer -> answer.getMarkObtained() != null ? answer.getMarkObtained() : 0.0)
+                                    .sum();
+                            questionResult.setStudentScore(totalMatchingScore);
+                            questionResult.setCorrect(totalMatchingScore == question.getMark());
+                            
+                            // For Matching questions, create detailed matching answers (questionPart is not null)
+                            List<StudentExamResultResponseDTO.MatchingAnswerDTO> matchingAnswerDTOs = matchingAnswers.stream()
+                                    .map(answer -> {
+                                        StudentExamResultResponseDTO.MatchingAnswerDTO matchingAnswer = new StudentExamResultResponseDTO.MatchingAnswerDTO();
+                                        matchingAnswer.setQuestionPart(answer.getQuestionPart());
+                                        matchingAnswer.setStudentAnswer(answer.getStudentAnswer());
+                                        matchingAnswer.setSortOrder(answer.getSortOrder());
+                                        matchingAnswer.setCorrect(answer.getIsCorrect() != null ? answer.getIsCorrect() : false);
+                                        matchingAnswer.setScore(answer.getMarkObtained() != null ? answer.getMarkObtained() : 0.0);
+                                        return matchingAnswer;
+                                    })
+                                    .collect(Collectors.toList());
+                            questionResult.setMatchingAnswers(matchingAnswerDTOs);
+                        } else {
+                            questionResult.setStudentScore(0.0);
+                            questionResult.setCorrect(false);
+                            questionResult.setMatchingAnswers(new ArrayList<>());
+                        }
+                        break;
+                        
+                    case Coding:
+                        StudentAnswerCode codeAnswer = studentAnswerCodeRepository
+                                .findByStudentExamAttemptIdAndExamQuestionId(attemptId, question.getId())
+                                .orElse(null);
+                        if (codeAnswer != null) {
+                            questionResult.setStudentAnswer(codeAnswer.getSubmittedCode());
+                            questionResult.setStudentScore(codeAnswer.getTotalScore() != null ? codeAnswer.getTotalScore() : 0.0);
+                            questionResult.setCorrect(codeAnswer.getTotalScore() != null && codeAnswer.getTotalScore() == question.getMark());
+                            questionResult.setFeedback(codeAnswer.getResultSummary());
+                        } else {
+                            questionResult.setStudentAnswer("No code submitted");
+                            questionResult.setStudentScore(0.0);
+                            questionResult.setCorrect(false);
+                        }
+                        break;
+                        
+                    default:
+                        questionResult.setStudentAnswer("Unsupported question type");
+                        questionResult.setStudentScore(0.0);
+                        questionResult.setCorrect(false);
+                        break;
+                }
+                
+                questionResults.add(questionResult);
+            }
+            
+            sectionResult.setQuestionResults(questionResults);
+            sectionResults.add(sectionResult);
+        }
+        
+        // Build and return result
+        StudentExamResultResponseDTO result = new StudentExamResultResponseDTO();
+        result.setAttemptId(attemptId);
+        result.setExamId(exam.getId());
+        result.setExamTitle(exam.getTitle());
+        result.setTotalExamScore(totalExamScore);
+        result.setTotalStudentScore(totalStudentScore);
+        result.setAttemptStatus(attemptStatus);
+        result.setPercentage(percentage);
+        result.setSectionResults(sectionResults);
+        
+        return result;
     }
 } 
