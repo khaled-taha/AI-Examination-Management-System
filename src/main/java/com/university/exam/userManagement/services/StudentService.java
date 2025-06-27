@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.rmi.NoSuchObjectException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -76,23 +77,22 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StudentResponseDTO> getAllStudents(Integer page, Integer size) {
-        Sort sort = Sort.by(Sort.Direction.fromString("DESC"), "createdAt");
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Student> students = studentRepository.findAll(pageable);
+    public List<StudentResponseDTO> getAllStudents() {
+        List<Student> students = studentRepository.findAll();
 
-        return students.map(student -> {
+        return students.stream().map(student -> {
             Optional<StudentEnrollment> enrollment = this.studentEnrollmentRepository.findLatestByStudentId(student.getStudentId());
             return enrollment.map(e ->
                             StudentResponseDTO.convertToStudentResponseDTO(student, e.getAcademicYearGroup()))
                     .orElseGet(() -> StudentResponseDTO.convertToStudentResponseDTO(student));
-        });
+        }).toList();
     }
 
 
     @Transactional
     public StudentResponseDTO saveStudent(StudentRequestDTO studentRequestDTO) throws Exception {
-        validateEmail(studentRequestDTO.getUserRequestDTO().getEmail());
+        validateEmail(studentRequestDTO.getUserRequestDTO().getId().toString(),
+                studentRequestDTO.getUserRequestDTO().getEmail());
 
         User user = saveUser(studentRequestDTO.getUserRequestDTO());
         Group group = findGroup(studentRequestDTO.getGroupId());
@@ -105,8 +105,13 @@ public class StudentService {
         return StudentResponseDTO.convertToStudentResponseDTO(student, academicYearGroup);
     }
 
-    private void validateEmail(String email) {
-        if (this.userRepository.existsByEmail(email)) {
+    private void validateEmail(String userId, String email) {
+        Optional<User> user = this.userRepository.findByEmail(email);
+        if(user.isEmpty()) return;
+
+        boolean sameEmail = email.equals(user.get().getEmail());
+
+        if ( (Utils.isEmpty(userId) && sameEmail) || (!user.get().getUserId().toString().equals(userId)) ) {
             throw new ValidationException("This Email Already exists!");
         }
     }
