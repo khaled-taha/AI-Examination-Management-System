@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -51,7 +53,7 @@ public class SqlCodeEvaluator extends BaseCodeEvaluator {
             mysqlPassword = mysqlPassword != null ? mysqlPassword : "password";
             
             ProcessBuilder runPb = createProcessBuilder(codeFile.getParent(), 
-                "mysql", "--silent", "-h", mysqlHost, "-P", mysqlPort, "-u", mysqlUser, 
+                "mysql", "-h", mysqlHost, "-P", mysqlPort, "-u", mysqlUser, 
                 "-p" + mysqlPassword, mysqlDatabase, "-e", sqlCode);
             String output = executeProcess(runPb, testCase.getInput());
             
@@ -62,7 +64,12 @@ public class SqlCodeEvaluator extends BaseCodeEvaluator {
             long memoryUsed = endMemory - startMemory;
             
             result.setActualOutput(cleanOutput);
-            result.setPassed(cleanOutput.trim().equals(testCase.getExpectedOutput().trim()));
+            
+            // Normalize output for comparison (sort rows to handle unordered results)
+            String normalizedActual = normalizeSqlOutput(cleanOutput);
+            String normalizedExpected = normalizeSqlOutput(testCase.getExpectedOutput());
+            
+            result.setPassed(normalizedActual.equals(normalizedExpected));
             result.setMarkObtained(result.isPassed() ? testCase.getMark() : 0.0);
             result.setExecutionTimeMs(System.currentTimeMillis() - startTime);
             result.setMemoryUsedKb(memoryUsed);
@@ -150,16 +157,78 @@ public class SqlCodeEvaluator extends BaseCodeEvaluator {
                 continue;
             }
             
-            // Skip header row that contains field information
+            // Skip header row that contains field information (but keep column names)
             if (skipHeader && (line.contains("Field") || line.contains("Type") || line.contains("Null") || line.contains("Key"))) {
                 continue;
             }
             
-            // Add the line to clean output
-            cleanOutput.append(line.trim()).append("\n");
+            // Convert tab-separated values to newline-separated format
+            String processedLine = line.trim();
+            if (processedLine.contains("\t")) {
+                // Split by tabs and join with newlines
+                String[] columns = processedLine.split("\t");
+                for (int i = 0; i < columns.length; i++) {
+                    cleanOutput.append(columns[i].trim());
+                    if (i < columns.length - 1) {
+                        cleanOutput.append("\n");
+                    }
+                }
+            } else {
+                // Single column or already newline-separated
+                cleanOutput.append(processedLine);
+            }
+            cleanOutput.append("\n");
         }
         
         return cleanOutput.toString().trim();
+    }
+    
+    private String normalizeSqlOutput(String output) {
+        String[] lines = output.split("\n");
+        if (lines.length <= 2) {
+            // Single row result, no need to sort
+            return output.trim();
+        }
+        
+        // Separate headers from data rows
+        String[] headers = new String[2];
+        List<String[]> dataRows = new ArrayList<>();
+        
+        // Parse the output structure
+        int currentIndex = 0;
+        for (String line : lines) {
+            if (currentIndex < 2) {
+                headers[currentIndex] = line.trim();
+                currentIndex++;
+            } else {
+                // Data rows come in pairs (major, count)
+                if (currentIndex % 2 == 0) {
+                    // This is a major name
+                    String major = line.trim();
+                    String count = "";
+                    if (currentIndex + 1 < lines.length) {
+                        count = lines[currentIndex + 1].trim();
+                    }
+                    dataRows.add(new String[]{major, count});
+                }
+                currentIndex++;
+            }
+        }
+        
+        // Sort data rows by major name
+        dataRows.sort((a, b) -> a[0].compareTo(b[0]));
+        
+        // Reconstruct the output
+        StringBuilder normalized = new StringBuilder();
+        normalized.append(headers[0]).append("\n");
+        normalized.append(headers[1]).append("\n");
+        
+        for (String[] row : dataRows) {
+            normalized.append(row[0]).append("\n");
+            normalized.append(row[1]).append("\n");
+        }
+        
+        return normalized.toString().trim();
     }
     
     @Override
