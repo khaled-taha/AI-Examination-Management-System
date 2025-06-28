@@ -94,12 +94,12 @@ public class StudentService {
         String userId = (studentRequestDTO.getUserRequestDTO().getId() == null) ? "" : studentRequestDTO.getUserRequestDTO().getId().toString();
         validateEmail(userId, studentRequestDTO.getUserRequestDTO().getEmail());
 
-        User user = saveUser(studentRequestDTO.getUserRequestDTO());
         Group group = findGroup(studentRequestDTO.getGroupId());
         AcademicYearGroup academicYearGroup = findAcademicYearGroup(group);
-        Student student = saveStudent(user);
         AcademicTerm firstTerm = findFirstTerm(academicYearGroup);
 
+        User user = saveUser(studentRequestDTO.getUserRequestDTO());
+        Student student = saveStudent(user);
         saveEnrollment(student, academicYearGroup, firstTerm);
 
         return StudentResponseDTO.convertToStudentResponseDTO(student, academicYearGroup);
