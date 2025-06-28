@@ -24,10 +24,10 @@ public interface StudentExamAttemptRepository extends JpaRepository<StudentExamA
     }
     
     default List<StudentExamAttempt> findByStudentIdAndExamId(UUID studentId, UUID examId) {
-        return findByStudentAndExam(new Student() {{ setId(studentId); }}, new Exam() {{ setId(examId); }});
+        return findByStudentAndExam(new Student() {{ setStudentId(studentId); }}, new Exam() {{ setId(examId); }});
     }
     
     default List<StudentExamAttempt> findByStudentId(UUID studentId) {
-        return findByStudent(new Student() {{ setId(studentId); }});
+        return findByStudent(new Student() {{ setStudentId(studentId); }});
     }
 } 
