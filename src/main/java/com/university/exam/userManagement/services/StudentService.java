@@ -91,8 +91,8 @@ public class StudentService {
 
     @Transactional
     public StudentResponseDTO saveStudent(StudentRequestDTO studentRequestDTO) throws Exception {
-        validateEmail(studentRequestDTO.getUserRequestDTO().getId().toString(),
-                studentRequestDTO.getUserRequestDTO().getEmail());
+        String userId = (studentRequestDTO.getUserRequestDTO().getId() == null) ? "" : studentRequestDTO.getUserRequestDTO().getId().toString();
+        validateEmail(userId, studentRequestDTO.getUserRequestDTO().getEmail());
 
         User user = saveUser(studentRequestDTO.getUserRequestDTO());
         Group group = findGroup(studentRequestDTO.getGroupId());

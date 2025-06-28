@@ -53,8 +53,8 @@ public class AdminService {
         Specialization specialization = this.specializationRepository.findById(adminRequestDTO.getSpecializationId())
                 .orElseThrow(() -> new NoSuchObjectException("Specialization Not Found ["+ adminRequestDTO.getSpecializationId() +"]"));
 
-        validateEmail(adminRequestDTO.getUserRequestDTO().getId().toString(),
-                adminRequestDTO.getUserRequestDTO().getEmail());
+        String userId = (adminRequestDTO.getUserRequestDTO().getId() == null) ? "" : adminRequestDTO.getUserRequestDTO().getId().toString();
+        validateEmail(userId, adminRequestDTO.getUserRequestDTO().getEmail());
 
         User user = UserRequestDTO.convertToUserEntity(adminRequestDTO.getUserRequestDTO(), "ADMIN");
         user = userRepository.save(user);
