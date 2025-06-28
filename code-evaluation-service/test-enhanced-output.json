@@ -1,0 +1,213 @@
+{
+  "testExamples": {
+    "allPassed": {
+      "description": "All test cases passed successfully",
+      "request": {
+        "code": "public class Solution {\n    public static void main(String[] args) {\n        System.out.println(\"Hello World\");\n    }\n}",
+        "language": "java",
+        "testCases": [
+          {
+            "input": "",
+            "expectedOutput": "Hello World",
+            "mark": 1.0,
+            "isSample": false
+          },
+          {
+            "input": "",
+            "expectedOutput": "Hello World",
+            "mark": 1.0,
+            "isSample": false
+          }
+        ]
+      },
+      "expectedResponse": {
+        "success": true,
+        "outputType": "ALL_PASSED",
+        "totalScore": 2.0,
+        "passedCases": 2,
+        "failedCases": 0,
+        "resultSummary": "ALL PASSED: Passed 2/2 test cases with total score 2.00 (Memory: X KB)"
+      }
+    },
+    "compilationError": {
+      "description": "Java compilation error",
+      "request": {
+        "code": "public class Solution {\n    public static void main(String[] args) {\n        System.out.println(\"Hello World\"\n    }\n}",
+        "language": "java",
+        "testCases": [
+          {
+            "input": "",
+            "expectedOutput": "Hello World",
+            "mark": 1.0,
+            "isSample": false
+          }
+        ]
+      },
+      "expectedResponse": {
+        "success": false,
+        "outputType": "COMPILATION_ERROR",
+        "totalScore": 0.0,
+        "passedCases": 0,
+        "failedCases": 1,
+        "resultSummary": "COMPILATION ERROR: Passed 0/1 test cases with total score 0.00 (Memory: X KB)"
+      }
+    },
+    "runtimeError": {
+      "description": "Python runtime error",
+      "request": {
+        "code": "n = int(input())\nprint(n / 0)",
+        "language": "python",
+        "testCases": [
+          {
+            "input": "5",
+            "expectedOutput": "5",
+            "mark": 1.0,
+            "isSample": false
+          }
+        ]
+      },
+      "expectedResponse": {
+        "success": false,
+        "outputType": "RUNTIME_ERROR",
+        "totalScore": 0.0,
+        "passedCases": 0,
+        "failedCases": 1,
+        "resultSummary": "RUNTIME ERROR: Passed 0/1 test cases with total score 0.00 (Memory: X KB)"
+      }
+    },
+    "timeLimitExceeded": {
+      "description": "Infinite loop causing timeout",
+      "request": {
+        "code": "while True:\n    pass",
+        "language": "python",
+        "testCases": [
+          {
+            "input": "",
+            "expectedOutput": "done",
+            "mark": 1.0,
+            "isSample": false
+          }
+        ]
+      },
+      "expectedResponse": {
+        "success": false,
+        "outputType": "TIME_LIMIT_EXCEEDED",
+        "totalScore": 0.0,
+        "passedCases": 0,
+        "failedCases": 1,
+        "resultSummary": "TIME LIMIT EXCEEDED: Passed 0/1 test cases with total score 0.00 (Memory: X KB)"
+      }
+    },
+    "memoryLimitExceeded": {
+      "description": "Memory-intensive operation",
+      "request": {
+        "code": "arr = [0] * 1000000000",
+        "language": "python",
+        "testCases": [
+          {
+            "input": "",
+            "expectedOutput": "done",
+            "mark": 1.0,
+            "isSample": false
+          }
+        ]
+      },
+      "expectedResponse": {
+        "success": false,
+        "outputType": "MEMORY_LIMIT_EXCEEDED",
+        "totalScore": 0.0,
+        "passedCases": 0,
+        "failedCases": 1,
+        "resultSummary": "MEMORY LIMIT EXCEEDED: Passed 0/1 test cases with total score 0.00 (Memory: X KB)"
+      }
+    },
+    "partialSuccess": {
+      "description": "Some test cases passed, some failed",
+      "request": {
+        "code": "n = int(input())\nprint(n * 2)",
+        "language": "python",
+        "testCases": [
+          {
+            "input": "5",
+            "expectedOutput": "10",
+            "mark": 1.0,
+            "isSample": false
+          },
+          {
+            "input": "10",
+            "expectedOutput": "20",
+            "mark": 1.0,
+            "isSample": false
+          },
+          {
+            "input": "3",
+            "expectedOutput": "7",
+            "mark": 1.0,
+            "isSample": false
+          }
+        ]
+      },
+      "expectedResponse": {
+        "success": false,
+        "outputType": "PARTIAL_SUCCESS",
+        "totalScore": 2.0,
+        "passedCases": 2,
+        "failedCases": 1,
+        "resultSummary": "PARTIAL SUCCESS: Passed 2/3 test cases with total score 2.00 (Memory: X KB)"
+      }
+    },
+    "wrongAnswer": {
+      "description": "Wrong answer with detailed case information",
+      "request": {
+        "code": "n = int(input())\nprint(n + 1)",
+        "language": "python",
+        "testCases": [
+          {
+            "input": "5",
+            "expectedOutput": "10",
+            "mark": 1.0,
+            "isSample": false
+          }
+        ]
+      },
+      "expectedResponse": {
+        "success": false,
+        "outputType": "PARTIAL_SUCCESS",
+        "totalScore": 0.0,
+        "passedCases": 0,
+        "failedCases": 1,
+        "testCaseResults": [
+          {
+            "input": "5",
+            "expectedOutput": "10",
+            "actualOutput": "6",
+            "passed": false,
+            "markObtained": 0.0,
+            "errorType": "WRONG_ANSWER",
+            "errorMessage": "Expected: 10, Got: 6",
+            "feedback": "Wrong answer: Expected: 10, Got: 6"
+          }
+        ]
+      }
+    }
+  },
+  "markCalculationRules": {
+    "totalScore": "Sum of marks from passed test cases only",
+    "failedCases": "Get 0 marks regardless of test case mark value",
+    "partialSuccess": "Only passed cases contribute to total score",
+    "example": {
+      "testCase1": { "mark": 2.0, "passed": true, "contribution": 2.0 },
+      "testCase2": { "mark": 3.0, "passed": false, "contribution": 0.0 },
+      "testCase3": { "mark": 1.0, "passed": true, "contribution": 1.0 },
+      "totalScore": 3.0
+    }
+  },
+  "outputTypeMapping": {
+    "ALL_PASSED": "All test cases passed successfully",
+    "COMPILATION_ERROR": "Code failed to compile (Java, C, C++)",
+    "RUNTIME_ERROR": "Code compiled but failed during execution",
+    "TIME_LIMIT_EXCEEDED": "Code execution exceeded time limit (10 seconds)",
+    "MEMORY_LIMIT_EXCEEDED": "Code exceeded memory limit (512MB)",
+    "PARTIAL_SUCCESS": "Some test cases passed, some failed"
+  }
+} 

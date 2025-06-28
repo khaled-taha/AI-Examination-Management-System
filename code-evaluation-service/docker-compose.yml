@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  code-evaluation-service:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=testdb
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=password
+    depends_on:
+      - mysql
+    networks:
+      - code-eval-network
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=testdb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - code-eval-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  code-eval-network:
+    driver: bridge
