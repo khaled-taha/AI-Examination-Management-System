@@ -139,7 +139,7 @@ public class ExamController {
         return ResponseEntity.ok(examService.getExams());
     }
 
-    @GetMapping("/academic-year/{academicYearCourseId}")
+    @GetMapping("/academic-year/{academicYearCourseId}/pages")
     @Deprecated
     public ResponseEntity<Page<ExamResponseDTO>> getExamsByAcademicYearCourse(
             @PathVariable UUID academicYearCourseId,
