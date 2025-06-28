@@ -12,11 +12,13 @@ import java.util.UUID;
 @Data
 public class StudentResponseDTO {
     private UserResponseDTO userResponseDTO;
+    private UUID studentId;
     private AcademicYearGroupResponseDTO academicYearGroupResponseDTO;
 
     public static StudentResponseDTO convertToStudentResponseDTO(Student student) {
         StudentResponseDTO responseDTO = new StudentResponseDTO();
         responseDTO.setUserResponseDTO(UserResponseDTO.convertToUserResponseDTO(student.getUser()));
+        responseDTO.setStudentId(student.getStudentId());
         return responseDTO;
     }
 
@@ -24,6 +26,7 @@ public class StudentResponseDTO {
         StudentResponseDTO responseDTO = new StudentResponseDTO();
         responseDTO.setUserResponseDTO(UserResponseDTO.convertToUserResponseDTO(student.getUser()));
         responseDTO.setAcademicYearGroupResponseDTO(AcademicYearGroupResponseDTO.fromEntity(group));
+        responseDTO.setStudentId(student.getStudentId());
         return responseDTO;
     }
 }

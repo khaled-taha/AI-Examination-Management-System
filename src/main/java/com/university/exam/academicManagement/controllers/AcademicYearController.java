@@ -5,6 +5,7 @@ import com.university.exam.academicManagement.dtos.requestDTO.AcademicYearReques
 import com.university.exam.academicManagement.dtos.responseDTO.AcademicYearCourseResponseDTO;
 import com.university.exam.academicManagement.dtos.responseDTO.AcademicYearResponseDTO;
 import com.university.exam.academicManagement.services.AcademicYearService;
+import com.university.exam.userManagement.dtos.responseDTO.StudentResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -89,5 +90,10 @@ public class AcademicYearController {
     public ResponseEntity<List<AcademicYearCourseResponseDTO>> getAcademicYearCourses(
             @PathVariable UUID academicYearId) {
         return ResponseEntity.ok(academicYearService.getAcademicYearCourses(academicYearId));
+    }
+
+    @GetMapping("/academic-years/{academicYearId}/students")
+    public ResponseEntity<List<StudentResponseDTO>> getStudentsByAcademicYear(@PathVariable UUID academicYearId) {
+        return ResponseEntity.ok(academicYearService.getStudentsByAcademicYear(academicYearId));
     }
 }

@@ -12,7 +12,7 @@ public class AcademicYearCourseAdminRequestDTO {
     @AllArgsConstructor
     public static class AssignAdminRequest {
         private UUID academicYearCourseId;
-        private UUID adminId;
+        private UUID userId;
     }
 
     @Data

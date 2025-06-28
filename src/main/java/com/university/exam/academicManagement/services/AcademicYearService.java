@@ -5,15 +5,12 @@ import com.university.exam.academicManagement.dtos.requestDTO.AcademicYearReques
 import com.university.exam.academicManagement.dtos.responseDTO.AcademicYearCourseResponseDTO;
 import com.university.exam.academicManagement.dtos.responseDTO.AcademicYearResponseDTO;
 import com.university.exam.academicManagement.entities.*;
-import com.university.exam.academicManagement.repos.AcademicYearGroupRepository;
-import com.university.exam.academicManagement.repos.AcademicYearRepository;
-import com.university.exam.academicManagement.repos.AcademicTermRepository;
-import com.university.exam.academicManagement.repos.AcademicYearCourseRepository;
-import com.university.exam.academicManagement.repos.AcademicYearCourseAdminRepository;
+import com.university.exam.academicManagement.repos.*;
 import com.university.exam.courseManagement.entities.Group;
 import com.university.exam.courseManagement.repos.GroupRepository;
 import com.university.exam.exceptions.ResourceNotFoundException;
 import com.university.exam.exceptions.ValidationException;
+import com.university.exam.userManagement.dtos.responseDTO.StudentResponseDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,6 +29,7 @@ public class AcademicYearService {
     private final AcademicYearCourseRepository academicYearCourseRepository;
     private final AcademicYearGroupRepository academicYearGroupRepository;
     private final AcademicYearCourseAdminRepository academicYearCourseAdminRepository;
+    private final StudentEnrollmentRepository studentEnrollmentRepository;
 
     @Transactional
     public AcademicYearResponseDTO.SaveYearResponse saveAcademicYearGroup(AcademicYearRequestDTO.SaveYearRequest request) {
@@ -252,5 +250,15 @@ public class AcademicYearService {
                 .map(academicYear -> AcademicYearResponseDTO.fromEntity(academicYear, Collections.emptyList()))
                 .collect(Collectors.toList());
     }
-    
+
+    public List<StudentResponseDTO> getStudentsByAcademicYear(UUID academicYearId) {
+        List<StudentEnrollment> enrollments = studentEnrollmentRepository
+                .findByAcademicYearGroup_AcademicYear_IdAndEnrollmentStatus(
+                        academicYearId, StudentEnrollment.EnrollmentStatus.ACTIVE);
+
+        return enrollments.stream()
+                .map(enrollment -> StudentResponseDTO.convertToStudentResponseDTO(enrollment.getStudent(), enrollment.getAcademicYearGroup()))
+                .collect(Collectors.toList());
+    }
+
 }

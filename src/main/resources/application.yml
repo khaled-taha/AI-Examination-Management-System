@@ -26,6 +26,7 @@ spring:
     baseline-on-migrate: true
 
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: false

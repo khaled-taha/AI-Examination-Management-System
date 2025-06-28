@@ -1,8 +1,12 @@
 package com.university.exam.userManagement.services;
 
+import com.university.exam.exceptions.ValidationException;
 import com.university.exam.userManagement.dtos.responseDTO.SpecializationResponseDTO;
+import com.university.exam.userManagement.entities.Admin;
 import com.university.exam.userManagement.entities.Specialization;
+import com.university.exam.userManagement.repos.AdminRepository;
 import com.university.exam.userManagement.repos.SpecializationRepository;
+import com.university.exam.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +18,12 @@ import java.util.stream.Collectors;
 public class SpecializationService {
 
     private final SpecializationRepository specializationRepository;
+    private final AdminRepository adminRepository;
 
     @Autowired
-    public SpecializationService(SpecializationRepository specializationRepository) {
+    public SpecializationService(SpecializationRepository specializationRepository, AdminRepository adminRepository) {
         this.specializationRepository = specializationRepository;
+        this.adminRepository = adminRepository;
     }
 
     public SpecializationResponseDTO createSpecialization(String specializationName) {
@@ -35,6 +41,8 @@ public class SpecializationService {
     }
 
     public void deleteSpecialization(UUID specializationId) {
+        List<Admin> admins = this.adminRepository.findBySpecialization_SpecializationId(specializationId);
+        if(!Utils.isEmpty(admins)) throw new ValidationException("Cannot Remove Referenced Specialization!");
         specializationRepository.deleteById(specializationId);
     }
 }

@@ -27,8 +27,8 @@ public class AcademicYearCourseAdminService {
     @Transactional
     public AcademicYearCourseAdminResponseDTO.CourseAdminResponse assignAdminToCourse(AcademicYearCourseAdminRequestDTO.AssignAdminRequest request) {
         AcademicYearCourse course = findCourse(request.getAcademicYearCourseId());
-        Admin admin = findAdmin(request.getAdminId());
-        validateAssignment(request.getAcademicYearCourseId(), request.getAdminId());
+        Admin admin = findAdmin(request.getUserId());
+        validateAssignment(request.getAcademicYearCourseId(), admin.getAdminId());
         AcademicYearCourseAdmin savedAssignment = createAndSaveAssignment(course, admin);
         return AcademicYearCourseAdminResponseDTO.CourseAdminResponse.fromEntity(savedAssignment);
     }
@@ -44,7 +44,7 @@ public class AcademicYearCourseAdminService {
     }
 
     private void validateAssignment(UUID courseId, UUID adminId) {
-        if (academicYearCourseAdminRepository.existsByAcademicYearCourseIdAndAdmin_AdminId(courseId, adminId)) {
+        if (academicYearCourseAdminRepository.existsByAcademicYearCourseIdAndAdminId(courseId, adminId)) {
             throw new IllegalStateException("Admin is already assigned to this course");
         }
     }
