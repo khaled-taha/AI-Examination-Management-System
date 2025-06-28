@@ -28,7 +28,7 @@ public class AcademicYearCourseAdminService {
     public AcademicYearCourseAdminResponseDTO.CourseAdminResponse assignAdminToCourse(AcademicYearCourseAdminRequestDTO.AssignAdminRequest request) {
         AcademicYearCourse course = findCourse(request.getAcademicYearCourseId());
         Admin admin = findAdmin(request.getUserId());
-        validateAssignment(request.getAcademicYearCourseId(), request.getUserId());
+        validateAssignment(request.getAcademicYearCourseId(), admin.getAdminId());
         AcademicYearCourseAdmin savedAssignment = createAndSaveAssignment(course, admin);
         return AcademicYearCourseAdminResponseDTO.CourseAdminResponse.fromEntity(savedAssignment);
     }
