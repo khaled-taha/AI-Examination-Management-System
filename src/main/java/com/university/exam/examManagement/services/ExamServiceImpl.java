@@ -55,6 +55,15 @@ public class ExamServiceImpl implements ExamService {
     private final AcademicYearGroupRepository academicYearGroupRepository;
     private final AcademicYearCourseRepository academicYearCourseRepository;
 
+
+    @Override
+    public List<LanguagesResponseDTO> getAvailableLanguages() {
+        return this.programmingLanguageRepository.findAll()
+                .stream()
+                .filter(ProgrammingLanguage::isEnabled)
+                .map(LanguagesResponseDTO::fromEntity).toList();
+    }
+
     @Override
     @Transactional
     public ExamResponseDTO saveExam(ExamRequestDTO request) {

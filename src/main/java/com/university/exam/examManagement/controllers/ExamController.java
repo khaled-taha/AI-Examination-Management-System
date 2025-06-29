@@ -2,6 +2,7 @@ package com.university.exam.examManagement.controllers;
 
 import com.university.exam.examManagement.dtos.request.*;
 import com.university.exam.examManagement.dtos.response.*;
+import com.university.exam.examManagement.entities.ProgrammingLanguage;
 import com.university.exam.examManagement.services.ExamService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,6 +22,11 @@ public class ExamController {
 
     public ExamController(@Qualifier("DefaultExamServiceImpl") ExamService examService) {
         this.examService = examService;
+    }
+
+    @GetMapping("/languages")
+    public ResponseEntity<List<LanguagesResponseDTO>> getAvailableLanguages() {
+        return ResponseEntity.ok(examService.getAvailableLanguages());
     }
 
     @PostMapping

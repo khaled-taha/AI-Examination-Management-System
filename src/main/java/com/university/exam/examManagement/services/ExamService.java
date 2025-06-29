@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ExamService {
+    List<LanguagesResponseDTO> getAvailableLanguages();
     ExamResponseDTO saveExam(ExamRequestDTO request);
     ExamResponseDTO getExam(UUID id);
     void deleteExam(UUID id);
