@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class AdminController {
     private AdminService adminService;
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     @Operation(
             summary = "Get admin by user ID",
             description = "Retrieves an admin by the associated user ID.",
@@ -38,6 +40,7 @@ public class AdminController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     @Operation(
             summary = "Get all admins",
             description = "Retrieves all admins.",
@@ -52,6 +55,7 @@ public class AdminController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Create a new admin",
             description = "Create a new admin with the provided details.",

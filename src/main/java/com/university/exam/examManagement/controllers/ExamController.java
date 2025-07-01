@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
@@ -25,21 +26,25 @@ public class ExamController {
     }
 
     @GetMapping("/languages")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<List<LanguagesResponseDTO>> getAvailableLanguages() {
         return ResponseEntity.ok(examService.getAvailableLanguages());
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ExamResponseDTO> saveExam(@Valid @RequestBody ExamRequestDTO request) {
         return ResponseEntity.ok(examService.saveExam(request));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<ExamResponseDTO> getExam(@PathVariable UUID id) {
         return ResponseEntity.ok(examService.getExam(id));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<Void> deleteExam(@PathVariable UUID id) {
         examService.deleteExam(id);
         return ResponseEntity.noContent().build();

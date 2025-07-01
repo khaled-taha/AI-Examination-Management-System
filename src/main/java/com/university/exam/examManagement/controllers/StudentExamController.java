@@ -9,6 +9,7 @@ import com.university.exam.examManagement.services.ExamService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class StudentExamController {
     }
 
     @GetMapping("/{examId}/can-enter/{studentId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<CanEnterExamResponseDTO> canStudentEnterExam(
             @PathVariable UUID examId,
             @PathVariable UUID studentId) {

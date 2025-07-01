@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class StudentController {
     private StudentService studentService;
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     @Operation(
             summary = "Get student by user ID",
             description = "Retrieves a student by the associated user ID.",
@@ -41,6 +43,7 @@ public class StudentController {
 
 
     @GetMapping("/{email}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     @Operation(
             summary = "Get student by email",
             description = "Retrieves a student by the associated email.",
@@ -55,12 +58,14 @@ public class StudentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     public ResponseEntity<List<StudentResponseDTO>> listStudents()  {
         return ResponseEntity.ok(studentService.getAllStudents());
     }
 
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Save a student",
             description = "Save a student with the provided details.",
