@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class AcademicYearController {
     private final AcademicYearService academicYearService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "save an academic year for a group",
             responses = {
@@ -38,6 +40,7 @@ public class AcademicYearController {
     }
 
     @PostMapping("/academicYear/terms")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Save terms for an academic year",
             responses = {
@@ -54,6 +57,7 @@ public class AcademicYearController {
     }
 
     @PostMapping("/academic-year-courses")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Assign courses to academic term",
             responses = {
@@ -67,12 +71,14 @@ public class AcademicYearController {
     }
 
     @GetMapping("/{academicYearId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     @Operation(summary = "Get academic year details with terms and courses")
     public ResponseEntity<AcademicYearResponseDTO> getAcademicYear(@PathVariable UUID academicYearId) {
         return ResponseEntity.ok(academicYearService.getAcademicYear(academicYearId));
     }
 
     @GetMapping("/{academicYearId}/terms")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     @Operation(summary = "Get all terms of an academic year")
     public ResponseEntity<List<AcademicYearResponseDTO.TermResponse>> getAcademicYearTerms(
             @PathVariable UUID academicYearId) {
@@ -80,6 +86,7 @@ public class AcademicYearController {
     }
 
     @GetMapping("/group/{groupId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     @Operation(summary = "Get all academic years of a group")
     public ResponseEntity<List<AcademicYearResponseDTO>> getAcademicYearsOfGroup(
             @PathVariable UUID groupId) {
@@ -87,12 +94,14 @@ public class AcademicYearController {
     }
 
     @GetMapping("/{academicYearId}/courses")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<List<AcademicYearCourseResponseDTO>> getAcademicYearCourses(
             @PathVariable UUID academicYearId) {
         return ResponseEntity.ok(academicYearService.getAcademicYearCourses(academicYearId));
     }
 
     @GetMapping("/academic-years/{academicYearId}/students")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     public ResponseEntity<List<StudentResponseDTO>> getStudentsByAcademicYear(@PathVariable UUID academicYearId) {
         return ResponseEntity.ok(academicYearService.getStudentsByAcademicYear(academicYearId));
     }

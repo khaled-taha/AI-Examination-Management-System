@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class AcademicYearCourseAdminController {
     private final AcademicYearCourseAdminService academicYearCourseAdminService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
         summary = "Assign an admin to a course",
         description = "Assigns a specific admin to manage a course for a given academic year. " +
@@ -39,6 +41,7 @@ public class AcademicYearCourseAdminController {
     }
 
     @GetMapping("/course/{courseId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     @Operation(
         summary = "Get all admins for a course",
         description = "Retrieves a list of all administrators assigned to a specific course. " +
@@ -54,6 +57,7 @@ public class AcademicYearCourseAdminController {
     }
 
     @GetMapping("/admin/{adminId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     @Operation(
         summary = "Get all courses for an admin",
         description = "Retrieves a list of all courses that a specific admin is assigned to manage. " +
@@ -69,6 +73,7 @@ public class AcademicYearCourseAdminController {
     }
 
     @DeleteMapping("/remove")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
         summary = "Remove admin from course",
         description = "Removes an admin's assignment from a specific course. " +

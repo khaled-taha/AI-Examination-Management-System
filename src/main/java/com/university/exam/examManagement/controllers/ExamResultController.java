@@ -5,6 +5,7 @@ import com.university.exam.examManagement.dtos.response.*;
 import com.university.exam.examManagement.services.ExamService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,12 +26,14 @@ public class ExamResultController {
 
     // Get Exam Total Points
     @GetMapping("/{examId}/total-points")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<Double> getExamTotalPoints(@PathVariable UUID examId) {
         return ResponseEntity.ok(examService.getExamTotalPoints(examId));
     }
 
     // Student Answers Retrieval APIs
     @GetMapping("/attempts/{attemptId}/questions/{questionId}/choice-answer")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<StudentAnswerChoicesResponseDTO> getStudentChoiceAnswer(
             @PathVariable UUID attemptId,
             @PathVariable UUID questionId) {
@@ -38,6 +41,7 @@ public class ExamResultController {
     }
 
     @GetMapping("/attempts/{attemptId}/questions/{questionId}/text-answers")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<StudentAnswerTextResponseDTO> getStudentTextAnswers(
             @PathVariable UUID attemptId,
             @PathVariable UUID questionId) {
@@ -45,6 +49,7 @@ public class ExamResultController {
     }
 
     @GetMapping("/attempts/{attemptId}/questions/{questionId}/code-answer")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<StudentAnswerCodeResponseDTO> getStudentCodeAnswer(
             @PathVariable UUID attemptId,
             @PathVariable UUID questionId) {
@@ -53,12 +58,14 @@ public class ExamResultController {
 
     // Student Exam Result API
     @GetMapping("/attempts/{attemptId}/result")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<StudentExamResultResponseDTO> getStudentExamResult(@PathVariable UUID attemptId) {
         return ResponseEntity.ok(examService.getStudentExamResult(attemptId));
     }
 
     @GetMapping("/answers/code/{codeAnswerId}/test-results")
     @Deprecated
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<List<StudentCodingTestResultResponseDTO>> getCodingTestResults(@PathVariable UUID codeAnswerId) {
         return ResponseEntity.ok(examService.getCodingTestResults(codeAnswerId));
     }

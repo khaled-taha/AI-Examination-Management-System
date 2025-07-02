@@ -35,22 +35,26 @@ public class StudentExamController {
 
     // Student Attempt APIs
     @PostMapping("/attempts")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'STUDENT')")
     public ResponseEntity<StudentAttemptResponseDTO> createStudentAttempt(@Valid @RequestBody StudentAttemptRequestDTO request) {
         return ResponseEntity.ok(examService.createStudentAttempt(request));
     }
 
     // End Exam Attempt
     @PostMapping("/attempts/{attemptId}/end")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'STUDENT')")
     public ResponseEntity<StudentAttemptResponseDTO> endExam(@PathVariable UUID attemptId) {
         return ResponseEntity.ok(examService.endExam(attemptId));
     }
 
     @GetMapping("/attempts/{attemptId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<StudentAttemptResponseDTO> getStudentAttempt(@PathVariable UUID attemptId) {
         return ResponseEntity.ok(examService.getStudentAttempt(attemptId));
     }
 
     @GetMapping("/attempts/student/{studentId}/exam/{examId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<List<StudentAttemptResponseDTO>> getStudentAttemptsByStudentIdAndExamId(
             @PathVariable UUID studentId,
             @PathVariable UUID examId) {
@@ -59,17 +63,20 @@ public class StudentExamController {
 
     @GetMapping("/{examId}/attempts")
     @Deprecated
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     public ResponseEntity<List<StudentAttemptResponseDTO>> getStudentsAttemptsByExamId(@PathVariable UUID examId) {
         return ResponseEntity.ok(examService.getStudentAttemptsByExamId(examId));
     }
 
     @GetMapping("/{examId}/student-view")
     @Deprecated
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<List<StudentSectionViewDTO>> renderExamForStudent(@PathVariable UUID examId) {
         return ResponseEntity.ok(examService.getExamForStudent(examId));
     }
 
     @GetMapping("/{examId}/student-view/paginated")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<PaginatedStudentSectionsResponseDTO> renderExamForStudentPaginated(
             @PathVariable UUID examId,
             @RequestParam(defaultValue = "1") int page) {
@@ -81,22 +88,26 @@ public class StudentExamController {
 
     // Student Answers APIs
     @PostMapping("/attempts/{attemptId}/answers/choice")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'STUDENT')")
     public ResponseEntity<StudentAnswerChoicesResponseDTO> submitChoiceAnswer(@PathVariable UUID attemptId, @Valid @RequestBody List<StudentAnswerChoiceRequestDTO> requests) {
         return ResponseEntity.ok(examService.submitChoiceAnswer(attemptId, requests));
     }
 
     @PostMapping("/attempts/{attemptId}/answers/text")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'STUDENT')")
     public ResponseEntity<StudentAnswerTextResponseDTO> submitTextAnswer(@PathVariable UUID attemptId, @Valid @RequestBody List<StudentAnswerTextRequestDTO> requests) {
         return ResponseEntity.ok(examService.submitTextAnswers(attemptId, requests));
     }
 
     @PostMapping("/attempts/{attemptId}/answers/code")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'STUDENT')")
     public ResponseEntity<StudentAnswerCodeResponseDTO> submitCodeAnswer(@PathVariable UUID attemptId, @Valid @RequestBody List<StudentAnswerCodeRequestDTO> requests) {
         return ResponseEntity.ok(examService.submitCodeAnswer(attemptId, requests));
     }
 
     @GetMapping("/attempts")
     @Deprecated
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     public ResponseEntity<List<StudentAttemptResponseDTO>> getStudentAttempts() {
         return ResponseEntity.ok(examService.getStudentAttempts());
     }

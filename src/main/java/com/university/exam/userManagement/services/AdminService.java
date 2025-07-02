@@ -12,6 +12,7 @@ import com.university.exam.userManagement.repos.AdminRepository;
 import com.university.exam.userManagement.repos.SpecializationRepository;
 import com.university.exam.userManagement.repos.UserRepository;
 import com.university.exam.utils.Utils;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +29,14 @@ public class AdminService {
     private final SpecializationRepository specializationRepository;
     private final AdminRepository adminRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AdminService(AdminRepository adminRepository, SpecializationRepository specializationRepository, UserRepository userRepository) {
+    public AdminService(PasswordEncoder passwordEncoder, AdminRepository adminRepository, SpecializationRepository specializationRepository, UserRepository userRepository) {
         this.adminRepository = adminRepository;
         this.specializationRepository = specializationRepository;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -57,6 +60,7 @@ public class AdminService {
         validateEmail(userId, adminRequestDTO.getUserRequestDTO().getEmail());
 
         User user = UserRequestDTO.convertToUserEntity(adminRequestDTO.getUserRequestDTO(), "ADMIN");
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user = userRepository.save(user);
 
         Admin admin = null;

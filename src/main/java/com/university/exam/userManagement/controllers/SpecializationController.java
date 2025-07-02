@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class SpecializationController {
     private SpecializationService specializationService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     @Operation(
             summary = "Get all specializations",
             description = "Retrieves a list of all available specializations.",
@@ -35,12 +37,14 @@ public class SpecializationController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<SpecializationResponseDTO> createSpecialization(@RequestParam String specializationName) {
         SpecializationResponseDTO createdSpecialization = specializationService.createSpecialization(specializationName);
         return new ResponseEntity<>(createdSpecialization, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{specializationId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<Void> deleteSpecialization(@PathVariable UUID specializationId) {
         specializationService.deleteSpecialization(specializationId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

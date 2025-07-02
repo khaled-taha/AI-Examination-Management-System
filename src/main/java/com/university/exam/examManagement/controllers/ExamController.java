@@ -51,6 +51,7 @@ public class ExamController {
     }
 
     @GetMapping("/academic-year/{academicYearCourseId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<List<ExamResponseDTO>> getExamsByAcademicYearCourse(
             @PathVariable UUID academicYearCourseId) {
         return ResponseEntity.ok(examService.getExamsByAcademicYearCourseId(academicYearCourseId));
@@ -59,16 +60,19 @@ public class ExamController {
 
     // Section APIs
     @PostMapping("/{examId}/sections")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<SectionResponseDTO> saveSection(@PathVariable UUID examId, @Valid @RequestBody SectionRequestDTO request) {
         return ResponseEntity.ok(examService.saveSection(examId, request));
     }
 
     @GetMapping("/{examId}/sections")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     public ResponseEntity<List<SectionResponseDTO>> getSections(@PathVariable UUID examId) {
         return ResponseEntity.ok(examService.getSections(examId));
     }
 
     @GetMapping("/{examId}/sections/paginated")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     public ResponseEntity<PaginatedSectionsResponseDTO> getSectionsPaginated(
             @PathVariable UUID examId, 
             @RequestParam(defaultValue = "1") int page) {
@@ -80,11 +84,13 @@ public class ExamController {
 
     // Question APIs
     @PostMapping("/{examId}/questions")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ExamQuestionResponseDTO> saveQuestion(@PathVariable UUID examId, @Valid @RequestBody QuestionRequestDTO request) {
         return ResponseEntity.ok(examService.saveQuestion(examId, request));
     }
 
     @DeleteMapping("/questions/{questionId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<Void> deleteQuestion(@PathVariable UUID questionId) {
         examService.deleteQuestion(questionId);
         return ResponseEntity.noContent().build();
@@ -92,17 +98,20 @@ public class ExamController {
 
     // Choices APIs
     @PostMapping("/questions/{questionId}/choices")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ExamQuestionChoicesResponseDTO> saveChoices(@PathVariable UUID questionId, @Valid @RequestBody ExamQuestionChoicesRequestDTO request) {
         return ResponseEntity.ok(examService.saveChoice(questionId, request));
     }
 
     @GetMapping("/questions/{questionId}/choices")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     public ResponseEntity<ExamQuestionChoicesResponseDTO> getChoices(@PathVariable UUID questionId) {
         return ResponseEntity.ok(examService.getChoices(questionId));
     }
 
     // Delete Choice
     @DeleteMapping("/questions/{questionId}/choices/{choiceId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<Void> deleteChoice(@PathVariable UUID questionId, @PathVariable UUID choiceId) {
         examService.deleteChoice(questionId, choiceId);
         return ResponseEntity.noContent().build();
@@ -110,17 +119,20 @@ public class ExamController {
 
     // Answer Key APIs
     @PostMapping("/questions/{questionId}/answer-keys")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ExamQuestionAnswerKeysResponseDTO> saveAnswerKeys(@PathVariable UUID questionId, @Valid @RequestBody ExamQuestionAnswerKeyRequestDTO request) {
         return ResponseEntity.ok(examService.saveAnswerKey(questionId, request));
     }
 
     @GetMapping("/questions/{questionId}/answer-keys")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     public ResponseEntity<ExamQuestionAnswerKeysResponseDTO> getAnswerKeys(@PathVariable UUID questionId) {
         return ResponseEntity.ok(examService.getAnswerKeys(questionId));
     }
 
     // Delete Answer Key
     @DeleteMapping("/questions/{questionId}/answer-keys/{answerKeyId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<Void> deleteAnswerKey(@PathVariable UUID questionId, @PathVariable UUID answerKeyId) {
         examService.deleteAnswerKey(questionId, answerKeyId);
         return ResponseEntity.noContent().build();
@@ -128,17 +140,20 @@ public class ExamController {
 
     // Coding Test Case APIs
     @PostMapping("/questions/{questionId}/test-cases")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ExamQuestionCodingTestCaseResponseDTO> saveTestCases(@PathVariable UUID questionId, @Valid @RequestBody ExamQuestionCodingTestCaseRequestDTO request) {
         return ResponseEntity.ok(examService.saveTestCase(questionId, request));
     }
 
     @GetMapping("/questions/{questionId}/test-cases")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     public ResponseEntity<ExamQuestionCodingTestCaseResponseDTO> getTestCases(@PathVariable UUID questionId) {
         return ResponseEntity.ok(examService.getTestCases(questionId));
     }
 
     // Delete Test Case
     @DeleteMapping("/questions/{questionId}/test-cases/{testCaseId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<Void> deleteTestCase(@PathVariable UUID questionId, @PathVariable UUID testCaseId) {
         examService.deleteTestCase(questionId, testCaseId);
         return ResponseEntity.noContent().build();
@@ -146,12 +161,14 @@ public class ExamController {
 
     @GetMapping
     @Deprecated
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<List<ExamResponseDTO>> getExams() {
         return ResponseEntity.ok(examService.getExams());
     }
 
     @GetMapping("/academic-year/{academicYearCourseId}/pages")
     @Deprecated
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     public ResponseEntity<Page<ExamResponseDTO>> getExamsByAcademicYearCourse(
             @PathVariable UUID academicYearCourseId,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {

@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,6 +42,7 @@ public class ResourceController {
     private ResourceService resourceService;
 
     @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Upload a resource",
             description = "Uploads a resource file with the provided details.",
@@ -62,6 +64,7 @@ public class ResourceController {
     }
 
     @DeleteMapping("/{resourceId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Delete a resource",
             description = "Deletes the resource with the specified ID.",
@@ -78,6 +81,7 @@ public class ResourceController {
     }
 
     @GetMapping("/download/{resourceId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     @Operation(
             summary = "Download a resource",
             description = "Downloads the resource file with the specified ID.",
@@ -100,6 +104,7 @@ public class ResourceController {
 
 
     @GetMapping("/files/preview/{resourceId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     @Operation(
             summary = "Preview a resource In the browser",
             description = "Previews the resource file with the specified ID.",
@@ -121,6 +126,7 @@ public class ResourceController {
     }
 
     @PostMapping("/directories")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Create a new directory",
             description = "Creates a new directory with the provided details.",
@@ -135,6 +141,7 @@ public class ResourceController {
     }
 
     @PutMapping("/directories/{directoryId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Update an existing directory",
             description = "Updates the directory with the specified ID.",
@@ -153,6 +160,7 @@ public class ResourceController {
     }
 
     @DeleteMapping("/directories/{directoryId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Delete a directory",
             description = "Deletes the directory with the specified ID.",
@@ -169,6 +177,7 @@ public class ResourceController {
     }
 
     @GetMapping("/directories/{baseDirectoryId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     @Operation(
             summary = "Get sub-directories of a base dir",
             description = "Retrieves all sub-directories of a base dir. We can get all categorized resources of any course" +

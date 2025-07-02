@@ -21,6 +21,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +40,7 @@ public class CourseController {
     private CourseService courseService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Create a new course",
             description = "Creates a new course with the provided details.",
@@ -67,6 +69,7 @@ public class CourseController {
 
 
     @PutMapping(path = "/{courseCode}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Update an existing course",
             description = "Updates the course with the specified code.",
@@ -94,6 +97,7 @@ public class CourseController {
     }
 
     @DeleteMapping("/{code}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @Operation(
             summary = "Delete a course",
             description = "Deletes the course with the specified code.",
@@ -111,6 +115,7 @@ public class CourseController {
 
     @GetMapping("/{code}/directories")
     @Deprecated
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     @Operation(
             summary = "Get directories for a course",
             description = "Retrieves all directories associated with the specified course code.",
@@ -129,6 +134,7 @@ public class CourseController {
     }
 
     @GetMapping("/group/{groupId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER')")
     @Operation(
             summary = "Get courses by group ID",
             description = "Retrieves all courses associated with the specified group ID.",
@@ -145,6 +151,7 @@ public class CourseController {
     }
 
     @GetMapping("/{code}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'VIEWER', 'STUDENT')")
     @Operation(
             summary = "Retrieve a course",
             description = "Retrieve the course by the specified code.",

@@ -2,7 +2,6 @@ package com.university.exam.security.controller;
 
 import com.university.exam.security.dto.AuthenticationRequest;
 import com.university.exam.security.dto.AuthenticationResponse;
-import com.university.exam.security.dto.RegisterRequest;
 import com.university.exam.security.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,20 +20,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
-
-    @PostMapping("/register")
-    @Operation(
-            summary = "Register a new user",
-            description = "Register a new user with the provided details.",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "User registered successfully",
-                            content = @Content(schema = @Schema(implementation = AuthenticationResponse.class))),
-                    @ApiResponse(responseCode = "400", description = "Invalid request payload")
-            }
-    )
-    public ResponseEntity<AuthenticationResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authenticationService.register(request));
-    }
 
     @PostMapping("/login")
     @Operation(
