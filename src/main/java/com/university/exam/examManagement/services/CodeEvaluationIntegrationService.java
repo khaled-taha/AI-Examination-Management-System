@@ -3,13 +3,7 @@ package com.university.exam.examManagement.services;
 import com.university.exam.config.CodeEvaluationConfig;
 import com.university.exam.examManagement.dtos.CodeEvaluationRequestDTO;
 import com.university.exam.examManagement.dtos.CodeEvaluationResponseDTO;
-import com.university.exam.examManagement.entities.CodingTestCase;
-import com.university.exam.examManagement.entities.ProgrammingLanguage;
-import com.university.exam.examManagement.entities.StudentAnswerChoice;
-import com.university.exam.examManagement.entities.StudentAnswerCode;
-import com.university.exam.examManagement.entities.StudentAnswerText;
-import com.university.exam.examManagement.entities.StudentCodingTestResult;
-import com.university.exam.examManagement.entities.StudentExamAttempt;
+import com.university.exam.examManagement.entities.*;
 import com.university.exam.examManagement.repos.StudentAnswerChoiceRepository;
 import com.university.exam.examManagement.repos.StudentAnswerCodeRepository;
 import com.university.exam.examManagement.repos.StudentAnswerTextRepository;
@@ -39,9 +33,6 @@ public class CodeEvaluationIntegrationService {
     private final String codeEvaluationServiceUrl;
     private final StudentCodingTestResultRepository studentCodingTestResultRepository;
     private final StudentAnswerCodeRepository studentAnswerCodeRepository;
-    private final StudentExamAttemptRepository studentExamAttemptRepository;
-    private final StudentAnswerChoiceRepository studentAnswerChoiceRepository;
-    private final StudentAnswerTextRepository studentAnswerTextRepository;
 
     /**
      * Asynchronously evaluate code and save results
@@ -49,14 +40,15 @@ public class CodeEvaluationIntegrationService {
      * @param testCases The test cases to evaluate against
      * @param programmingLanguage The programming language
      */
-    public void evaluateCodeAsync(StudentAnswerCode studentAnswerCode, 
+    public void evaluateCodeAsync(StudentAnswerCode studentAnswerCode,
+                                 ExamQuestion examQuestion,
                                  List<CodingTestCase> testCases, 
                                  ProgrammingLanguage programmingLanguage) {
         try {
             log.info("Starting async code evaluation for student answer: {}", studentAnswerCode.getId());
             
             // Build the evaluation request
-            CodeEvaluationRequestDTO request = buildEvaluationRequest(studentAnswerCode, testCases, programmingLanguage);
+            CodeEvaluationRequestDTO request = buildEvaluationRequest(studentAnswerCode, examQuestion, testCases, programmingLanguage);
             
             // Call the code evaluation service
             CodeEvaluationResponseDTO response = callCodeEvaluationService(request);
@@ -79,7 +71,8 @@ public class CodeEvaluationIntegrationService {
     /**
      * Build the evaluation request for the code evaluation service
      */
-    private CodeEvaluationRequestDTO buildEvaluationRequest(StudentAnswerCode studentAnswerCode, 
+    private CodeEvaluationRequestDTO buildEvaluationRequest(StudentAnswerCode studentAnswerCode,
+                                                           ExamQuestion examQuestion,
                                                            List<CodingTestCase> testCases, 
                                                            ProgrammingLanguage programmingLanguage) {
         
@@ -96,6 +89,8 @@ public class CodeEvaluationIntegrationService {
         return CodeEvaluationRequestDTO.builder()
                 .code(studentAnswerCode.getSubmittedCode())
                 .language(programmingLanguage.getName().toLowerCase())
+                .timeLimit(examQuestion.getTimeLimit())
+                .memoryLimit(examQuestion.getMemoryLimit())
                 .testCases(testCaseDTOs)
                 .build();
     }

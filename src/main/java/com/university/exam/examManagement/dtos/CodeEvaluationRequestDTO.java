@@ -16,6 +16,8 @@ public class CodeEvaluationRequestDTO {
     
     private String code;
     private String language;
+    private int timeLimit;
+    private int memoryLimit;
     private List<TestCaseDTO> testCases;
     
     @Data

@@ -1613,7 +1613,8 @@ public class ExamServiceImpl implements ExamService {
             
             // Trigger async evaluation
             codeEvaluationIntegrationService.evaluateCodeAsync(
-                studentAnswerCode, 
+                studentAnswerCode,
+                studentAnswerCode.getExamQuestion(),
                 testCases, 
                 studentAnswerCode.getLanguage()
             );
