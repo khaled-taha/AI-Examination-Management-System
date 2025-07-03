@@ -11,9 +11,9 @@ public class LanguagesResponseDTO {
 
     public static LanguagesResponseDTO fromEntity(ProgrammingLanguage language){
         LanguagesResponseDTO languagesResponseDTO = new LanguagesResponseDTO();
-        language.setName(language.getName());
-        language.setCodeName(language.getCodeName());
-        language.setVersion(language.getVersion());
+        languagesResponseDTO.setName(language.getName());
+        languagesResponseDTO.setCodeName(language.getCodeName());
+        languagesResponseDTO.setVersion(language.getVersion());
         return languagesResponseDTO;
     }
 }
