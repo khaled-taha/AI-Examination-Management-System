@@ -105,7 +105,7 @@ public class CodeEvaluationIntegrationService {
 
             HttpEntity<CodeEvaluationRequestDTO> entity = new HttpEntity<>(request, headers);
             
-            String url = codeEvaluationServiceUrl + "/api/v1/code-evaluation/evaluate";
+            String url = codeEvaluationServiceUrl + "/code-evaluation/api/v1/code-evaluation/evaluate";
             
             log.info("Calling code evaluation service at: {}", url);
             
