@@ -3,6 +3,7 @@ package com.university.exam.academicManagement.services;
 import com.university.exam.academicManagement.dtos.requestDTO.AcademicYearCourseRequestDTO;
 import com.university.exam.academicManagement.dtos.requestDTO.AcademicYearRequestDTO;
 import com.university.exam.academicManagement.dtos.responseDTO.AcademicYearCourseResponseDTO;
+import com.university.exam.academicManagement.dtos.responseDTO.AcademicYearGroupResponseDTO;
 import com.university.exam.academicManagement.dtos.responseDTO.AcademicYearResponseDTO;
 import com.university.exam.academicManagement.entities.*;
 import com.university.exam.academicManagement.repos.*;
@@ -250,6 +251,13 @@ public class AcademicYearService {
                 .map(academicYear -> AcademicYearResponseDTO.fromEntity(academicYear, Collections.emptyList()))
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public UUID getAcademicYearGroup(UUID academicYearId) {
+        Optional<AcademicYearGroup> academicYearGroup = academicYearGroupRepository.findByAcademicYearId(academicYearId);
+        return academicYearGroup.map(AcademicYearGroup::getId).orElse(null);
+    }
+
 
     public List<StudentResponseDTO> getStudentsByAcademicYear(UUID academicYearId) {
         List<StudentEnrollment> enrollments = studentEnrollmentRepository

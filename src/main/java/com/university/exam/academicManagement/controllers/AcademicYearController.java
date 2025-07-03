@@ -4,6 +4,7 @@ import com.university.exam.academicManagement.dtos.requestDTO.AcademicYearCourse
 import com.university.exam.academicManagement.dtos.requestDTO.AcademicYearRequestDTO;
 import com.university.exam.academicManagement.dtos.responseDTO.AcademicYearCourseResponseDTO;
 import com.university.exam.academicManagement.dtos.responseDTO.AcademicYearResponseDTO;
+import com.university.exam.academicManagement.entities.AcademicYearGroup;
 import com.university.exam.academicManagement.services.AcademicYearService;
 import com.university.exam.userManagement.dtos.responseDTO.StudentResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,9 +12,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -95,5 +98,10 @@ public class AcademicYearController {
     @GetMapping("/academic-years/{academicYearId}/students")
     public ResponseEntity<List<StudentResponseDTO>> getStudentsByAcademicYear(@PathVariable UUID academicYearId) {
         return ResponseEntity.ok(academicYearService.getStudentsByAcademicYear(academicYearId));
+    }
+
+    @GetMapping("/academic-years/{academicYearId}/academicYearGroupId")
+    public ResponseEntity<UUID> getAcademicYearGroup(@PathVariable UUID academicYearId) {
+        return ResponseEntity.ok(academicYearService.getAcademicYearGroup(academicYearId));
     }
 }

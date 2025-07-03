@@ -18,6 +18,8 @@ public interface AcademicYearGroupRepository extends JpaRepository<AcademicYearG
 
     Optional<AcademicYearGroup> findByAcademicYearIdAndGroupId(UUID academicYearId, UUID groupId);
 
+    Optional<AcademicYearGroup> findByAcademicYearId(UUID academicYearId);
+
     @Query("SELECT ayg FROM AcademicYearGroup ayg " +
             "JOIN AcademicTerm t ON t.academicYear = ayg.academicYear " +
             "WHERE ayg.group.id = :groupId " +
