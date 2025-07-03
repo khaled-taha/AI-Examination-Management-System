@@ -177,9 +177,6 @@ public class CodeEvaluationIntegrationService {
         
         // Save the updated student answer code
         studentAnswerCodeRepository.save(studentAnswerCode);
-        
-        // Update the exam attempt score after code evaluation
-        updateExamAttemptScore(studentAnswerCode.getStudentExamAttempt());
     }
 
     /**
@@ -211,47 +208,5 @@ public class CodeEvaluationIntegrationService {
             log.warn("Code evaluation service is not available: {}", e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Update the exam attempt score after code evaluation
-     * @param studentExamAttempt The student exam attempt to update
-     */
-    private void updateExamAttemptScore(StudentExamAttempt studentExamAttempt) {
-        try {
-            // Recalculate total score including all answer types
-            double totalScore = studentExamAttempt.getScore();
-            
-            // Code answers (now with evaluation results)
-            List<StudentAnswerCode> codeAnswers = studentAnswerCodeRepository.findByStudentExamAttempt(studentExamAttempt);
-            totalScore += codeAnswers.stream().mapToDouble(a -> a.getTotalScore() != null ? a.getTotalScore() : 0.0).sum();
-            
-            // Update the attempt score with the new total
-            studentExamAttempt.setScore(totalScore);
-            studentExamAttempt.setUpdatedAt(LocalDateTime.now());
-            
-            // Determine new status based on updated score
-            double examMark = getExamTotalPoints(studentExamAttempt.getExam().getId());
-            double successPercentage = studentExamAttempt.getExam().getSuccessPercentage();
-            String newStatus = (totalScore / examMark) * 100 >= successPercentage ? "SUCCESS" : "FAILED";
-            studentExamAttempt.setStatus(newStatus);
-            
-            studentExamAttemptRepository.save(studentExamAttempt);
-            
-            log.info("Updated exam attempt score for attempt: {} - New score: {}, Status: {}", 
-                    studentExamAttempt.getId(), totalScore, newStatus);
-                    
-        } catch (Exception e) {
-            log.error("Error updating exam attempt score for attempt: {}", studentExamAttempt.getId(), e);
-        }
-    }
-    
-    /**
-     * Get total exam points (helper method)
-     */
-    private double getExamTotalPoints(UUID examId) {
-        // This is a simplified version - in a real implementation, you might want to inject the service
-        // For now, we'll return a default value or you can implement this based on your needs
-        return 100.0; // Default exam total points
     }
 } 
