@@ -1,7 +1,9 @@
 package com.university.exam.examManagement.services;
 
+import com.university.exam.academicManagement.entities.AcademicYear;
 import com.university.exam.academicManagement.entities.AcademicYearCourse;
 import com.university.exam.academicManagement.repos.AcademicYearCourseRepository;
+import com.university.exam.academicManagement.repos.AcademicYearRepository;
 import com.university.exam.examManagement.dtos.request.*;
 import com.university.exam.examManagement.dtos.response.*;
 import com.university.exam.examManagement.entities.*;
@@ -54,6 +56,7 @@ public class ExamServiceImpl implements ExamService {
     private final StudentRepository studentRepository;
     private final AcademicTermRepository academicTermRepository;
     private final AcademicYearGroupRepository academicYearGroupRepository;
+    private final AcademicYearRepository academicYearRepository;
     private final AcademicYearCourseRepository academicYearCourseRepository;
     
     // Code evaluation integration service
@@ -83,8 +86,8 @@ public class ExamServiceImpl implements ExamService {
         AcademicTerm term = academicTermRepository.findById(request.getTermId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic term not found with id: " + request.getTermId()));
         
-        AcademicYearGroup academicYearGroup = academicYearGroupRepository.findById(request.getAcademicYearGroupId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year group not found with id: " + request.getAcademicYearGroupId()));
+        AcademicYear academicYear = academicYearRepository.findById(request.getAcademicYearId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year not found with id: " + request.getAcademicYearId()));
 
         AcademicYearCourse academicYearCourse = academicYearCourseRepository.findById(request.getAcademicYearCourseId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year Course not found with id: " + request.getAcademicYearCourseId()));
@@ -104,7 +107,7 @@ public class ExamServiceImpl implements ExamService {
         exam.setCreator(creator);
         exam.setAcademicYearCourse(academicYearCourse);
         exam.setTerm(term);
-        exam.setAcademicYearGroup(academicYearGroup);
+        exam.setAcademicYearGroup(academicYearGroupRepository.findByAcademicYearId(academicYear.getId()).get());
         exam.setSuccessPercentage(request.getSuccessPercentage());
         exam.setAllowedAttemptTimes(request.getAllowedAttemptTimes());
         exam.setQuestionsPerPage(request.getQuestionsPerPage());
