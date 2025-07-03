@@ -49,3 +49,10 @@ server:
 springdoc:
   swagger-ui:
     enabled: true
+
+# Code Evaluation Service Configuration
+code:
+  evaluation:
+    service:
+      url: http://localhost:8084
+      timeout: 30000

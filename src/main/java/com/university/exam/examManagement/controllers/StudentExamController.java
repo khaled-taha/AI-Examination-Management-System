@@ -39,7 +39,7 @@ public class StudentExamController {
 
     // End Exam Attempt
     @PostMapping("/attempts/{attemptId}/end")
-    public ResponseEntity<StudentAttemptResponseDTO> endExam(@PathVariable UUID attemptId) {
+    public ResponseEntity<Boolean> endExam(@PathVariable UUID attemptId) {
         return ResponseEntity.ok(examService.endExam(attemptId));
     }
 

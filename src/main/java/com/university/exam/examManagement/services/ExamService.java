@@ -54,7 +54,7 @@ public interface ExamService {
     void deleteChoice(UUID questionId, UUID choiceId);
     void deleteAnswerKey(UUID questionId, UUID answerKeyId);
     void deleteTestCase(UUID questionId, UUID testCaseId);
-    StudentAttemptResponseDTO endExam(UUID attemptId);
+    boolean endExam(UUID attemptId);
     double getExamTotalPoints(UUID examId);
 
     StudentAnswerChoicesResponseDTO getStudentChoiceAnswer(UUID attemptId, UUID questionId);
