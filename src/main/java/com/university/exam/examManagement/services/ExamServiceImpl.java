@@ -30,6 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1330,44 +1331,44 @@ public class ExamServiceImpl implements ExamService {
     @Override
     @Async
     @Transactional
-    public boolean endExam(UUID attemptId) {
+    public CompletableFuture<Boolean> endExam(UUID attemptId) {
         StudentExamAttempt attempt = studentExamAttemptRepository.findById(attemptId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student attempt not found with id: " + attemptId));
         if (attempt.getEndTime() != null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exam attempt already ended");
         }
-        
+
         // Get all code answers for this attempt
         List<StudentAnswerCode> codeAnswers = studentAnswerCodeRepository.findByStudentExamAttempt(attempt);
-        
+
         // Trigger async code evaluation for all coding answers
         for (StudentAnswerCode codeAnswer : codeAnswers) {
             triggerCodeEvaluation(codeAnswer);
         }
-        
+
         // Calculate final score (sum of all answers' marks for this attempt)
         double successPercentage = attempt.getExam().getSuccessPercentage();
         double examMark = getExamTotalPoints(attempt.getExam().getId());
         double totalScore = 0d;
-        
+
         // Choice answers
         List<StudentAnswerChoice> choiceAnswers = studentAnswerChoiceRepository.findByStudentExamAttempt(attempt);
         totalScore += choiceAnswers.stream().mapToDouble(a -> a.getScore() != null ? a.getScore() : 0d).sum();
-        
+
         // Text answers
         List<StudentAnswerText> textAnswers = studentAnswerTextRepository.findByStudentExamAttempt(attempt);
         totalScore += textAnswers.stream().mapToDouble(a -> a.getMarkObtained() != null ? a.getMarkObtained() : 0d).sum();
-        
+
         // Code answers (initial score, will be updated after evaluation)
         totalScore += codeAnswers.stream().mapToDouble(a -> a.getTotalScore() != null ? a.getTotalScore() : 0d).sum();
-        
+
         attempt.setEndTime(LocalDateTime.now());
         attempt.setScore(totalScore);
         attempt.setStatus((totalScore / examMark) * 100 >= successPercentage ? "SUCCESS" : "FAILED");
         attempt.setUpdatedAt(LocalDateTime.now());
         studentExamAttemptRepository.save(attempt);
-        
-        return true;
+
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override

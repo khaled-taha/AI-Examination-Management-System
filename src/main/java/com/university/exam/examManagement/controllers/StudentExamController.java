@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/student/exams")
@@ -39,7 +40,7 @@ public class StudentExamController {
 
     // End Exam Attempt
     @PostMapping("/attempts/{attemptId}/end")
-    public ResponseEntity<Boolean> endExam(@PathVariable UUID attemptId) {
+    public ResponseEntity<CompletableFuture<Boolean>> endExam(@PathVariable UUID attemptId) {
         return ResponseEntity.ok(examService.endExam(attemptId));
     }
 
