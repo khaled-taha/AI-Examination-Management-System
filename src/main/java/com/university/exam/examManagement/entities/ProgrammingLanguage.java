@@ -23,7 +23,7 @@ public class ProgrammingLanguage {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String codeName;
 
     @Column(length = 50)
