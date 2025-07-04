@@ -63,5 +63,5 @@ application:
 code:
   evaluation:
     service:
-      url: http://localhost:8084
+      url: http://localhost:8080
       timeout: 30000
