@@ -702,13 +702,20 @@ public class ExamServiceImpl implements ExamService {
         ExamQuestion question = examQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found with id: " + questionId));
 
-        boolean allowedDeletion = switch (QuestionType.valueOf(question.getQuestionType())) {
+        boolean hasAnswers = switch (QuestionType.valueOf(question.getQuestionType())) {
             case TF, MCQ, MultiChoice -> studentAnswerChoiceRepository.existsByQuestionId(questionId);
             case Complete, Matching -> studentAnswerCodeRepository.existsByQuestionId(questionId);
             case Coding -> studentAnswerTextRepository.existsByQuestionId(questionId);
         };
 
-        if(allowedDeletion) examQuestionRepository.delete(question);
+        if (hasAnswers) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete question because it has student answers.");
+        }
+
+        examQuestionChoiceRepository.deleteByQuestionId(questionId);
+        examQuestionAnswerKeyRepository.deleteByQuestionId(questionId);
+        codingTestCaseRepository.deleteByQuestionId(questionId);
+        examQuestionRepository.delete(question);
     }
 
     @Override
