@@ -27,7 +27,9 @@ public abstract class BaseCodeEvaluator implements CodeEvaluator {
     public CodeExecutionResponse evaluate(CodeExecutionRequest request) {
         CodeExecutionResponse response = new CodeExecutionResponse();
         long startTime = System.currentTimeMillis();
-        
+        timeLimit = request.getTime();
+        memoryLimit = request.getMemory();
+
         try {
             // Create temporary directory for this execution
             String executionId = UUID.randomUUID().toString();
