@@ -3,7 +3,6 @@ package com.university.codeevaluation.services;
 import com.university.codeevaluation.models.CodeExecutionRequest;
 import com.university.codeevaluation.models.CodeExecutionResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -21,8 +20,8 @@ import java.util.concurrent.TimeUnit;
 public abstract class BaseCodeEvaluator implements CodeEvaluator {
     
     protected static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
-    protected static final int TIMEOUT_SECONDS = 10;
-    protected static final int MAX_MEMORY_MB = 512;
+    protected int timeLimit = 10;
+    protected int memoryLimit = 512;
     
     @Override
     public CodeExecutionResponse evaluate(CodeExecutionRequest request) {
@@ -102,7 +101,7 @@ public abstract class BaseCodeEvaluator implements CodeEvaluator {
         
         // Set memory limit for the process
         Map<String, String> env = pb.environment();
-        env.put("JAVA_OPTS", "-Xmx" + MAX_MEMORY_MB + "m");
+        env.put("JAVA_OPTS", "-Xmx" + memoryLimit + "m");
         
         return pb;
     }
@@ -119,10 +118,10 @@ public abstract class BaseCodeEvaluator implements CodeEvaluator {
         }
         
         // Wait for completion with timeout
-        boolean completed = process.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        boolean completed = process.waitFor(timeLimit, TimeUnit.SECONDS);
         if (!completed) {
             process.destroyForcibly();
-            throw new RuntimeException("TIME_LIMIT_EXCEEDED: Process timed out after " + TIMEOUT_SECONDS + " seconds");
+            throw new RuntimeException("TIME_LIMIT_EXCEEDED: Process timed out after " + timeLimit + " seconds");
         }
         
         // Read output
@@ -149,7 +148,7 @@ public abstract class BaseCodeEvaluator implements CodeEvaluator {
     }
     
     protected void checkMemoryLimit(long memoryUsedKb) {
-        long memoryLimitKb = MAX_MEMORY_MB * 1024;
+        long memoryLimitKb = memoryLimit * 1024;
         if (memoryUsedKb > memoryLimitKb) {
             throw new RuntimeException("MEMORY_LIMIT_EXCEEDED: Memory limit exceeded: " + memoryUsedKb + " KB > " + memoryLimitKb + " KB");
         }

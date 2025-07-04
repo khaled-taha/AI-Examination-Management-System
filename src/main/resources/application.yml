@@ -58,3 +58,10 @@ application:
       expiration: 86400000 # 24 hours in milliseconds
       refresh-token:
         expiration: 604800000 # 7 days in milliseconds
+
+# Code Evaluation Service Configuration
+code:
+  evaluation:
+    service:
+      url: http://localhost:8084
+      timeout: 30000

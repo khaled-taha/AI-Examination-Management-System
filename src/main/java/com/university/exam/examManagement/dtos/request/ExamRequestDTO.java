@@ -34,8 +34,8 @@ public class ExamRequestDTO {
     @NotNull(message = "Term ID is required")
     private UUID termId;
 
-    @NotNull(message = "Academic year group ID is required")
-    private UUID academicYearGroupId;
+    @NotNull(message = "Academic year ID is required")
+    private UUID academicYearId;
 
     @Min(value = 0, message = "Success percentage must be at least 0")
     @Max(value = 100, message = "Success percentage cannot exceed 100")

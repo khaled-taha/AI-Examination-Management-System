@@ -1,7 +1,9 @@
 package com.university.exam.examManagement.services;
 
+import com.university.exam.academicManagement.entities.AcademicYear;
 import com.university.exam.academicManagement.entities.AcademicYearCourse;
 import com.university.exam.academicManagement.repos.AcademicYearCourseRepository;
+import com.university.exam.academicManagement.repos.AcademicYearRepository;
 import com.university.exam.examManagement.dtos.request.*;
 import com.university.exam.examManagement.dtos.response.*;
 import com.university.exam.examManagement.entities.*;
@@ -19,6 +21,7 @@ import com.university.exam.userManagement.repos.StudentRepository;
 import com.university.exam.utils.Utils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,7 +57,11 @@ public class ExamServiceImpl implements ExamService {
     private final StudentRepository studentRepository;
     private final AcademicTermRepository academicTermRepository;
     private final AcademicYearGroupRepository academicYearGroupRepository;
+    private final AcademicYearRepository academicYearRepository;
     private final AcademicYearCourseRepository academicYearCourseRepository;
+
+    // Code evaluation integration service
+    private final CodeEvaluationIntegrationService codeEvaluationIntegrationService;
 
 
     @Override
@@ -79,8 +87,8 @@ public class ExamServiceImpl implements ExamService {
         AcademicTerm term = academicTermRepository.findById(request.getTermId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic term not found with id: " + request.getTermId()));
         
-        AcademicYearGroup academicYearGroup = academicYearGroupRepository.findById(request.getAcademicYearGroupId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year group not found with id: " + request.getAcademicYearGroupId()));
+        AcademicYear academicYear = academicYearRepository.findById(request.getAcademicYearId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year not found with id: " + request.getAcademicYearId()));
 
         AcademicYearCourse academicYearCourse = academicYearCourseRepository.findById(request.getAcademicYearCourseId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year Course not found with id: " + request.getAcademicYearCourseId()));
@@ -100,7 +108,7 @@ public class ExamServiceImpl implements ExamService {
         exam.setCreator(creator);
         exam.setAcademicYearCourse(academicYearCourse);
         exam.setTerm(term);
-        exam.setAcademicYearGroup(academicYearGroup);
+        exam.setAcademicYearGroup(academicYearGroupRepository.findByAcademicYearId(academicYear.getId()).get());
         exam.setSuccessPercentage(request.getSuccessPercentage());
         exam.setAllowedAttemptTimes(request.getAllowedAttemptTimes());
         exam.setQuestionsPerPage(request.getQuestionsPerPage());
@@ -1031,6 +1039,11 @@ public class ExamServiceImpl implements ExamService {
             ProgrammingLanguage language = programmingLanguageRepository.findById(request.getLanguageId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Programming language not found with id: " + request.getLanguageId()));
 
+            // Check if this is a coding question
+            if (!QuestionType.Coding.name().equals(question.getQuestionType())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Question is not a coding question: " + request.getExamQuestionId());
+            }
+
             // Create new student answer code entity
             StudentAnswerCode studentAnswer = new StudentAnswerCode();
             studentAnswer.setId(request.getId());
@@ -1038,10 +1051,16 @@ public class ExamServiceImpl implements ExamService {
             studentAnswer.setExamQuestion(question);
             studentAnswer.setSubmittedCode(request.getSubmittedCode());
             studentAnswer.setLanguage(language);
+
+            // Set initial status - evaluation will be done at exam end
+            studentAnswer.setTotalScore(0.0);
+            studentAnswer.setResultSummary("Code submitted - evaluation pending");
+
             return studentAnswer;
         }).toList();
 
         List<StudentAnswerCode> savedAnswers = studentAnswerCodeRepository.saveAll(studentAnswerCodes);
+
         return convertToStudentAnswerCodeResponseDTO(savedAnswers);
     }
 
@@ -1310,32 +1329,46 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
+    @Async
     @Transactional
-    public StudentAttemptResponseDTO endExam(UUID attemptId) {
+    public CompletableFuture<Boolean> endExam(UUID attemptId) {
         StudentExamAttempt attempt = studentExamAttemptRepository.findById(attemptId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student attempt not found with id: " + attemptId));
         if (attempt.getEndTime() != null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exam attempt already ended");
         }
+
+        // Get all code answers for this attempt
+        List<StudentAnswerCode> codeAnswers = studentAnswerCodeRepository.findByStudentExamAttempt(attempt);
+
+        // Trigger async code evaluation for all coding answers
+        for (StudentAnswerCode codeAnswer : codeAnswers) {
+            triggerCodeEvaluation(codeAnswer);
+        }
+
         // Calculate final score (sum of all answers' marks for this attempt)
         double successPercentage = attempt.getExam().getSuccessPercentage();
         double examMark = getExamTotalPoints(attempt.getExam().getId());
         double totalScore = 0d;
+
         // Choice answers
         List<StudentAnswerChoice> choiceAnswers = studentAnswerChoiceRepository.findByStudentExamAttempt(attempt);
         totalScore += choiceAnswers.stream().mapToDouble(a -> a.getScore() != null ? a.getScore() : 0d).sum();
+
         // Text answers
         List<StudentAnswerText> textAnswers = studentAnswerTextRepository.findByStudentExamAttempt(attempt);
         totalScore += textAnswers.stream().mapToDouble(a -> a.getMarkObtained() != null ? a.getMarkObtained() : 0d).sum();
-        // Code answers
-        List<StudentAnswerCode> codeAnswers = studentAnswerCodeRepository.findByStudentExamAttempt(attempt);
+
+        // Code answers (initial score, will be updated after evaluation)
         totalScore += codeAnswers.stream().mapToDouble(a -> a.getTotalScore() != null ? a.getTotalScore() : 0d).sum();
+
         attempt.setEndTime(LocalDateTime.now());
         attempt.setScore(totalScore);
         attempt.setStatus((totalScore / examMark) * 100 >= successPercentage ? "SUCCESS" : "FAILED");
         attempt.setUpdatedAt(LocalDateTime.now());
         studentExamAttemptRepository.save(attempt);
-        return convertToStudentAttemptResponseDTO(attempt);
+
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
@@ -1559,4 +1592,41 @@ public class ExamServiceImpl implements ExamService {
         
         return result;
     }
-} 
+
+    /**
+     * Trigger async code evaluation for a student answer
+     * @param studentAnswerCode The student's code answer to evaluate
+     */
+    private void triggerCodeEvaluation(StudentAnswerCode studentAnswerCode) {
+        try {
+            // Get test cases for the question
+            List<CodingTestCase> testCases = codingTestCaseRepository.findByExamQuestion(studentAnswerCode.getExamQuestion());
+
+            if (testCases.isEmpty()) {
+                studentAnswerCode.setResultSummary("No test cases available for evaluation");
+                studentAnswerCodeRepository.save(studentAnswerCode);
+                return;
+            }
+
+            // Check if code evaluation service is available
+            if (!codeEvaluationIntegrationService.isCodeEvaluationServiceAvailable()) {
+                studentAnswerCode.setResultSummary("Code evaluation service is not available");
+                studentAnswerCodeRepository.save(studentAnswerCode);
+                return;
+            }
+
+            // Trigger async evaluation
+            codeEvaluationIntegrationService.evaluateCodeAsync(
+                studentAnswerCode,
+                studentAnswerCode.getExamQuestion(),
+                testCases,
+                studentAnswerCode.getLanguage()
+            );
+
+
+        } catch (Exception e) {
+            studentAnswerCode.setResultSummary("Error triggering evaluation: " + e.getMessage());
+            studentAnswerCodeRepository.save(studentAnswerCode);
+        }
+    }
+}

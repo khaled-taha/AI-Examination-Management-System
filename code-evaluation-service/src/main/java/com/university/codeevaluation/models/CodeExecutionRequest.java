@@ -14,7 +14,10 @@ public class CodeExecutionRequest {
     
     @NotBlank(message = "Language cannot be empty")
     private String language;
-    
+
+    private int time;
+    private int memory;
+
     @NotNull(message = "Test cases cannot be null")
     private List<TestCase> testCases;
     

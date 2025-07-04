@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public interface ExamService {
     List<LanguagesResponseDTO> getAvailableLanguages();
@@ -54,7 +55,7 @@ public interface ExamService {
     void deleteChoice(UUID questionId, UUID choiceId);
     void deleteAnswerKey(UUID questionId, UUID answerKeyId);
     void deleteTestCase(UUID questionId, UUID testCaseId);
-    StudentAttemptResponseDTO endExam(UUID attemptId);
+    CompletableFuture<Boolean> endExam(UUID attemptId);
     double getExamTotalPoints(UUID examId);
 
     StudentAnswerChoicesResponseDTO getStudentChoiceAnswer(UUID attemptId, UUID questionId);

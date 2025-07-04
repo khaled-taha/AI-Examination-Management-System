@@ -105,4 +105,9 @@ public class AcademicYearController {
     public ResponseEntity<List<StudentResponseDTO>> getStudentsByAcademicYear(@PathVariable UUID academicYearId) {
         return ResponseEntity.ok(academicYearService.getStudentsByAcademicYear(academicYearId));
     }
+
+    @GetMapping("/academic-years/{academicYearId}/academicYearGroupId")
+    public ResponseEntity<UUID> getAcademicYearGroup(@PathVariable UUID academicYearId) {
+        return ResponseEntity.ok(academicYearService.getAcademicYearGroup(academicYearId));
+    }
 }
