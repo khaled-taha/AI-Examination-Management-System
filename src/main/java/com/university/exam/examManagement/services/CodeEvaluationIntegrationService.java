@@ -1,6 +1,5 @@
 package com.university.exam.examManagement.services;
 
-import com.university.exam.config.CodeEvaluationConfig;
 import com.university.exam.examManagement.dtos.CodeEvaluationRequestDTO;
 import com.university.exam.examManagement.dtos.CodeEvaluationResponseDTO;
 import com.university.exam.examManagement.entities.*;
