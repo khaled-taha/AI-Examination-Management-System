@@ -21,6 +21,6 @@ public interface ExamQuestionAnswerKeyRepository extends JpaRepository<ExamQuest
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM ExamQuestionAnswerKey a WHERE a.ExamQuestion.id = :questionId")
+    @Query("DELETE FROM ExamQuestionAnswerKey a WHERE a.examQuestion.id = :questionId")
     void deleteByQuestionId(@Param("questionId") UUID questionId);
 } 

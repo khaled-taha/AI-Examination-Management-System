@@ -22,6 +22,6 @@ public interface CodingTestCaseRepository extends JpaRepository<CodingTestCase, 
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM CodingTestCase t WHERE t.ExamQuestion.id = :questionId")
+    @Query("DELETE FROM CodingTestCase t WHERE t.examQuestion.id = :questionId")
     void deleteByQuestionId(@Param("questionId") UUID questionId);
 } 
