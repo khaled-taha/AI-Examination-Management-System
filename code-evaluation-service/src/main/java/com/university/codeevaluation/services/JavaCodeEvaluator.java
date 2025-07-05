@@ -36,7 +36,7 @@ public class JavaCodeEvaluator extends BaseCodeEvaluator {
         try {
             // Compile Java code
             ProcessBuilder compilePb = createProcessBuilder(codeFile.getParent(), "javac", codeFile.getFileName().toString());
-            String compileOutput = executeProcess(compilePb, null);
+            executeProcess(compilePb, null);
             
             // Run compiled Java program
             String className = codeFile.getFileName().toString().replace(".java", "");

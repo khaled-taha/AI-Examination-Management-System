@@ -30,3 +30,24 @@ code-evaluation:
   max-memory:
     mb: 512
   temp-dir: ${java.io.tmpdir}/code-evaluation
+  languages:
+    java:
+      default-time-limit-seconds: 10
+      default-memory-limit-mb: 512
+      requires-compilation: true
+    python:
+      default-time-limit-seconds: 10
+      default-memory-limit-mb: 256
+      requires-compilation: false
+    c++:
+      default-time-limit-seconds: 10
+      default-memory-limit-mb: 512
+      requires-compilation: true
+    c:
+      default-time-limit-seconds: 10
+      default-memory-limit-mb: 512
+      requires-compilation: true
+    sql:
+      default-time-limit-seconds: 30
+      default-memory-limit-mb: 1024
+      requires-compilation: false

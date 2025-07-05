@@ -1,8 +1,12 @@
 package com.university.codeevaluation.services;
 
+import com.university.codeevaluation.config.CodeEvaluationConfig;
 import com.university.codeevaluation.models.CodeExecutionRequest;
 import com.university.codeevaluation.models.CodeExecutionResponse;
+import com.university.codeevaluation.utils.ProcessManager;
+import com.university.codeevaluation.utils.ProcessResult;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -20,15 +24,32 @@ import java.util.concurrent.TimeUnit;
 public abstract class BaseCodeEvaluator implements CodeEvaluator {
     
     protected static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
-    protected int timeLimit = 10;
+    protected int timeLimit = 1;
     protected int memoryLimit = 512;
+    
+    @Autowired
+    protected CodeEvaluationConfig config;
     
     @Override
     public CodeExecutionResponse evaluate(CodeExecutionRequest request) {
         CodeExecutionResponse response = new CodeExecutionResponse();
         long startTime = System.currentTimeMillis();
-        timeLimit = request.getTime();
-        memoryLimit = request.getMemory();
+        
+        // Use request values if provided, otherwise use language-specific defaults
+        if (request.getTime() > 0) {
+            timeLimit = request.getTime();
+        } else {
+            timeLimit = config.getTimeLimitForLanguage(request.getLanguage());
+        }
+        
+        if (request.getMemory() > 0) {
+            memoryLimit = request.getMemory();
+        } else {
+            memoryLimit = config.getMemoryLimitForLanguage(request.getLanguage());
+        }
+        
+        log.info("Evaluating {} code with time limit: {}s, memory limit: {}MB", 
+            request.getLanguage(), timeLimit, memoryLimit);
         
         try {
             // Create temporary directory for this execution
@@ -101,46 +122,35 @@ public abstract class BaseCodeEvaluator implements CodeEvaluator {
         pb.directory(workingDir.toFile());
         pb.redirectErrorStream(true);
         
-        // Set memory limit for the process
+        // Set environment variables for memory limits based on language
         Map<String, String> env = pb.environment();
-        env.put("JAVA_OPTS", "-Xmx" + memoryLimit + "m");
+        String language = getSupportedLanguage();
+        
+        switch (language.toLowerCase()) {
+            case "java":
+                env.put("JAVA_OPTS", "-Xmx" + memoryLimit + "m -Xms64m");
+                break;
+            case "python":
+                // Python doesn't have built-in memory limits, but we can set some environment variables
+                env.put("PYTHONMALLOC", "malloc");
+                env.put("PYTHONDEVMODE", "1");
+                break;
+            case "c++":
+            case "c":
+                // C/C++ will be handled by OS-level limits
+                break;
+            case "sql":
+                // MySQL memory limits
+                env.put("MYSQL_OPTS", "--max-connections=1 --max-user-connections=1");
+                break;
+        }
         
         return pb;
     }
     
     protected String executeProcess(ProcessBuilder pb, String input) throws Exception {
-        Process process = pb.start();
-        
-        // Write input to process
-        if (input != null && !input.trim().isEmpty()) {
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()))) {
-                writer.write(input);
-                writer.flush();
-            }
-        }
-        
-        // Wait for completion with timeout
-        boolean completed = process.waitFor(timeLimit, TimeUnit.SECONDS);
-        if (!completed) {
-            process.destroyForcibly();
-            throw new RuntimeException("TIME_LIMIT_EXCEEDED: Process timed out after " + timeLimit + " seconds");
-        }
-        
-        // Read output
-        StringBuilder output = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-            }
-        }
-        
-        int exitCode = process.exitValue();
-        if (exitCode != 0) {
-            throw new RuntimeException("RUNTIME_ERROR: Process failed with exit code " + exitCode + ": " + output.toString());
-        }
-        
-        return output.toString().trim();
+        ProcessResult result = ProcessManager.executeProcess(pb, input, timeLimit, memoryLimit);
+        return result.getOutput();
     }
     
     protected long getMemoryUsageKb() {

@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     git \
     unzip \
+    maven \
     && rm -rf /var/lib/apt/lists/*
 
 # Install OpenJDK 17
@@ -47,22 +48,15 @@ RUN apt-get update && apt-get install -y \
 # Create application directory
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml
-COPY mvnw .
-COPY .mvn .mvn
+# Copy pom.xml and source code
 COPY pom.xml .
-
-# Make Maven wrapper executable
-RUN chmod +x mvnw
-
-# Download Maven dependencies
-RUN ./mvnw dependency:go-offline -B
-
-# Copy source code
 COPY src ./src
 
+# Download Maven dependencies
+RUN mvn dependency:go-offline -B
+
 # Build the application
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # Create temp directory
 RUN mkdir -p /app/tmp && chmod 1777 /app/tmp
@@ -80,4 +74,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # Run the application
-CMD ["java", "-jar", "target/code-evaluation-service-0.0.1-SNAPSHOT.jar"] 
+CMD ["java", "-jar", "target/code-evaluation-service-0.0.1-SNAPSHOT.jar"]
