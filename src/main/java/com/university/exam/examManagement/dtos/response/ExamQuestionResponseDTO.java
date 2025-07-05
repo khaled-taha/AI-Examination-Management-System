@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "questionType")
+//@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "questionType")
 //@JsonSubTypes({
 //        @JsonSubTypes.Type(value = ExamQuestionChoiceResponseDTO.class, name = "TF"),
 //        @JsonSubTypes.Type(value = ExamQuestionChoiceResponseDTO.class, name = "MCQ"),
