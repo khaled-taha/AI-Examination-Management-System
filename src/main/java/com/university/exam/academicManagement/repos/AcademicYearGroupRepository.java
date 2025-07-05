@@ -20,12 +20,12 @@ public interface AcademicYearGroupRepository extends JpaRepository<AcademicYearG
 
     Optional<AcademicYearGroup> findByAcademicYearId(UUID academicYearId);
 
-    @Query(value = "SELECT ayg.* FROM academic_year_groups ayg " +
-            "JOIN academic_terms t ON t.academic_year_id = ayg.academic_year_id " +
-            "JOIN academic_years ay ON ay.id = ayg.academic_year_id " +
-            "WHERE ayg.group_id = :groupId " +
-            "AND EXTRACT(YEAR FROM ay.start_date) = EXTRACT(YEAR FROM CURRENT_DATE) " +
-            "AND t.term_order = 1 AND t.status = 'ACTIVE' " +
-            "ORDER BY ay.start_date DESC LIMIT 1", nativeQuery = true)
+    @Query("SELECT ayg FROM AcademicYearGroup ayg " +
+            "JOIN AcademicTerm t ON t.academicYear = ayg.academicYear " +
+            "WHERE ayg.group.id = :groupId " +
+            "AND YEAR(ayg.academicYear.startDate) = YEAR(CURRENT_DATE) " +
+            "AND t.termOrder = 1 AND t.status = 'ACTIVE' " +
+            "ORDER BY ayg.academicYear.startDate DESC")
     Optional<AcademicYearGroup> findLatestActiveAcademicYearByGroupId(@Param("groupId") UUID groupId);
+
 } 
