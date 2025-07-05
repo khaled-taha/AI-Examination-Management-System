@@ -594,7 +594,6 @@ public class ExamServiceImpl implements ExamService {
         questionViewDTO.setId(question.getId());
         questionViewDTO.setQuestionText(question.getQuestionText());
         questionViewDTO.setQuestionType(question.getQuestionType());
-        questionViewDTO.setExplanation(question.getExplanation());
         questionViewDTO.setMark(question.getMark());
         questionViewDTO.setPosition(question.getPosition());
         questionViewDTO.setTimeLimit(question.getTimeLimit());
