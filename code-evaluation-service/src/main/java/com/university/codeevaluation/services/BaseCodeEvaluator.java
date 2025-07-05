@@ -101,6 +101,7 @@ public abstract class BaseCodeEvaluator implements CodeEvaluator {
                             result.setInput(testCase.getInput());
                             result.setExpectedOutput(testCase.getExpectedOutput());
                             result.setSample(testCase.isSample());
+                            result.setTestCaseId(testCase.getTestCaseId()); // Preserve the test case ID
                             result.setPassed(false);
                             result.setMarkObtained(0.0);
                             result.setExecutionTimeMs(0);
@@ -233,6 +234,7 @@ public abstract class BaseCodeEvaluator implements CodeEvaluator {
         result.setInput(testCase.getInput());
         result.setExpectedOutput(testCase.getExpectedOutput());
         result.setSample(testCase.isSample());
+        result.setTestCaseId(testCase.getTestCaseId()); // Preserve the test case ID
         
         long startTime = System.currentTimeMillis();
         long startMemory = getMemoryUsageKb();

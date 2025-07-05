@@ -29,6 +29,7 @@ public class SqlCodeEvaluator extends BaseCodeEvaluator {
         result.setInput(testCase.getInput());
         result.setExpectedOutput(testCase.getExpectedOutput());
         result.setSample(testCase.isSample());
+        result.setTestCaseId(testCase.getTestCaseId()); // Preserve the test case ID
         
         long startTime = System.currentTimeMillis();
         long startMemory = getMemoryUsageKb();

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class CodeExecutionRequest {
@@ -31,5 +32,6 @@ public class CodeExecutionRequest {
         
         private double mark = 1.0;
         private boolean isSample = false;
+        private UUID testCaseId;
     }
 } 

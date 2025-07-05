@@ -2,6 +2,7 @@ package com.university.codeevaluation.models;
 
 import lombok.Data;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class CodeExecutionResponse {
@@ -45,5 +46,6 @@ public class CodeExecutionResponse {
         private String errorType; // COMPILATION_ERROR, RUNTIME_ERROR, TIME_LIMIT, MEMORY_LIMIT, WRONG_ANSWER
         private String errorMessage;
         private String stackTrace;
+        private UUID testCaseId; // To map back to the original test case
     }
 } 
