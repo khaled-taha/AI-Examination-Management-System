@@ -10,7 +10,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 @Configuration
 public class CodeEvaluationConfig {
 
-    @Value("${code.evaluation.service.url:http://localhost:8080}")
+    @Value("${code.evaluation.service.url:http://localhost:8080/code-evaluation}")
     private String codeEvaluationServiceUrl;
 
     @Value("${code.evaluation.service.timeout:30000}")

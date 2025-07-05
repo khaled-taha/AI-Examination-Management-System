@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH=$JAVA_HOME/bin:$PATH
 
-# Update package list and install system dependencies
+# Install all dependencies in a single RUN to avoid redundant apt-get update
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
@@ -16,34 +16,18 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     maven \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install OpenJDK 17
-RUN apt-get update && apt-get install -y \
     openjdk-17-jdk \
     openjdk-17-jre \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python 3.10
-RUN apt-get update && apt-get install -y \
     python3.10 \
     python3.10-dev \
     python3-pip \
+    gcc \
+    g++ \
+    mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3.10 /usr/bin/python
-
-# Install GCC and G++ for C/C++ compilation
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install MySQL Client for SQL evaluation
-RUN apt-get update && apt-get install -y \
-    mysql-client \
-    && rm -rf /var/lib/apt/lists/*
 
 # Create application directory
 WORKDIR /app

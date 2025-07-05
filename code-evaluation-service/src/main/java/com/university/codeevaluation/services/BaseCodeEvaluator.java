@@ -69,16 +69,68 @@ public abstract class BaseCodeEvaluator implements CodeEvaluator {
             int passedCases = 0;
             int failedCases = 0;
             
-            for (CodeExecutionRequest.TestCase testCase : request.getTestCases()) {
-                CodeExecutionResponse.TestCaseResult result = executeTestCase(codeFile, testCase);
-                results.add(result);
-                totalMemoryUsed += result.getMemoryUsedKb();
-                
-                if (result.isPassed()) {
-                    totalScore += result.getMarkObtained();
-                    passedCases++;
-                } else {
-                    failedCases++;
+            if (requiresCompilation()) {
+                // For compiled languages: compile once, then run all test cases
+                log.info("Compiling {} code...", request.getLanguage());
+                try {
+                    Path executablePath = compileCode(codeFile);
+                    log.info("Compilation successful, running {} test cases", request.getTestCases().size());
+                    
+                    for (CodeExecutionRequest.TestCase testCase : request.getTestCases()) {
+                        CodeExecutionResponse.TestCaseResult result = executeTestCaseWithCompiledExecutable(executablePath, testCase);
+                        results.add(result);
+                        totalMemoryUsed += result.getMemoryUsedKb();
+                        
+                        if (result.isPassed()) {
+                            totalScore += result.getMarkObtained();
+                            passedCases++;
+                        } else {
+                            failedCases++;
+                        }
+                    }
+                } catch (Exception e) {
+                    // Handle compilation errors
+                    String errorMessage = e.getMessage();
+                    if (errorMessage != null && errorMessage.startsWith("COMPILATION_ERROR:")) {
+                        String compilationError = errorMessage.substring("COMPILATION_ERROR:".length()).trim();
+                        log.warn("Compilation failed: {}", compilationError);
+                        
+                        // Create failed results for all test cases
+                        for (CodeExecutionRequest.TestCase testCase : request.getTestCases()) {
+                            CodeExecutionResponse.TestCaseResult result = new CodeExecutionResponse.TestCaseResult();
+                            result.setInput(testCase.getInput());
+                            result.setExpectedOutput(testCase.getExpectedOutput());
+                            result.setSample(testCase.isSample());
+                            result.setPassed(false);
+                            result.setMarkObtained(0.0);
+                            result.setExecutionTimeMs(0);
+                            result.setMemoryUsedKb(0);
+                            result.setActualOutput("ERROR: " + compilationError);
+                            result.setErrorType(compilationError);
+                            result.setErrorMessage(compilationError);
+                            result.setFeedback(compilationError);
+                            
+                            results.add(result);
+                            failedCases++;
+                        }
+                    } else {
+                        // Re-throw other errors
+                        throw e;
+                    }
+                }
+            } else {
+                // For interpreted languages: execute each test case individually
+                for (CodeExecutionRequest.TestCase testCase : request.getTestCases()) {
+                    CodeExecutionResponse.TestCaseResult result = executeTestCase(codeFile, testCase);
+                    results.add(result);
+                    totalMemoryUsed += result.getMemoryUsedKb();
+                    
+                    if (result.isPassed()) {
+                        totalScore += result.getMarkObtained();
+                        passedCases++;
+                    } else {
+                        failedCases++;
+                    }
                 }
             }
             
@@ -116,6 +168,152 @@ public abstract class BaseCodeEvaluator implements CodeEvaluator {
     protected abstract String getFileName(String language);
     
     protected abstract CodeExecutionResponse.TestCaseResult executeTestCase(Path codeFile, CodeExecutionRequest.TestCase testCase) throws Exception;
+    
+    /**
+     * Check if this language requires compilation
+     */
+    protected boolean requiresCompilation() {
+        String language = getSupportedLanguage();
+        return "java".equals(language) || "c++".equals(language) || "c".equals(language);
+    }
+    
+    /**
+     * Compile the code and return the executable path (for compiled languages)
+     */
+    protected Path compileCode(Path codeFile) throws Exception {
+        String language = getSupportedLanguage();
+        
+        switch (language.toLowerCase()) {
+            case "java":
+                return compileJavaCode(codeFile);
+            case "c++":
+                return compileCppCode(codeFile);
+            case "c":
+                return compileCCode(codeFile);
+            default:
+                throw new UnsupportedOperationException("Compilation not supported for language: " + language);
+        }
+    }
+    
+    private Path compileJavaCode(Path codeFile) throws Exception {
+        // Compile Java code
+        ProcessBuilder compilePb = createProcessBuilder(codeFile.getParent(), "javac", codeFile.getFileName().toString());
+        executeProcess(compilePb, null);
+        
+        // Return the compiled class file path
+        String className = codeFile.getFileName().toString().replace(".java", "");
+        return codeFile.getParent().resolve(className + ".class");
+    }
+    
+    private Path compileCppCode(Path codeFile) throws Exception {
+        // Compile C++ code
+        String executableName = "solution";
+        ProcessBuilder compilePb = createProcessBuilder(codeFile.getParent(), "g++", "-o", executableName, codeFile.getFileName().toString());
+        executeProcess(compilePb, null);
+        
+        // Return the compiled executable path
+        return codeFile.getParent().resolve(executableName);
+    }
+    
+    private Path compileCCode(Path codeFile) throws Exception {
+        // Compile C code
+        String executableName = "solution";
+        ProcessBuilder compilePb = createProcessBuilder(codeFile.getParent(), "gcc", "-o", executableName, codeFile.getFileName().toString());
+        executeProcess(compilePb, null);
+        
+        // Return the compiled executable path
+        return codeFile.getParent().resolve(executableName);
+    }
+    
+    /**
+     * Execute a test case using a compiled executable
+     */
+    protected CodeExecutionResponse.TestCaseResult executeTestCaseWithCompiledExecutable(Path executablePath, CodeExecutionRequest.TestCase testCase) throws Exception {
+        CodeExecutionResponse.TestCaseResult result = new CodeExecutionResponse.TestCaseResult();
+        result.setInput(testCase.getInput());
+        result.setExpectedOutput(testCase.getExpectedOutput());
+        result.setSample(testCase.isSample());
+        
+        long startTime = System.currentTimeMillis();
+        long startMemory = getMemoryUsageKb();
+        
+        try {
+            String language = getSupportedLanguage();
+            String output;
+            
+            if ("java".equals(language)) {
+                // For Java, run the class file
+                String className = executablePath.getFileName().toString().replace(".class", "");
+                ProcessBuilder runPb = createProcessBuilder(executablePath.getParent(), "java", className);
+                output = executeProcess(runPb, testCase.getInput());
+            } else {
+                // For C/C++, run the executable directly
+                ProcessBuilder runPb = createProcessBuilder(executablePath.getParent(), executablePath.toString());
+                output = executeProcess(runPb, testCase.getInput());
+            }
+            
+            long endMemory = getMemoryUsageKb();
+            long memoryUsed = endMemory - startMemory;
+            
+            result.setActualOutput(output);
+            result.setPassed(output.trim().equals(testCase.getExpectedOutput().trim()));
+            result.setMarkObtained(result.isPassed() ? testCase.getMark() : 0.0);
+            result.setExecutionTimeMs(System.currentTimeMillis() - startTime);
+            result.setMemoryUsedKb(memoryUsed);
+            
+            if (result.isPassed()) {
+                result.setFeedback("Test case passed");
+                result.setErrorType("PASSED");
+            } else {
+                result.setFeedback("Wrong answer: Expected: " + testCase.getExpectedOutput() + ", Got: " + output);
+                result.setErrorType("WRONG_ANSWER");
+                result.setErrorMessage("Expected: " + testCase.getExpectedOutput() + ", Got: " + output);
+            }
+            
+            // Check memory limit
+            checkMemoryLimit(memoryUsed);
+            
+        } catch (Exception e) {
+            long endMemory = getMemoryUsageKb();
+            long memoryUsed = endMemory - startMemory;
+            
+            result.setPassed(false);
+            result.setMarkObtained(0.0);
+            result.setExecutionTimeMs(System.currentTimeMillis() - startTime);
+            result.setMemoryUsedKb(memoryUsed);
+            result.setActualOutput("ERROR: " + e.getMessage());
+            
+            // Categorize the error
+            String errorMessage = e.getMessage();
+            if (errorMessage != null) {
+                if (errorMessage.startsWith("RUNTIME_ERROR:")) {
+                    result.setErrorType("RUNTIME_ERROR");
+                    result.setErrorMessage(errorMessage.substring("RUNTIME_ERROR:".length()).trim());
+                    result.setFeedback("Runtime error: " + result.getErrorMessage());
+                    result.setStackTrace(errorMessage);
+                } else if (errorMessage.startsWith("TIME_LIMIT_EXCEEDED:")) {
+                    result.setErrorType("TIME_LIMIT");
+                    result.setErrorMessage(errorMessage.substring("TIME_LIMIT_EXCEEDED:".length()).trim());
+                    result.setFeedback("Time limit exceeded: " + result.getErrorMessage());
+                } else if (errorMessage.startsWith("MEMORY_LIMIT_EXCEEDED:")) {
+                    result.setErrorType("MEMORY_LIMIT");
+                    result.setErrorMessage(errorMessage.substring("MEMORY_LIMIT_EXCEEDED:".length()).trim());
+                    result.setFeedback("Memory limit exceeded: " + result.getErrorMessage());
+                } else {
+                    result.setErrorType("RUNTIME_ERROR");
+                    result.setErrorMessage(errorMessage);
+                    result.setFeedback("Runtime error: " + errorMessage);
+                    result.setStackTrace(errorMessage);
+                }
+            } else {
+                result.setErrorType("UNKNOWN_ERROR");
+                result.setErrorMessage("Unknown error occurred");
+                result.setFeedback("Unknown error occurred");
+            }
+        }
+        
+        return result;
+    }
     
     protected ProcessBuilder createProcessBuilder(Path workingDir, String... command) {
         ProcessBuilder pb = new ProcessBuilder(command);
