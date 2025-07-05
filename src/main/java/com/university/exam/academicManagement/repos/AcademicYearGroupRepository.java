@@ -25,7 +25,7 @@ public interface AcademicYearGroupRepository extends JpaRepository<AcademicYearG
             "WHERE ayg.group.id = :groupId " +
             "AND YEAR(ayg.academicYear.startDate) = YEAR(CURRENT_DATE) " +
             "AND t.termOrder = 1 AND t.status = 'ACTIVE' " +
-            "ORDER BY ayg.academicYear.startDate DESC")
+            "ORDER BY ayg.academicYear.startDate DESC LIMIT 1")
     Optional<AcademicYearGroup> findLatestActiveAcademicYearByGroupId(@Param("groupId") UUID groupId);
 
 } 
