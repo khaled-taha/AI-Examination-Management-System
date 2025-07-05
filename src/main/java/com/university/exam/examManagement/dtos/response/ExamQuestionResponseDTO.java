@@ -7,14 +7,14 @@ import java.util.UUID;
 
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "questionType")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = ExamQuestionChoiceResponseDTO.class, name = "TF"),
-        @JsonSubTypes.Type(value = ExamQuestionChoiceResponseDTO.class, name = "MCQ"),
-        @JsonSubTypes.Type(value = ExamQuestionChoiceResponseDTO.class, name = "MultiChoice"),
-        @JsonSubTypes.Type(value = ExamQuestionAnswerKeyResponseDTO.class, name = "Complete"),
-        @JsonSubTypes.Type(value = ExamQuestionAnswerKeyResponseDTO.class, name = "Matching"),
-        @JsonSubTypes.Type(value = ExamQuestionCodingResponseDTO.class, name = "Coding")
-})
+//@JsonSubTypes({
+//        @JsonSubTypes.Type(value = ExamQuestionChoiceResponseDTO.class, name = "TF"),
+//        @JsonSubTypes.Type(value = ExamQuestionChoiceResponseDTO.class, name = "MCQ"),
+//        @JsonSubTypes.Type(value = ExamQuestionChoiceResponseDTO.class, name = "MultiChoice"),
+//        @JsonSubTypes.Type(value = ExamQuestionAnswerKeyResponseDTO.class, name = "Complete"),
+//        @JsonSubTypes.Type(value = ExamQuestionAnswerKeyResponseDTO.class, name = "Matching"),
+//        @JsonSubTypes.Type(value = ExamQuestionCodingResponseDTO.class, name = "Coding")
+//})
 public abstract class ExamQuestionResponseDTO {
     private UUID id;
     private UUID examId;

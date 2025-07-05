@@ -434,7 +434,6 @@ public class ExamServiceImpl implements ExamService {
                 break;
 
             case Complete:
-                break;
             case Matching:
                 ExamQuestionAnswerKeyResponseDTO answerDto = (ExamQuestionAnswerKeyResponseDTO) response;
                 List<ExamQuestionAnswerKey> answerKeys = examQuestionAnswerKeyRepository.findByExamQuestion(question);
