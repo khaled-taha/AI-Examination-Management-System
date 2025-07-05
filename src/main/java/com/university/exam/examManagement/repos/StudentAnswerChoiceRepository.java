@@ -17,4 +17,6 @@ public interface StudentAnswerChoiceRepository extends JpaRepository<StudentAnsw
     List<StudentAnswerChoice> findByStudentExamAttempt(StudentExamAttempt attempt);
 
     Optional<StudentAnswerChoice> findByStudentExamAttemptIdAndExamQuestionId(UUID attemptId, UUID questionId);
+    
+    List<StudentAnswerChoice> findAllByStudentExamAttemptIdAndExamQuestionId(UUID attemptId, UUID questionId);
 }

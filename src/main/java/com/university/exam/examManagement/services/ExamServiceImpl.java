@@ -1389,15 +1389,20 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     public StudentAnswerChoicesResponseDTO getStudentChoiceAnswer(UUID attemptId, UUID questionId) {
-        return studentAnswerChoiceRepository.findByStudentExamAttemptIdAndExamQuestionId(attemptId, questionId)
-                .map(entity -> {
-                    StudentAnswerChoicesResponseDTO dto = new StudentAnswerChoicesResponseDTO();
-                    dto.setStudentExamAttemptId(entity.getStudentExamAttempt().getId());
-                    dto.setAnswers(List.of(new StudentAnswerChoicesResponseDTO.Answer(entity.getId(), entity.getExamQuestion().getId(),
-                            entity.getSelectedChoice() != null ? entity.getSelectedChoice().getId() : null)));
-                    return dto;
-                })
-                .orElse(null);
+        List<StudentAnswerChoice> answers = studentAnswerChoiceRepository.findAllByStudentExamAttemptIdAndExamQuestionId(attemptId, questionId);
+        if (answers.isEmpty()) {
+            return null;
+        }
+        
+        StudentAnswerChoicesResponseDTO dto = new StudentAnswerChoicesResponseDTO();
+        dto.setStudentExamAttemptId(attemptId);
+        dto.setAnswers(answers.stream()
+                .map(entity -> new StudentAnswerChoicesResponseDTO.Answer(
+                        entity.getId(), 
+                        entity.getExamQuestion().getId(),
+                        entity.getSelectedChoice() != null ? entity.getSelectedChoice().getId() : null))
+                .collect(Collectors.toList()));
+        return dto;
     }
 
     @Override
@@ -1488,14 +1493,36 @@ public class ExamServiceImpl implements ExamService {
                     case TF:
                     case MCQ:
                     case MultiChoice:
-                        StudentAnswerChoice choiceAnswer = studentAnswerChoiceRepository
-                                .findByStudentExamAttemptIdAndExamQuestionId(attemptId, question.getId())
-                                .orElse(null);
-                        if (choiceAnswer != null) {
-                            questionResult.setStudentAnswer(choiceAnswer.getSelectedChoice() != null ? 
-                                    choiceAnswer.getSelectedChoice().getChoiceText() : "No answer");
-                            questionResult.setStudentScore(choiceAnswer.getScore() != null ? choiceAnswer.getScore() : 0.0);
-                            questionResult.setCorrect(choiceAnswer.getIsCorrect() != null ? choiceAnswer.getIsCorrect() : false);
+                        List<StudentAnswerChoice> choiceAnswers = studentAnswerChoiceRepository
+                                .findAllByStudentExamAttemptIdAndExamQuestionId(attemptId, question.getId());
+                        if (!choiceAnswers.isEmpty()) {
+                            // For TF and MCQ, there should be only one answer
+                            // For MultiChoice, there can be multiple answers
+                            if (QuestionType.valueOf(question.getQuestionType()) == QuestionType.MultiChoice) {
+                                // Handle multiple choices for MultiChoice questions
+                                double totalScore = choiceAnswers.stream()
+                                        .mapToDouble(answer -> answer.getScore() != null ? answer.getScore() : 0.0)
+                                        .sum();
+                                boolean allCorrect = choiceAnswers.stream()
+                                        .allMatch(answer -> answer.getIsCorrect() != null ? answer.getIsCorrect() : false);
+                                
+                                String combinedAnswer = choiceAnswers.stream()
+                                        .map(answer -> answer.getSelectedChoice() != null ? 
+                                                answer.getSelectedChoice().getChoiceText() : "")
+                                        .filter(text -> !text.isEmpty())
+                                        .collect(Collectors.joining("; "));
+                                
+                                questionResult.setStudentAnswer(combinedAnswer.isEmpty() ? "No answer" : combinedAnswer);
+                                questionResult.setStudentScore(totalScore);
+                                questionResult.setCorrect(allCorrect);
+                            } else {
+                                // Handle single choice for TF and MCQ questions
+                                StudentAnswerChoice choiceAnswer = choiceAnswers.get(0);
+                                questionResult.setStudentAnswer(choiceAnswer.getSelectedChoice() != null ? 
+                                        choiceAnswer.getSelectedChoice().getChoiceText() : "No answer");
+                                questionResult.setStudentScore(choiceAnswer.getScore() != null ? choiceAnswer.getScore() : 0.0);
+                                questionResult.setCorrect(choiceAnswer.getIsCorrect() != null ? choiceAnswer.getIsCorrect() : false);
+                            }
                         } else {
                             questionResult.setStudentAnswer("No answer");
                             questionResult.setStudentScore(0.0);
