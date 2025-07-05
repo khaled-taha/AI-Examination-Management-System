@@ -248,6 +248,7 @@ public class ExamServiceImpl implements ExamService {
     private ExamResponseDTO convertToExamResponseDTO(Exam exam) {
         ExamResponseDTO response = new ExamResponseDTO();
         response.setId(exam.getId());
+        response.setDesc(exam.getDescription());
         response.setTitle(exam.getTitle());
         response.setStartDate(exam.getStartDate());
         response.setEndDate(exam.getEndDate());

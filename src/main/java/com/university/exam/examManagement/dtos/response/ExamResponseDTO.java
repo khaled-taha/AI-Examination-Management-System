@@ -7,6 +7,7 @@ import java.util.UUID;
 @Data
 public class ExamResponseDTO {
     private UUID id;
+    private String desc;
     private String title;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
