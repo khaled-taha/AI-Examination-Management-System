@@ -155,7 +155,7 @@ public class AcademicYearService {
         AcademicTerm term = academicTermRepository.findById(request.getTermId())
                 .orElseThrow(() -> new ValidationException("Term not found."));
 
-        academicYearCourseRepository.deleteByAcademicYearId(term.getAcademicYear().getId());
+        academicYearCourseRepository.deleteByTermId(term.getAcademicYear().getId());
         academicYearCourseRepository.flush();
 
         List<AcademicYearCourse> courses = request.getCourseCodes().stream()

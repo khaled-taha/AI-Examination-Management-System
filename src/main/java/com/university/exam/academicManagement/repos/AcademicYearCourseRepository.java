@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface AcademicYearCourseRepository extends JpaRepository<AcademicYearCourse, UUID> {
     List<AcademicYearCourse> findByAcademicYearId(UUID academicYearId);
-    void deleteByAcademicYearId(UUID academicYearId);
+    void deleteByTermId(UUID termId);
 }
