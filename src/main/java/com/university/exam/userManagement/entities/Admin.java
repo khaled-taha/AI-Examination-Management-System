@@ -24,7 +24,7 @@ public class Admin {
     private User user;
 
     @OneToOne
-    @JoinColumn(name = "specialization_id", nullable = false, unique = true)
+    @JoinColumn(name = "specialization_id", nullable = false)
     private Specialization specialization;
 
     @CreationTimestamp
