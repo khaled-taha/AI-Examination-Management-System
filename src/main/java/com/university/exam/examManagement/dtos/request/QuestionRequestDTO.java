@@ -27,10 +27,8 @@ public class QuestionRequestDTO {
 
     private UUID programmingLanguageId;
 
-    @Min(value = 1, message = "Time limit must be at least 1 second")
     private Integer timeLimit;
 
-    @Min(value = 1, message = "Memory limit must be at least 1 KB")
     private Integer memoryLimit;
 
     @Min(value = 0, message = "Mark must be at least 0")
